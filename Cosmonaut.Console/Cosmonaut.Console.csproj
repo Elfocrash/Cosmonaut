@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cosmonaut.Models\Cosmonaut.Models.csproj" />
+    <ProjectReference Include="..\Cosmonaut\Cosmonaut.csproj" />
+  </ItemGroup>
+
+</Project>
