@@ -42,6 +42,26 @@ namespace Cosmonaut
             return new CosmosResponse(addedDocument);
         }
 
+        public async Task<IEnumerable<CosmosResponse>> AddRangeAsync(params TEntity[] entities)
+        {
+            return await AddRangeAsync((IEnumerable<TEntity>)entities);
+        }
+
+        public async Task<IEnumerable<CosmosResponse>> AddRangeAsync(IEnumerable<TEntity> entities)
+        {
+            if (entities == null)
+                throw new ArgumentNullException(nameof(entities));
+
+            var responses = new List<CosmosResponse>();
+
+            foreach (var entity in entities)
+            {
+                responses.Add(await AddAsync(entity));
+            }
+
+            return responses;
+        }
+
         public async Task<List<TEntity>> ToListAsync(Func<TEntity, bool> predicate = null)
         {
             if (predicate == null)
@@ -63,7 +83,7 @@ namespace Cosmonaut
 
         public IDocumentClient DocumentClient => _documentClient;
 
-        private async Task<Database> GetOrCreateDatabaseAsync()
+        internal async Task<Database> GetOrCreateDatabaseAsync()
         {
             Database database = _documentClient.CreateDatabaseQuery()
                 .Where(db => db.Id == _databaseName).ToArray().FirstOrDefault();
@@ -76,7 +96,7 @@ namespace Cosmonaut
             return database;
         }
 
-        private async Task<DocumentCollection> GetOrCreateCollectionAsync()
+        internal async Task<DocumentCollection> GetOrCreateCollectionAsync()
         {
             DocumentCollection collection = _documentClient.CreateDocumentCollectionQuery((await _database).SelfLink).Where(c => c.Id == _collectionName).ToArray().FirstOrDefault();
 
@@ -90,8 +110,7 @@ namespace Cosmonaut
             return collection;
         }
 
-
-        private dynamic GetCosmosDbFriendlyEntity(TEntity entity)
+        internal dynamic GetCosmosDbFriendlyEntity(TEntity entity)
         {
             var propertyInfos = entity.GetType().GetProperties();
 
