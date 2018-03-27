@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents.Client;
 
@@ -16,5 +17,7 @@ namespace Cosmonaut
         Task<TEntity> FirstOrDefaultAsync(Func<TEntity, bool> predicate);
 
         Task<List<TEntity>> ToListAsync(Func<TEntity, bool> predicate = null);
+
+        Task<IQueryable<TEntity>> AsQueryableAsync();
     }
 }

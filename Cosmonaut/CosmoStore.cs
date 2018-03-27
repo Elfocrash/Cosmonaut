@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 using Humanizer;
@@ -26,12 +25,12 @@ namespace Cosmonaut
             _documentClient = documentClient;
             _databaseName = databaseName;
 
-            _collectionName = typeof(TEntity).Name.ToLower().Pluralize();
+            _collectionName = GetCollectionNameForEntity();
 
             _database = new AsyncLazy<Database>(async () => await GetOrCreateDatabaseAsync());
             _collection = new AsyncLazy<DocumentCollection>(async () => await GetOrCreateCollectionAsync());
         }
-
+        
         public async Task<CosmosResponse> AddAsync(TEntity entity, RequestOptions requestOptions = null)
         {
             var collection = await _collection;
@@ -62,6 +61,12 @@ namespace Cosmonaut
             return responses;
         }
 
+        public async Task<IQueryable<TEntity>> AsQueryableAsync()
+        {
+            return _documentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink)
+                .AsQueryable();
+        }
+
         public async Task<List<TEntity>> ToListAsync(Func<TEntity, bool> predicate = null)
         {
             if (predicate == null)
@@ -80,7 +85,7 @@ namespace Cosmonaut
                     .AsEnumerable()
                     .FirstOrDefault();
         }
-
+        
         public IDocumentClient DocumentClient => _documentClient;
 
         internal async Task<Database> GetOrCreateDatabaseAsync()
@@ -135,10 +140,46 @@ namespace Cosmonaut
             if (idProperty == null || containsJsonAttributeIdCount != 0)
                 return entity;
 
+            if(idProperty.GetValue(entity) == null)
+                idProperty.SetValue(entity, Guid.NewGuid().ToString());
+
             //TODO Clean this up. It is a very bad hack
             dynamic mapped = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(entity));
-            mapped.id = mapped.Id;
+
+            SetTheCosmosDbIdBasedOnTheObjectIndex(entity, mapped, idProperty);
+            
+            RemovePotentialDuplicateIdProperties(mapped);
+
             return mapped;
+        }
+
+        internal static void SetTheCosmosDbIdBasedOnTheObjectIndex(TEntity entity, dynamic mapped, PropertyInfo idProperty)
+        {
+            if (mapped.id == null)
+            {
+                mapped.id = idProperty.GetValue(entity).ToString();
+            }
+        }
+
+        internal static string GetCollectionNameForEntity()
+        {
+            var collectionNameAttribute = typeof(TEntity).GetCustomAttribute<CosmosCollectionAttribute>();
+            
+            var collectionName = collectionNameAttribute?.Name;
+
+            return !string.IsNullOrEmpty(collectionName) ? collectionName : typeof(TEntity).Name.ToLower().Pluralize();
+        }
+
+        internal static void RemovePotentialDuplicateIdProperties(dynamic mapped)
+        {
+            if (mapped.Id != null)
+                mapped.Remove("Id");
+
+            if (mapped.ID != null)
+                mapped.Remove("ID");
+
+            if (mapped.iD != null)
+                mapped.Remove("iD");
         }
     }
 }
