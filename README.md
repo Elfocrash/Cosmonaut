@@ -9,28 +9,39 @@ However even basic CRUD operations with Microsoft's SDK is not as simple and eas
 That's where Cosmonaut come's in the picture. It's meant to be what the DbContext is for Entity Framework.
 A simple and easy way to basic CRUD without missing out on the depth that Microsoft's low level SDK is offering.
 
-### Usage (Take this with a grain of salt as it's still WIP)
+### Usage 
 The idea is pretty simple. You can have one CosmoStore per entity (POCO/dtos etc)
 This entity will be used to create a collection in the cosmosdb and it will offer CRUD+ operations for this object
 
-Example
+Adding an entity in the entity store
 ```csharp
-var newUser = new TestUser
+var newUser = new User
 {
-    Id = Guid.NewGuid().ToString(),
     Name = "Nick"
 };
-var documentClient = new DocumentClient(new Uri("https://localhost:8081"), "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==");
-var cosmoStore = new CosmoStore<TestUser>(documentClient, databaseName);
 var added = await cosmoStore.AddAsync(newUser);
 ```
 
-You can also retrieve data based on any property just like you would with EF
+Quering for an entity
 ```csharp
 var user = await cosmoStore.FirstOrDefaultAsync(x => x.Id == "Nick");
+```
+
+Removing an entity
+```csharp
+await cosmoStore.RemoveAsync(x => x.Id == "Nick");
+```
+
+#### Collection naming
+Your collections will automatically be named based on the plural of the object you are using in the generic type.
+However you can override that by decorating the class with the `CosmosCollection` attribute.
+
+Example:
+```csharp
+[CosmosCollection("somename")]
 ```
 
 ### Restrictions
 Because of the way the internal `id` property of Cosmosdb works, there is a mandatory restriction made.
 You cannot have a property named Id or a property with the attribute `[JsonProperty("id")]` without it being a string.
-The id property isn't mandatory, however if you need an id it needs to be a string.
+A cosmos id need to exist somehow on your entity model. For that reason if it isn't part of your entity you can just implement the `ICosmosEntity` interface.
