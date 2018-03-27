@@ -14,7 +14,7 @@ namespace Cosmonaut.Console
 
             var newUser = new TestUser
             {
-                Test = "Some nick",
+                Username = "nicholas",
                 Id = Guid.NewGuid().ToString()
             };
 
@@ -28,12 +28,12 @@ namespace Cosmonaut.Console
 
             var cosmoStore = new CosmoStore<Book>(documentClient, databaseName);
 
-            var added = cosmoStore.AddAsync(book).GetAwaiter().GetResult();
+            //for(int i = 0; i < 1000; i++)
+            //  cosmoStore.AddAsync(book).GetAwaiter().GetResult();
             //var result = cosmoStore.FirstOrDefaultAsync(x => x.Name == "book name").Result;
-
+            //cosmoStore.RemoveAsync(x => x.Name == "book name").GetAwaiter().GetResult();
             //var results = cosmoStore.ToListAsync().Result;
-
-           // System.Console.ReadKey();
+            // System.Console.ReadKey();
         }
     }
 }

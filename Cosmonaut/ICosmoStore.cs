@@ -16,6 +16,8 @@ namespace Cosmonaut
 
         Task<TEntity> FirstOrDefaultAsync(Func<TEntity, bool> predicate);
 
+        Task RemoveAsync(Func<TEntity, bool> predicate);
+
         Task<List<TEntity>> ToListAsync(Func<TEntity, bool> predicate = null);
 
         Task<IQueryable<TEntity>> AsQueryableAsync();

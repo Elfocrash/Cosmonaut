@@ -12,7 +12,6 @@ namespace Cosmonaut
 {
     public class CosmoStore<TEntity> : ICosmoStore<TEntity>
     {
-        private readonly IDocumentClient _documentClient;
         private readonly string _databaseName;
 
         private readonly AsyncLazy<Database> _database;
@@ -22,7 +21,7 @@ namespace Cosmonaut
 
         public CosmoStore(IDocumentClient documentClient, string databaseName)
         {
-            _documentClient = documentClient;
+            DocumentClient = documentClient;
             _databaseName = databaseName;
 
             _collectionName = GetCollectionNameForEntity();
@@ -37,7 +36,7 @@ namespace Cosmonaut
 
             var safeDocument = GetCosmosDbFriendlyEntity(entity);
 
-            ResourceResponse<Document> addedDocument = await _documentClient.CreateDocumentAsync(collection.SelfLink, safeDocument, requestOptions);
+            ResourceResponse<Document> addedDocument = await DocumentClient.CreateDocumentAsync(collection.SelfLink, safeDocument, requestOptions);
             return new CosmosResponse(addedDocument);
         }
 
@@ -63,8 +62,73 @@ namespace Cosmonaut
 
         public async Task<IQueryable<TEntity>> AsQueryableAsync()
         {
-            return _documentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink)
+            return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink)
                 .AsQueryable();
+        }
+
+        public async Task RemoveAsync(Func<TEntity, bool> predicate)
+        {
+            var collectionLink = (await _collection).DocumentsLink;
+            var documentIdsToRemove = DocumentClient.CreateDocumentQuery<TEntity>(collectionLink)
+                .Where(predicate)
+                .Select(GetDocumentId).ToList();
+
+            var selfLinksForDocumentsToDelete = SafelyGetSelfLinksForDocumentsToDelete(documentIdsToRemove, collectionLink);
+
+            foreach (var link in selfLinksForDocumentsToDelete)
+            {
+                await DocumentClient.DeleteDocumentAsync(link);
+            }
+        }
+
+        internal List<string> SafelyGetSelfLinksForDocumentsToDelete(List<string> documentIdsToRemove, string collectionLink)
+        {
+            var selfLinksForDocumentsToDelete = new List<string>();
+            var queryBatches = 1;
+
+            void RecursiveQueryGenerator()
+            {
+                try
+                {
+                    var splitDocumentIdsToRemoveBatches = documentIdsToRemove.Partition(queryBatches);
+                    foreach (var splitDocumentIdsToRemove in splitDocumentIdsToRemoveBatches)
+                    {
+                        selfLinksForDocumentsToDelete.AddRange(DocumentClient
+                            .CreateDocumentQuery<Document>(collectionLink)
+                            .Where(x => splitDocumentIdsToRemove.Contains(x.Id))
+                            .Select(x => x.SelfLink).ToList());
+                    }
+                    
+                }
+                catch (AggregateException aggregateException)
+                {
+                    if (ExceptionIsMaximumQuerySizeExceeded(aggregateException))
+                    {
+                        queryBatches++;
+                        RecursiveQueryGenerator();
+                        return;
+                    }
+                    throw;
+                }
+            }
+
+            RecursiveQueryGenerator();
+
+            return selfLinksForDocumentsToDelete;
+        }
+
+        private static bool ExceptionIsMaximumQuerySizeExceeded(AggregateException aggregateException)
+        {
+            return aggregateException.InnerExceptions.Any(x=>x.Message.Contains("SC3020"));
+        }
+
+        internal IEnumerable<IOrderedQueryable<T>> SizeSafeQueriable<T>(string collectionLink, FeedOptions feedOptions = null)
+        {
+            var listOfQueries = new List<IOrderedQueryable<T>>();
+
+            listOfQueries.Add(DocumentClient.CreateDocumentQuery<T>(collectionLink));
+
+            return listOfQueries;
         }
 
         public async Task<List<TEntity>> ToListAsync(Func<TEntity, bool> predicate = null)
@@ -72,7 +136,7 @@ namespace Cosmonaut
             if (predicate == null)
                 predicate = entity => true;
 
-            return _documentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink)
+            return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink)
                 .Where(predicate)
                 .ToList();
         }
@@ -80,36 +144,61 @@ namespace Cosmonaut
         public async Task<TEntity> FirstOrDefaultAsync(Func<TEntity, bool> predicate)
         {
             return
-                _documentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink)
+                DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink)
                     .Where(predicate)
                     .AsEnumerable()
                     .FirstOrDefault();
         }
         
-        public IDocumentClient DocumentClient => _documentClient;
+        public IDocumentClient DocumentClient { get; }
 
         internal async Task<Database> GetOrCreateDatabaseAsync()
         {
-            Database database = _documentClient.CreateDatabaseQuery()
+            Database database = DocumentClient.CreateDatabaseQuery()
                 .Where(db => db.Id == _databaseName).ToArray().FirstOrDefault();
             if (database == null)
             {
-                database = await _documentClient.CreateDatabaseAsync(
+                database = await DocumentClient.CreateDatabaseAsync(
                     new Database { Id = _databaseName });
             }
 
             return database;
         }
 
+        internal string GetDocumentId(TEntity entity)
+        {
+            var propertyInfos = entity.GetType().GetProperties();
+
+            var propertyWithJsonPropertyId =
+                propertyInfos.SingleOrDefault(x => x.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName == "id");
+
+            if (propertyWithJsonPropertyId != null)
+                return propertyWithJsonPropertyId.GetValue(entity).ToString();
+
+            var propertyNamedId = propertyInfos.SingleOrDefault(x => x.Name.Equals("id", StringComparison.OrdinalIgnoreCase));
+
+            if (propertyNamedId != null)
+                return propertyNamedId.GetValue(entity).ToString();
+
+            var potentialCosmosEntityId = entity.GetType().GetInterface(nameof(ICosmosEntity))
+                .GetProperties().SingleOrDefault(x =>
+                    x.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName == "id");
+
+            if (potentialCosmosEntityId != null)
+                return potentialCosmosEntityId.GetValue(entity).ToString();
+
+            throw new CosmosEntityWithoutIdException<TEntity>(entity);
+        }
+
         internal async Task<DocumentCollection> GetOrCreateCollectionAsync()
         {
-            DocumentCollection collection = _documentClient.CreateDocumentCollectionQuery((await _database).SelfLink).Where(c => c.Id == _collectionName).ToArray().FirstOrDefault();
+            DocumentCollection collection = DocumentClient.CreateDocumentCollectionQuery((await _database).SelfLink).Where(c => c.Id == _collectionName).ToArray().FirstOrDefault();
 
             if (collection == null)
             {
                 collection = new DocumentCollection { Id = _collectionName };
 
-                collection = await _documentClient.CreateDocumentCollectionAsync((await _database).SelfLink, collection);
+                collection = await DocumentClient.CreateDocumentCollectionAsync((await _database).SelfLink, collection);
             }
 
             return collection;
@@ -120,7 +209,10 @@ namespace Cosmonaut
             var propertyInfos = entity.GetType().GetProperties();
 
             var containsJsonAttributeIdCount =
-                propertyInfos.Count(x => x.GetCustomAttributes().ToList().Contains(new JsonPropertyAttribute("id")));
+                propertyInfos.Count(x => x.GetCustomAttributes().ToList().Contains(new JsonPropertyAttribute("id")))
+                + entity.GetType().GetInterfaces().Count(x=> x.GetProperties()
+                .Any(prop => prop.GetCustomAttributes<JsonPropertyAttribute>()
+                .Any(attr => attr.PropertyName.Equals("id", StringComparison.OrdinalIgnoreCase))));
 
             if (containsJsonAttributeIdCount > 1)
                 throw new ArgumentException("An entity can only have one cosmos db id. Only one [JsonAttribute(\"id\")] allowed per entity.");
@@ -137,7 +229,7 @@ namespace Cosmonaut
                 return entity;
             }
 
-            if (idProperty == null || containsJsonAttributeIdCount != 0)
+            if (idProperty == null || containsJsonAttributeIdCount == 1)
                 return entity;
 
             if(idProperty.GetValue(entity) == null)
@@ -146,22 +238,19 @@ namespace Cosmonaut
             //TODO Clean this up. It is a very bad hack
             dynamic mapped = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(entity));
 
-            SetTheCosmosDbIdBasedOnTheObjectIndex(entity, mapped, idProperty);
+            SetTheCosmosDbIdBasedOnTheObjectIndex(entity, mapped);
             
             RemovePotentialDuplicateIdProperties(mapped);
 
             return mapped;
         }
 
-        internal static void SetTheCosmosDbIdBasedOnTheObjectIndex(TEntity entity, dynamic mapped, PropertyInfo idProperty)
+        internal void SetTheCosmosDbIdBasedOnTheObjectIndex(TEntity entity, dynamic mapped)
         {
-            if (mapped.id == null)
-            {
-                mapped.id = idProperty.GetValue(entity).ToString();
-            }
+            mapped.id = GetDocumentId(entity);
         }
 
-        internal static string GetCollectionNameForEntity()
+        internal string GetCollectionNameForEntity()
         {
             var collectionNameAttribute = typeof(TEntity).GetCustomAttribute<CosmosCollectionAttribute>();
             

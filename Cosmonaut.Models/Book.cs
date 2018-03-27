@@ -3,13 +3,12 @@
 namespace Cosmonaut.Models
 {
     [CosmosCollection("TheBooks")]
-    public class Book
+    public class Book : ICosmosEntity
     {
-        [JsonProperty("id")]
-        public string SomeId { get; set; }
-
         public string Name { get; set; }
 
         public TestUser Author { get; set; }
+
+        public string CosmosId { get; set; }
     }
 }
