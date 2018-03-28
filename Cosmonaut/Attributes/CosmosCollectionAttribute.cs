@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Cosmonaut
+namespace Cosmonaut.Attributes
 {
     [AttributeUsage(AttributeTargets.Class)]
     public class CosmosCollectionAttribute : Attribute

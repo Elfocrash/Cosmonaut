@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Cosmonaut.Response;
 using Microsoft.Azure.Documents.Client;
 
 namespace Cosmonaut
 {
-    public interface ICosmoStore<TEntity> where TEntity : class
+    public interface ICosmosStore<TEntity> where TEntity : class
     {
         Task<CosmosResponse> AddAsync(TEntity entity, RequestOptions requestOptions = null);
 

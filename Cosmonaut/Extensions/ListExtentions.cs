@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Cosmonaut
+namespace Cosmonaut.Extensions
 {
     public static class ListExtentions
     {

@@ -1,4 +1,4 @@
-﻿namespace Cosmonaut
+﻿namespace Cosmonaut.Response
 {
     public enum CosmosOperationStatus
     {

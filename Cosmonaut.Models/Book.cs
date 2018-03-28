@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Cosmonaut.Attributes;
+using Newtonsoft.Json;
 
 namespace Cosmonaut.Models
 {

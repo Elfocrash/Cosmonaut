@@ -1,8 +1,7 @@
-﻿using System.Net;
-using Microsoft.Azure.Documents;
+﻿using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 
-namespace Cosmonaut
+namespace Cosmonaut.Response
 {
     public class CosmosResponse
     {

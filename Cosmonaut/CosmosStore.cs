@@ -4,6 +4,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
+using Cosmonaut.Attributes;
+using Cosmonaut.Exceptions;
+using Cosmonaut.Extensions;
+using Cosmonaut.Response;
 using Humanizer;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
@@ -11,32 +15,38 @@ using Newtonsoft.Json;
 
 namespace Cosmonaut
 {
-    public class CosmoStore<TEntity> : ICosmoStore<TEntity> where TEntity : class
+    public class CosmosStore<TEntity> : ICosmosStore<TEntity> where TEntity : class
     {
         private readonly string _databaseName;
 
-        private readonly AsyncLazy<Database> _database;
-        private readonly AsyncLazy<DocumentCollection> _collection;
+        private AsyncLazy<Database> _database;
+        private AsyncLazy<DocumentCollection> _collection;
 
-        private readonly string _collectionName;
+        private string _collectionName;
 
-        public CosmoStore(IDocumentClient documentClient, string databaseName)
+        public CosmosStore(CosmosStoreSettings settings)
         {
-            DocumentClient = documentClient;
-            _databaseName = databaseName;
+            if(settings == null)
+                throw new ArgumentNullException(nameof(settings));
 
-            _collectionName = GetCollectionNameForEntity();
+            var endpointUrl = settings.EndpointUrl ?? throw new ArgumentNullException(nameof(settings.DatabaseName));
+            var authKey = settings.AuthKey ?? throw new ArgumentNullException(nameof(settings.AuthKey));
 
-            _database = new AsyncLazy<Database>(async () => await GetOrCreateDatabaseAsync());
-            _collection = new AsyncLazy<DocumentCollection>(async () => await GetOrCreateCollectionAsync());
-
-            PingCosmosInOrderToOpenTheClientAndPreventInitialDelay();
+            DocumentClient = new DocumentClient(endpointUrl, authKey, settings.ConnectionPolicy ?? ConnectionPolicy.Default);
+            _databaseName = settings.DatabaseName ?? throw new ArgumentNullException(nameof(settings.DatabaseName));
+            InitialiseCosmosStore();
         }
-
+        
+        public CosmosStore(IDocumentClient documentClient, string databaseName)
+        {
+            DocumentClient = documentClient ?? throw new ArgumentNullException(nameof(documentClient));
+            _databaseName = databaseName ?? throw new ArgumentNullException(nameof(documentClient));
+            InitialiseCosmosStore();
+        }
+        
         public async Task<CosmosResponse> AddAsync(TEntity entity, RequestOptions requestOptions = null)
         {
             var collection = await _collection;
-
             var safeDocument = GetCosmosDbFriendlyEntity(entity);
 
             ResourceResponse<Document> addedDocument = await DocumentClient.CreateDocumentAsync(collection.SelfLink, safeDocument, requestOptions);
@@ -78,7 +88,7 @@ namespace Cosmonaut
             foreach (var documentId in documentIdsToRemove)
             {
                 var selfLink = GetDocumentSelfLink(documentId);
-                await DocumentClient.DeleteDocumentAsync(selfLink);
+                await DocumentClient.DeleteDocumentAsync(selfLink);               
             }
         }
 
@@ -273,7 +283,16 @@ namespace Cosmonaut
             if (mapped.iD != null)
                 mapped.Remove("iD");
         }
+        
+        internal void InitialiseCosmosStore()
+        {
+            _collectionName = GetCollectionNameForEntity();
 
+            _database = new AsyncLazy<Database>(async () => await GetOrCreateDatabaseAsync());
+            _collection = new AsyncLazy<DocumentCollection>(async () => await GetOrCreateCollectionAsync());
+
+            PingCosmosInOrderToOpenTheClientAndPreventInitialDelay();
+        }
 
         internal string GetDocumentSelfLink(string documentId) =>
             $"dbs/{_databaseName}/colls/{_collectionName}/docs/{documentId}/";

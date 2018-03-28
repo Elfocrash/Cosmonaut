@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Cosmonaut
+namespace Cosmonaut.Exceptions
 {
     public class CosmosEntityWithoutIdException<TEntity> : Exception
     {
