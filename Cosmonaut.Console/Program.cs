@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Cosmonaut.Models;
 using Microsoft.Azure.Documents;
@@ -14,7 +15,7 @@ namespace Cosmonaut.Console
 
             var newUser = new TestUser
             {
-                Username = "nicholas",
+                Username = "nick",
                 Id = Guid.NewGuid().ToString()
             };
 
@@ -28,10 +29,13 @@ namespace Cosmonaut.Console
 
             var cosmoStore = new CosmoStore<Book>(documentClient, databaseName);
 
-            for(int i = 0; i < 500; i++)
-              cosmoStore.AddAsync(book).GetAwaiter().GetResult();
+            //for(int i = 0; i < 10; i++)
+            //  cosmoStore.AddAsync(book).GetAwaiter().GetResult();
             //var result = cosmoStore.FirstOrDefaultAsync(x => x.Name == "book name").Result;
-            cosmoStore.RemoveAsync(x => x.Name == "book name").GetAwaiter().GetResult();
+            //cosmoStore.RemoveAsync(x => x.Name == "book name").GetAwaiter().GetResult();
+
+            var result = cosmoStore.WhereAsync(x => x.Author.Username == "nick").Result.ToList();
+
             //var results = cosmoStore.ToListAsync().Result;
             // System.Console.ReadKey();
         }

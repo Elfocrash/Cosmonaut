@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents.Client;
 
 namespace Cosmonaut
 {
-    public interface ICosmoStore<TEntity>
+    public interface ICosmoStore<TEntity> where TEntity : class
     {
         Task<CosmosResponse> AddAsync(TEntity entity, RequestOptions requestOptions = null);
 
@@ -20,6 +21,8 @@ namespace Cosmonaut
 
         Task<List<TEntity>> ToListAsync(Func<TEntity, bool> predicate = null);
 
-        Task<IQueryable<TEntity>> AsQueryableAsync();
+        Task<IQueryable<TEntity>> QueryAsync();
+
+        Task<IQueryable<TEntity>> WhereAsync(Expression<Func<TEntity, bool>> predicate);
     }
 }

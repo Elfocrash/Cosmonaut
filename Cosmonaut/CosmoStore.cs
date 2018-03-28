@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using Humanizer;
@@ -10,7 +11,7 @@ using Newtonsoft.Json;
 
 namespace Cosmonaut
 {
-    public class CosmoStore<TEntity> : ICosmoStore<TEntity>
+    public class CosmoStore<TEntity> : ICosmoStore<TEntity> where TEntity : class
     {
         private readonly string _databaseName;
 
@@ -60,10 +61,15 @@ namespace Cosmonaut
             return responses;
         }
 
-        public async Task<IQueryable<TEntity>> AsQueryableAsync()
+        public async Task<IQueryable<TEntity>> WhereAsync(Expression<Func<TEntity, bool>> predicate)
         {
             return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink)
-                .AsQueryable();
+                .Where(predicate);
+        }
+
+        public async Task<IQueryable<TEntity>> QueryAsync()
+        {
+            return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink);
         }
 
         public async Task RemoveAsync(Func<TEntity, bool> predicate)
@@ -82,16 +88,7 @@ namespace Cosmonaut
 
         internal string GetDocumentSelfLink(string documentId) =>
             $"dbs/{_databaseName}/colls/{_collectionName}/docs/{documentId}/";
-
-        internal IEnumerable<IOrderedQueryable<T>> SizeSafeQueriable<T>(string collectionLink, FeedOptions feedOptions = null)
-        {
-            var listOfQueries = new List<IOrderedQueryable<T>>();
-
-            listOfQueries.Add(DocumentClient.CreateDocumentQuery<T>(collectionLink));
-
-            return listOfQueries;
-        }
-
+        
         public async Task<List<TEntity>> ToListAsync(Func<TEntity, bool> predicate = null)
         {
             if (predicate == null)
