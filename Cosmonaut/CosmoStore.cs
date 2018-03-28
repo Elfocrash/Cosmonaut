@@ -86,6 +86,31 @@ namespace Cosmonaut
             }
         }
 
+        public async Task<CosmosResponse> RemoveAsync(TEntity entity)
+        {
+            var documentId = GetDocumentId(entity);
+            var documentSelfLink = GetDocumentSelfLink(documentId);
+            var result = await DocumentClient.DeleteDocumentAsync(documentSelfLink);
+            return new CosmosResponse(result);
+        }
+
+        public async Task<CosmosResponse> RemoveByIdAsync(string id)
+        {
+            var documentSelfLink = GetDocumentSelfLink(id);
+            try
+            {
+                var result = await DocumentClient.DeleteDocumentAsync(documentSelfLink);
+                return new CosmosResponse(result);
+            }
+            catch (DocumentClientException exception)
+            {
+                if(exception.Message.Contains("Resource Not Found"))
+                    return new CosmosResponse(CosmosOperationFailure.ResourceNotFound);
+
+                throw;
+            }
+        }
+
         internal string GetDocumentSelfLink(string documentId) =>
             $"dbs/{_databaseName}/colls/{_collectionName}/docs/{documentId}/";
         

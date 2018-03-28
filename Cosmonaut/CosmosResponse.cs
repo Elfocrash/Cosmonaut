@@ -6,13 +6,23 @@ namespace Cosmonaut
 {
     public class CosmosResponse
     {
-        public bool IsSuccess => (int)ResourceResponse.StatusCode >= 200 && (int)ResourceResponse.StatusCode <= 299;
+        public bool IsSuccess => ResourceResponse != null && 
+            (int)ResourceResponse.StatusCode >= 200 && 
+            (int)ResourceResponse.StatusCode <= 299 && 
+            CosmosOperationFailure == CosmosOperationFailure.None;
+
+        public CosmosOperationFailure CosmosOperationFailure { get; set; } = CosmosOperationFailure.None;
 
         public ResourceResponse<Document> ResourceResponse { get; }
 
         public CosmosResponse(ResourceResponse<Document> resourceResponse)
         {
             ResourceResponse = resourceResponse;
+        }
+
+        public CosmosResponse(CosmosOperationFailure failureType)
+        {
+            CosmosOperationFailure = failureType;
         }
     }
 }

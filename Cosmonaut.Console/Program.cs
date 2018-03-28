@@ -32,9 +32,11 @@ namespace Cosmonaut.Console
             //for(int i = 0; i < 10; i++)
             //  cosmoStore.AddAsync(book).GetAwaiter().GetResult();
             //var result = cosmoStore.FirstOrDefaultAsync(x => x.Name == "book name").Result;
-            //cosmoStore.RemoveAsync(x => x.Name == "book name").GetAwaiter().GetResult();
 
-            var result = cosmoStore.WhereAsync(x => x.Author.Username == "nick").Result.ToList();
+            //var selectedEntity = cosmoStore.FirstOrDefaultAsync(x => x.CosmosId == "0a65e8c9-2c9d-4a04-a515-5f945af0c40a").Result;
+            var result = cosmoStore.RemoveByIdAsync("a36ad690-4719-43a3-95ad-7d59954544ca").GetAwaiter().GetResult();
+
+            //var result = cosmoStore.WhereAsync(x => x.Author.Username == "nick").Result.ToList();
 
             //var results = cosmoStore.ToListAsync().Result;
             // System.Console.ReadKey();
