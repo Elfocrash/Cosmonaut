@@ -73,54 +73,15 @@ namespace Cosmonaut
                 .Where(predicate)
                 .Select(GetDocumentId).ToList();
 
-            var selfLinksForDocumentsToDelete = SafelyGetSelfLinksForDocumentsToDelete(documentIdsToRemove, collectionLink);
-
-            foreach (var link in selfLinksForDocumentsToDelete)
+            foreach (var documentId in documentIdsToRemove)
             {
-                await DocumentClient.DeleteDocumentAsync(link);
+                var selfLink = GetDocumentSelfLink(documentId);
+                await DocumentClient.DeleteDocumentAsync(selfLink);
             }
         }
 
-        internal List<string> SafelyGetSelfLinksForDocumentsToDelete(List<string> documentIdsToRemove, string collectionLink)
-        {
-            var selfLinksForDocumentsToDelete = new List<string>();
-            var queryBatches = 1;
-
-            void RecursiveQueryGenerator()
-            {
-                try
-                {
-                    var splitDocumentIdsToRemoveBatches = documentIdsToRemove.Partition(queryBatches);
-                    foreach (var splitDocumentIdsToRemove in splitDocumentIdsToRemoveBatches)
-                    {
-                        selfLinksForDocumentsToDelete.AddRange(DocumentClient
-                            .CreateDocumentQuery<Document>(collectionLink)
-                            .Where(x => splitDocumentIdsToRemove.Contains(x.Id))
-                            .Select(x => x.SelfLink).ToList());
-                    }
-                    
-                }
-                catch (AggregateException aggregateException)
-                {
-                    if (ExceptionIsMaximumQuerySizeExceeded(aggregateException))
-                    {
-                        queryBatches++;
-                        RecursiveQueryGenerator();
-                        return;
-                    }
-                    throw;
-                }
-            }
-
-            RecursiveQueryGenerator();
-
-            return selfLinksForDocumentsToDelete;
-        }
-
-        private static bool ExceptionIsMaximumQuerySizeExceeded(AggregateException aggregateException)
-        {
-            return aggregateException.InnerExceptions.Any(x=>x.Message.Contains("SC3020"));
-        }
+        internal string GetDocumentSelfLink(string documentId) =>
+            $"dbs/{_databaseName}/colls/{_collectionName}/docs/{documentId}/";
 
         internal IEnumerable<IOrderedQueryable<T>> SizeSafeQueriable<T>(string collectionLink, FeedOptions feedOptions = null)
         {
