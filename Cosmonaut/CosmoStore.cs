@@ -29,8 +29,10 @@ namespace Cosmonaut
 
             _database = new AsyncLazy<Database>(async () => await GetOrCreateDatabaseAsync());
             _collection = new AsyncLazy<DocumentCollection>(async () => await GetOrCreateCollectionAsync());
+
+            PingCosmosInOrderToOpenTheClientAndPreventInitialDelay();
         }
-        
+
         public async Task<CosmosResponse> AddAsync(TEntity entity, RequestOptions requestOptions = null)
         {
             var collection = await _collection;
@@ -63,19 +65,13 @@ namespace Cosmonaut
 
         public async Task<IQueryable<TEntity>> WhereAsync(Expression<Func<TEntity, bool>> predicate)
         {
-            return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink)
+            return (await QueryableAsync())
                 .Where(predicate);
         }
-
-        public async Task<IQueryable<TEntity>> QueryAsync()
-        {
-            return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink);
-        }
-
+        
         public async Task RemoveAsync(Func<TEntity, bool> predicate)
         {
-            var collectionLink = (await _collection).DocumentsLink;
-            var documentIdsToRemove = DocumentClient.CreateDocumentQuery<TEntity>(collectionLink)
+            var documentIdsToRemove = (await QueryableAsync())
                 .Where(predicate)
                 .Select(GetDocumentId).ToList();
 
@@ -94,6 +90,19 @@ namespace Cosmonaut
             return new CosmosResponse(result);
         }
 
+        public async Task<CosmosResponse> UpdateAsync(TEntity entity)
+        {
+            var documentId = GetDocumentId(entity);
+            var documentExists = DocumentClient.CreateDocumentQuery<Document>((await _collection).DocumentsLink)
+                .Where(x => x.Id == documentId).ToList().SingleOrDefault();
+
+            if(documentExists == null)
+                return new CosmosResponse(CosmosOperationStatus.ResourceNotFound);
+
+            var result = await DocumentClient.UpsertDocumentAsync((await _collection).DocumentsLink, entity);
+            return new CosmosResponse(result);
+        }
+
         public async Task<CosmosResponse> RemoveByIdAsync(string id)
         {
             var documentSelfLink = GetDocumentSelfLink(id);
@@ -105,15 +114,12 @@ namespace Cosmonaut
             catch (DocumentClientException exception)
             {
                 if(exception.Message.Contains("Resource Not Found"))
-                    return new CosmosResponse(CosmosOperationFailure.ResourceNotFound);
+                    return new CosmosResponse(CosmosOperationStatus.ResourceNotFound);
 
                 throw;
             }
         }
 
-        internal string GetDocumentSelfLink(string documentId) =>
-            $"dbs/{_databaseName}/colls/{_collectionName}/docs/{documentId}/";
-        
         public async Task<List<TEntity>> ToListAsync(Func<TEntity, bool> predicate = null)
         {
             if (predicate == null)
@@ -127,18 +133,24 @@ namespace Cosmonaut
         public async Task<TEntity> FirstOrDefaultAsync(Func<TEntity, bool> predicate)
         {
             return
-                DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink)
-                    .Where(predicate)
-                    .AsEnumerable()
-                    .FirstOrDefault();
+                (await QueryableAsync())
+                    .FirstOrDefault(predicate);
         }
         
         public IDocumentClient DocumentClient { get; }
 
+        public async Task<IOrderedQueryable<TEntity>> QueryableAsync()
+        {
+            return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink);
+        }
+
         internal async Task<Database> GetOrCreateDatabaseAsync()
         {
             Database database = DocumentClient.CreateDatabaseQuery()
-                .Where(db => db.Id == _databaseName).ToArray().FirstOrDefault();
+                .Where(db => db.Id == _databaseName)
+                .ToArray()
+                .FirstOrDefault();
+
             if (database == null)
             {
                 database = await DocumentClient.CreateDatabaseAsync(
@@ -155,19 +167,19 @@ namespace Cosmonaut
             var propertyWithJsonPropertyId =
                 propertyInfos.SingleOrDefault(x => x.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName == "id");
 
-            if (propertyWithJsonPropertyId != null)
+            if (propertyWithJsonPropertyId != null && !string.IsNullOrEmpty(propertyWithJsonPropertyId.GetValue(entity)?.ToString()))
                 return propertyWithJsonPropertyId.GetValue(entity).ToString();
 
             var propertyNamedId = propertyInfos.SingleOrDefault(x => x.Name.Equals("id", StringComparison.OrdinalIgnoreCase));
 
-            if (propertyNamedId != null)
+            if (propertyNamedId != null && !string.IsNullOrEmpty(propertyNamedId.GetValue(entity)?.ToString()))
                 return propertyNamedId.GetValue(entity).ToString();
 
             var potentialCosmosEntityId = entity.GetType().GetInterface(nameof(ICosmosEntity))
                 .GetProperties().SingleOrDefault(x =>
                     x.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName == "id");
 
-            if (potentialCosmosEntityId != null)
+            if (potentialCosmosEntityId != null && !string.IsNullOrEmpty(potentialCosmosEntityId.GetValue(entity)?.ToString()))
                 return potentialCosmosEntityId.GetValue(entity).ToString();
 
             throw new CosmosEntityWithoutIdException<TEntity>(entity);
@@ -175,7 +187,10 @@ namespace Cosmonaut
 
         internal async Task<DocumentCollection> GetOrCreateCollectionAsync()
         {
-            DocumentCollection collection = DocumentClient.CreateDocumentCollectionQuery((await _database).SelfLink).Where(c => c.Id == _collectionName).ToArray().FirstOrDefault();
+            var collection = DocumentClient
+                .CreateDocumentCollectionQuery((await _database).SelfLink)
+                .ToArray()
+                .FirstOrDefault(c => c.Id == _collectionName);
 
             if (collection == null)
             {
@@ -228,6 +243,11 @@ namespace Cosmonaut
             return mapped;
         }
 
+        internal void PingCosmosInOrderToOpenTheClientAndPreventInitialDelay()
+        {
+            DocumentClient.ReadDatabaseAsync(_database.GetAwaiter().GetResult().SelfLink);
+        }
+
         internal void SetTheCosmosDbIdBasedOnTheObjectIndex(TEntity entity, dynamic mapped)
         {
             mapped.id = GetDocumentId(entity);
@@ -253,5 +273,10 @@ namespace Cosmonaut
             if (mapped.iD != null)
                 mapped.Remove("iD");
         }
+
+
+        internal string GetDocumentSelfLink(string documentId) =>
+            $"dbs/{_databaseName}/colls/{_collectionName}/docs/{documentId}/";
+
     }
 }

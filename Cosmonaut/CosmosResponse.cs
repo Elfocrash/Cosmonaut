@@ -9,9 +9,9 @@ namespace Cosmonaut
         public bool IsSuccess => ResourceResponse != null && 
             (int)ResourceResponse.StatusCode >= 200 && 
             (int)ResourceResponse.StatusCode <= 299 && 
-            CosmosOperationFailure == CosmosOperationFailure.None;
+            CosmosOperationStatus == CosmosOperationStatus.Success;
 
-        public CosmosOperationFailure CosmosOperationFailure { get; set; } = CosmosOperationFailure.None;
+        public CosmosOperationStatus CosmosOperationStatus { get; set; } = CosmosOperationStatus.Success;
 
         public ResourceResponse<Document> ResourceResponse { get; }
 
@@ -20,9 +20,9 @@ namespace Cosmonaut
             ResourceResponse = resourceResponse;
         }
 
-        public CosmosResponse(CosmosOperationFailure failureType)
+        public CosmosResponse(CosmosOperationStatus statusType)
         {
-            CosmosOperationFailure = failureType;
+            CosmosOperationStatus = statusType;
         }
     }
 }

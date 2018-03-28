@@ -21,11 +21,13 @@ namespace Cosmonaut
 
         Task<CosmosResponse> RemoveAsync(TEntity entity);
 
+        Task<CosmosResponse> UpdateAsync(TEntity entity);
+
         Task<CosmosResponse> RemoveByIdAsync(string id);
 
         Task<List<TEntity>> ToListAsync(Func<TEntity, bool> predicate = null);
 
-        Task<IQueryable<TEntity>> QueryAsync();
+        Task<IOrderedQueryable<TEntity>> QueryableAsync();
 
         Task<IQueryable<TEntity>> WhereAsync(Expression<Func<TEntity, bool>> predicate);
     }

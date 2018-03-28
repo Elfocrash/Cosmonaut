@@ -1,8 +1,8 @@
 ﻿namespace Cosmonaut
 {
-    public enum CosmosOperationFailure
+    public enum CosmosOperationStatus
     {
-        None,
+        Success,
         ResourceNotFound
     }
 }
