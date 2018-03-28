@@ -1,3 +1,5 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/au32jna62iue4wut?svg=true)](https://ci.appveyor.com/project/Elfocrash/cosmonaut)
+
 # Cosmonaut
 A simple and easy to use entity store for Microsoft's CosmosDB. (Which is in work in progress atm so don't use it)
 
