@@ -38,6 +38,11 @@ Quering for an entity
 var user = await cosmoStore.FirstOrDefaultAsync(x => x.Id == "Nick");
 ```
 
+Updating an entity
+```csharp
+await cosmoStore.UpdateAsync(entity);
+```
+
 Removing an entity
 ```csharp
 await cosmoStore.RemoveAsync(x => x.Id == "Nick");
