@@ -15,6 +15,15 @@ A simple and easy way to basic CRUD without missing out on the depth that Micros
 The idea is pretty simple. You can have one CosmoStore per entity (POCO/dtos etc)
 This entity will be used to create a collection in the cosmosdb and it will offer CRUD+ operations for this object
 
+Registering the CosmosStores in ServiceCollection for DI support
+```csharp
+ var cosmosSettings = new CosmosStoreSettings("<<databaseName>>", 
+    new Uri("<<cosmosUri>>"), 
+    "<<authkey>>");
+                
+serviceCollection.AddCosmosStore<Book>(cosmosSettings);
+```
+
 Adding an entity in the entity store
 ```csharp
 var newUser = new User
