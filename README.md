@@ -31,21 +31,37 @@ var newUser = new User
     Name = "Nick"
 };
 var added = await cosmoStore.AddAsync(newUser);
+
+var multiple = await cosmoStore.AddRangeAsync(manyManyUsers);
 ```
 
-Quering for an entity
+Quering for entities
 ```csharp
-var user = await cosmoStore.FirstOrDefaultAsync(x => x.Id == "Nick");
+var user = await cosmoStore.FirstOrDefaultAsync(x => x.Username == "elfocrash");
+var users = await cosmoStore.ToListAsync(x => x.HairColor == HairColor.Black);
 ```
 
-Updating an entity
+Updating entities
 ```csharp
 await cosmoStore.UpdateAsync(entity);
 ```
 
-Removing an entity
+Removing entities
 ```csharp
-await cosmoStore.RemoveAsync(x => x.Id == "Nick");
+await cosmoStore.RemoveAsync(x => x.Name == "Nick"); // Removes all the entities that match the criteria
+await cosmoStore.RemoveAsync(entity);// Removes the specific entity
+await cosmoStore.RemoveByIdAsync("<<anId>>");// Removes an entity with the specified ID
+```
+
+#### Performance
+Performance can vary dramatically based on the throughput (RU/s*) you are using.
+By default Cosmonaut will set the throughput to the lowest value of `400` mainly because I don't want to affect how much you pay accidentaly.
+You can set the default throughput for all the collections when you set up your `CosmosStore` by setting the `CollectionThroughput` option to whatever you see fit.
+You can also set the throughput at the collection level by using the `CosmosCollection` attribute at the entity's class.
+
+Example:
+```csharp
+[CosmosCollection(Throughput = 1000)]
 ```
 
 #### Collection naming
