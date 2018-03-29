@@ -67,28 +67,8 @@ namespace Cosmonaut
 
         public async Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(IEnumerable<TEntity> entities)
         {
-            if (entities == null)
-                throw new ArgumentNullException(nameof(entities));
-
-            var response = new CosmosMultipleResponse<TEntity>();
             var addEntitiesTasks = entities.Select(entity => AddAsync(entity));
-            var results = (await Task.WhenAll(addEntitiesTasks)).ToList();
-
-            async Task RetryPotentialRateLimitFailures()
-            {
-                var failedBecauseOfRateLimit =
-                    results.Where(x => x.CosmosOperationStatus == CosmosOperationStatus.RequestRateIsLarge).ToList();
-                if (!failedBecauseOfRateLimit.Any())
-                    return;
-
-                results.RemoveAll(x => x.CosmosOperationStatus == CosmosOperationStatus.RequestRateIsLarge);
-                addEntitiesTasks = failedBecauseOfRateLimit.Select(entity => AddAsync(entity.Entity));
-                results.AddRange(await Task.WhenAll(addEntitiesTasks));
-            }
-
-            await RetryPotentialRateLimitFailures();
-            response.FailedEntities.AddRange(results.Where(x=> !x.IsSuccess));
-            return response;
+            return await HandleOperationWithRateLimitRetry(addEntitiesTasks);
         }
 
         public async Task<IQueryable<TEntity>> WhereAsync(Expression<Func<TEntity, bool>> predicate)
@@ -99,27 +79,8 @@ namespace Cosmonaut
         
         public async Task<CosmosMultipleResponse<TEntity>> RemoveAsync(Func<TEntity, bool> predicate)
         {
-            var documentIdsToRemove = await ToListAsync(predicate);
-            var response = new CosmosMultipleResponse<TEntity>();
-
-            var removeEntitiesTasks = documentIdsToRemove.Select(RemoveAsync);
-            var results = (await Task.WhenAll(removeEntitiesTasks)).ToList();
-
-            async Task RetryPotentialRateLimitFailures()
-            {
-                var failedBecauseOfRateLimit =
-                    results.Where(x => x.CosmosOperationStatus == CosmosOperationStatus.RequestRateIsLarge).ToList();
-                if (!failedBecauseOfRateLimit.Any())
-                    return;
-
-                results.RemoveAll(x => x.CosmosOperationStatus == CosmosOperationStatus.RequestRateIsLarge);
-                removeEntitiesTasks = failedBecauseOfRateLimit.Select(entity => RemoveAsync(entity.Entity));
-                results.AddRange(await Task.WhenAll(removeEntitiesTasks));
-            }
-
-            await RetryPotentialRateLimitFailures();
-            response.FailedEntities.AddRange(results.Where(x => !x.IsSuccess));
-            return response;
+            var entitiesToRemove = await ToListAsync(predicate);
+            return await RemoveRangeAsync(entitiesToRemove);
         }
 
         public async Task<CosmosResponse<TEntity>> RemoveAsync(TEntity entity)
@@ -135,6 +96,17 @@ namespace Cosmonaut
             {
                 return HandleDocumentClientException(entity, exception);
             }
+        }
+
+        public async Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(params TEntity[] entities)
+        {
+            return await RemoveRangeAsync((IEnumerable<TEntity>)entities);
+        }
+
+        public async Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(IEnumerable<TEntity> entities)
+        {
+            var removeEntitiesTasks = entities.Select(RemoveAsync);
+            return await HandleOperationWithRateLimitRetry(removeEntitiesTasks);
         }
 
         public async Task<CosmosResponse<TEntity>> UpdateAsync(TEntity entity)
@@ -156,7 +128,40 @@ namespace Cosmonaut
                 return HandleDocumentClientException(exception);
             }
         }
-        
+
+        public async Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(params TEntity[] entities)
+        {
+            return await UpdateRangeAsync((IEnumerable<TEntity>)entities);
+        }
+
+        public async Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(IEnumerable<TEntity> entities)
+        {
+            var removeEntitiesTasks = entities.Select(UpdateAsync);
+            return await HandleOperationWithRateLimitRetry(removeEntitiesTasks);
+        }
+
+        internal async Task<CosmosMultipleResponse<TEntity>> HandleOperationWithRateLimitRetry(IEnumerable<Task<CosmosResponse<TEntity>>> entitiesTasks)
+        {
+            var response = new CosmosMultipleResponse<TEntity>();
+            var results = (await Task.WhenAll(entitiesTasks)).ToList();
+
+            async Task RetryPotentialRateLimitFailures()
+            {
+                var failedBecauseOfRateLimit =
+                    results.Where(x => x.CosmosOperationStatus == CosmosOperationStatus.RequestRateIsLarge).ToList();
+                if (!failedBecauseOfRateLimit.Any())
+                    return;
+
+                results.RemoveAll(x => x.CosmosOperationStatus == CosmosOperationStatus.RequestRateIsLarge);
+                entitiesTasks = failedBecauseOfRateLimit.Select(entity => RemoveAsync(entity.Entity));
+                results.AddRange(await Task.WhenAll(entitiesTasks));
+            }
+
+            await RetryPotentialRateLimitFailures();
+            response.FailedEntities.AddRange(results.Where(x => !x.IsSuccess));
+            return response;
+        }
+
         public async Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id)
         {
             var documentSelfLink = GetDocumentSelfLink(id);

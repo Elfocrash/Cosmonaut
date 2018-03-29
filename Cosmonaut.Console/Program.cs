@@ -33,7 +33,7 @@ namespace Cosmonaut.Console
 
             var cosmoStore = provider.GetService<ICosmosStore<Book>>();
             var books = new List<Book>();
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 50; i++)
             {
                 books.Add(new Book
                 {
@@ -41,8 +41,7 @@ namespace Cosmonaut.Console
                     Name = "Test " + i
                 });
             }
-
-            var result = cosmoStore.RemoveAsync(x=> true).GetAwaiter().GetResult();
+            
             //cosmoStore.RemoveAsync(x => x.Name == "MYBOOK").GetAwaiter().GetResult();
             //var result = cosmoStore.WhereAsync(x => x.Author.Username == "nick").Result.ToList();
             //var results = cosmoStore.ToListAsync().Result;

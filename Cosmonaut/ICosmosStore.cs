@@ -22,7 +22,15 @@ namespace Cosmonaut
 
         Task<CosmosResponse<TEntity>> RemoveAsync(TEntity entity);
 
+        Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(params TEntity[] entities);
+
+        Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(IEnumerable<TEntity> entities);
+
         Task<CosmosResponse<TEntity>> UpdateAsync(TEntity entity);
+
+        Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(params TEntity[] entities);
+
+        Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(IEnumerable<TEntity> entities);
 
         Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id);
 
