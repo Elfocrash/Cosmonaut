@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27428.2015
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cosmonaut", "Cosmonaut\Cosmonaut.csproj", "{70D43CE3-CCB1-41C4-AF30-EF67E29D87F9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut", "src\Cosmonaut\Cosmonaut.csproj", "{70D43CE3-CCB1-41C4-AF30-EF67E29D87F9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cosmonaut.Console", "Cosmonaut.Console\Cosmonaut.Console.csproj", "{6E770C8F-3D14-4527-B713-C3845BA507DE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut.Console", "src\Cosmonaut.Console\Cosmonaut.Console.csproj", "{6E770C8F-3D14-4527-B713-C3845BA507DE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cosmonaut.Models", "Cosmonaut.Models\Cosmonaut.Models.csproj", "{0B5A8CF8-7F13-44FB-8E64-97061DC74076}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut.Models", "src\Cosmonaut.Models\Cosmonaut.Models.csproj", "{0B5A8CF8-7F13-44FB-8E64-97061DC74076}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
