@@ -2,6 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>Elfocrash</Authors>
+    <Description>A simple and easy to use entity store for Microsoft's CosmosDB.</Description>
+	<Summary>A simple and easy to use entity store for Microsoft's CosmosDB.</Summary>
+    <Copyright>Copyright 2018</Copyright>
+	<Title>Cosmonaut</Title>
+    <PackageLicenseUrl>https://github.com/Elfocrash/Cosmonaut/blob/develop/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/Elfocrash/Cosmonaut</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Elfocrash/Cosmonaut</RepositoryUrl>
+    <PackageTags>cosmosdb azure cosmos entitystore entity db</PackageTags>
+    <PackageReleaseNotes>Initial release of Cosmonaut. Please report any issues on Github.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
