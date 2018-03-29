@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace Cosmonaut.Models
 {
-    [CosmosCollection("TheBooks", 700)]
+    [CosmosCollection(Throughput = 1000)]
     public class Book : ICosmosEntity
     {
         public string Name { get; set; }

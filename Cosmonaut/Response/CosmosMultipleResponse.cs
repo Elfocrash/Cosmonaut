@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Cosmonaut.Response
 {
-    public class CosmosMultipleReponse<TEntity> where TEntity : class
+    public class CosmosMultipleResponse<TEntity> where TEntity : class
     {
         public bool IsSuccess => !FailedEntities.Any();
 

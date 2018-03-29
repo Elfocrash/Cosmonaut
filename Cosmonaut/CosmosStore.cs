@@ -60,17 +60,17 @@ namespace Cosmonaut
             }
         }
 
-        public async Task<CosmosMultipleReponse<TEntity>> AddRangeAsync(params TEntity[] entities)
+        public async Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(params TEntity[] entities)
         {
             return await AddRangeAsync((IEnumerable<TEntity>)entities);
         }
 
-        public async Task<CosmosMultipleReponse<TEntity>> AddRangeAsync(IEnumerable<TEntity> entities)
+        public async Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(IEnumerable<TEntity> entities)
         {
             if (entities == null)
                 throw new ArgumentNullException(nameof(entities));
 
-            var response = new CosmosMultipleReponse<TEntity>();
+            var response = new CosmosMultipleResponse<TEntity>();
             var addEntitiesTasks = entities.Select(entity => AddAsync(entity));
             var results = (await Task.WhenAll(addEntitiesTasks)).ToList();
 
@@ -97,10 +97,10 @@ namespace Cosmonaut
                 .Where(predicate);
         }
         
-        public async Task<CosmosMultipleReponse<TEntity>> RemoveAsync(Func<TEntity, bool> predicate)
+        public async Task<CosmosMultipleResponse<TEntity>> RemoveAsync(Func<TEntity, bool> predicate)
         {
             var documentIdsToRemove = await ToListAsync(predicate);
-            var response = new CosmosMultipleReponse<TEntity>();
+            var response = new CosmosMultipleResponse<TEntity>();
 
             var removeEntitiesTasks = documentIdsToRemove.Select(RemoveAsync);
             var results = (await Task.WhenAll(removeEntitiesTasks)).ToList();

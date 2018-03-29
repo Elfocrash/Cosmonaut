@@ -12,13 +12,13 @@ namespace Cosmonaut
     {
         Task<CosmosResponse<TEntity>> AddAsync(TEntity entity, RequestOptions requestOptions = null);
 
-        Task<CosmosMultipleReponse<TEntity>> AddRangeAsync(params TEntity[] entities);
+        Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(params TEntity[] entities);
 
-        Task<CosmosMultipleReponse<TEntity>> AddRangeAsync(IEnumerable<TEntity> entities);
+        Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(IEnumerable<TEntity> entities);
 
         Task<TEntity> FirstOrDefaultAsync(Func<TEntity, bool> predicate);
 
-        Task<CosmosMultipleReponse<TEntity>> RemoveAsync(Func<TEntity, bool> predicate);
+        Task<CosmosMultipleResponse<TEntity>> RemoveAsync(Func<TEntity, bool> predicate);
 
         Task<CosmosResponse<TEntity>> RemoveAsync(TEntity entity);
 
