@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Cosmonaut.Extensions;
 using Cosmonaut.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,11 +32,8 @@ namespace Cosmonaut.Console
             var provider = serviceCollection.BuildServiceProvider();
 
             var cosmoStore = provider.GetService<ICosmosStore<Book>>();
-
-            for(int i = 0; i < 10; i++)
-                cosmoStore.AddAsync(book).GetAwaiter().GetResult();
-
-            cosmoStore.RemoveAsync(x => x.Name == "MYBOOK").GetAwaiter().GetResult();
+            
+            //cosmoStore.RemoveAsync(x => x.Name == "MYBOOK").GetAwaiter().GetResult();
             //var result = cosmoStore.WhereAsync(x => x.Author.Username == "nick").Result.ToList();
             //var results = cosmoStore.ToListAsync().Result;
             // System.Console.ReadKey();

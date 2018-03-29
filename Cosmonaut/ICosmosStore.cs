@@ -10,21 +10,21 @@ namespace Cosmonaut
 {
     public interface ICosmosStore<TEntity> where TEntity : class
     {
-        Task<CosmosResponse> AddAsync(TEntity entity, RequestOptions requestOptions = null);
+        Task<CosmosResponse<TEntity>> AddAsync(TEntity entity, RequestOptions requestOptions = null);
 
-        Task<IEnumerable<CosmosResponse>> AddRangeAsync(params TEntity[] entities);
+        Task<CosmosMultipleReponse<TEntity>> AddRangeAsync(params TEntity[] entities);
 
-        Task<IEnumerable<CosmosResponse>> AddRangeAsync(IEnumerable<TEntity> entities);
+        Task<CosmosMultipleReponse<TEntity>> AddRangeAsync(IEnumerable<TEntity> entities);
 
         Task<TEntity> FirstOrDefaultAsync(Func<TEntity, bool> predicate);
 
         Task RemoveAsync(Func<TEntity, bool> predicate);
 
-        Task<CosmosResponse> RemoveAsync(TEntity entity);
+        Task<CosmosResponse<TEntity>> RemoveAsync(TEntity entity);
 
-        Task<CosmosResponse> UpdateAsync(TEntity entity);
+        Task<CosmosResponse<TEntity>> UpdateAsync(TEntity entity);
 
-        Task<CosmosResponse> RemoveByIdAsync(string id);
+        Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id);
 
         Task<List<TEntity>> ToListAsync(Func<TEntity, bool> predicate = null);
 

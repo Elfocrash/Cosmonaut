@@ -44,33 +44,46 @@ namespace Cosmonaut
             InitialiseCosmosStore();
         }
         
-        public async Task<CosmosResponse> AddAsync(TEntity entity, RequestOptions requestOptions = null)
+        public async Task<CosmosResponse<TEntity>> AddAsync(TEntity entity, RequestOptions requestOptions = null)
         {
             var collection = await _collection;
             var safeDocument = GetCosmosDbFriendlyEntity(entity);
 
-            ResourceResponse<Document> addedDocument = await DocumentClient.CreateDocumentAsync(collection.SelfLink, safeDocument, requestOptions);
-            return new CosmosResponse(addedDocument);
+            try
+            {
+                ResourceResponse<Document> addedDocument =
+                    await DocumentClient.CreateDocumentAsync(collection.SelfLink, safeDocument, requestOptions);
+                return new CosmosResponse<TEntity>(entity, addedDocument);
+            }
+            catch (DocumentClientException exception)
+            {
+                if (exception.Message.Contains("Resource with specified id or name already exists"))
+                    return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.ResourceWithIdAlreadyExists);
+
+                throw;
+            }
         }
 
-        public async Task<IEnumerable<CosmosResponse>> AddRangeAsync(params TEntity[] entities)
+        public async Task<CosmosMultipleReponse<TEntity>> AddRangeAsync(params TEntity[] entities)
         {
             return await AddRangeAsync((IEnumerable<TEntity>)entities);
         }
 
-        public async Task<IEnumerable<CosmosResponse>> AddRangeAsync(IEnumerable<TEntity> entities)
+        public async Task<CosmosMultipleReponse<TEntity>> AddRangeAsync(IEnumerable<TEntity> entities)
         {
             if (entities == null)
                 throw new ArgumentNullException(nameof(entities));
 
-            var responses = new List<CosmosResponse>();
+            var response = new CosmosMultipleReponse<TEntity>();
 
             foreach (var entity in entities)
             {
-                responses.Add(await AddAsync(entity));
+                var addResult = await AddAsync(entity);
+                if(!addResult.IsSuccess)
+                    response.FailedEntities.Add(addResult);
             }
 
-            return responses;
+            return response;
         }
 
         public async Task<IQueryable<TEntity>> WhereAsync(Expression<Func<TEntity, bool>> predicate)
@@ -92,39 +105,39 @@ namespace Cosmonaut
             }
         }
 
-        public async Task<CosmosResponse> RemoveAsync(TEntity entity)
+        public async Task<CosmosResponse<TEntity>> RemoveAsync(TEntity entity)
         {
             var documentId = GetDocumentId(entity);
             var documentSelfLink = GetDocumentSelfLink(documentId);
             var result = await DocumentClient.DeleteDocumentAsync(documentSelfLink);
-            return new CosmosResponse(result);
+            return new CosmosResponse<TEntity>(entity, result);
         }
 
-        public async Task<CosmosResponse> UpdateAsync(TEntity entity)
+        public async Task<CosmosResponse<TEntity>> UpdateAsync(TEntity entity)
         {
             var documentId = GetDocumentId(entity);
             var documentExists = DocumentClient.CreateDocumentQuery<Document>((await _collection).DocumentsLink)
                 .Where(x => x.Id == documentId).ToList().SingleOrDefault();
 
             if(documentExists == null)
-                return new CosmosResponse(CosmosOperationStatus.ResourceNotFound);
+                return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.ResourceNotFound);
 
             var result = await DocumentClient.UpsertDocumentAsync((await _collection).DocumentsLink, entity);
-            return new CosmosResponse(result);
+            return new CosmosResponse<TEntity>(entity, result);
         }
 
-        public async Task<CosmosResponse> RemoveByIdAsync(string id)
+        public async Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id)
         {
             var documentSelfLink = GetDocumentSelfLink(id);
             try
             {
                 var result = await DocumentClient.DeleteDocumentAsync(documentSelfLink);
-                return new CosmosResponse(result);
+                return new CosmosResponse<TEntity>(result);
             }
             catch (DocumentClientException exception)
             {
                 if(exception.Message.Contains("Resource Not Found"))
-                    return new CosmosResponse(CosmosOperationStatus.ResourceNotFound);
+                    return new CosmosResponse<TEntity>(CosmosOperationStatus.ResourceNotFound);
 
                 throw;
             }

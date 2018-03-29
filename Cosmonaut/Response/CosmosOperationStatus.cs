@@ -3,6 +3,7 @@
     public enum CosmosOperationStatus
     {
         Success,
-        ResourceNotFound
+        ResourceNotFound,
+        ResourceWithIdAlreadyExists
     }
 }
