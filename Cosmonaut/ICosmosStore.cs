@@ -18,7 +18,7 @@ namespace Cosmonaut
 
         Task<TEntity> FirstOrDefaultAsync(Func<TEntity, bool> predicate);
 
-        Task RemoveAsync(Func<TEntity, bool> predicate);
+        Task<CosmosMultipleReponse<TEntity>> RemoveAsync(Func<TEntity, bool> predicate);
 
         Task<CosmosResponse<TEntity>> RemoveAsync(TEntity entity);
 

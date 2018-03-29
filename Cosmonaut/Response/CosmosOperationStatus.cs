@@ -4,6 +4,7 @@
     {
         Success,
         ResourceNotFound,
-        ResourceWithIdAlreadyExists
+        ResourceWithIdAlreadyExists,
+        RequestRateIsLarge
     }
 }
