@@ -12,6 +12,7 @@
     <RepositoryUrl>https://github.com/Elfocrash/Cosmonaut</RepositoryUrl>
     <PackageTags>cosmosdb azure cosmos entitystore entity db</PackageTags>
     <PackageReleaseNotes>Initial release of Cosmonaut. Please report any issues on Github.</PackageReleaseNotes>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
