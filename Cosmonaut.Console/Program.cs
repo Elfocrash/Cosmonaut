@@ -32,12 +32,14 @@ namespace Cosmonaut.Console
             var provider = serviceCollection.BuildServiceProvider();
 
             var cosmoStore = provider.GetService<ICosmosStore<Book>>();
+            cosmoStore.RemoveAsync(x => true).GetAwaiter().GetResult();
+
             var books = new List<Book>();
             for (int i = 0; i < 50; i++)
             {
                 books.Add(new Book
                 {
-                    CosmosId = Guid.NewGuid().ToString(),
+                    Id = Guid.NewGuid().ToString(),
                     Name = "Test " + i
                 });
             }

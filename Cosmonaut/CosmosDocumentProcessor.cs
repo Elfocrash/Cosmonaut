@@ -48,10 +48,7 @@ namespace Cosmonaut
                 return entity;
             }
 
-            if (idProperty == null || containsJsonAttributeIdCount == 1)
-                return entity;
-
-            if (idProperty.GetValue(entity) == null)
+            if (idProperty != null && idProperty.GetValue(entity) == null)
                 idProperty.SetValue(entity, Guid.NewGuid().ToString());
 
             return entity;
@@ -77,8 +74,8 @@ namespace Cosmonaut
             if (propertyNamedId != null && !string.IsNullOrEmpty(propertyNamedId.GetValue(entity)?.ToString()))
                 return propertyNamedId.GetValue(entity).ToString();
 
-            var potentialCosmosEntityId = entity.GetType().GetInterface(nameof(ICosmosEntity))
-                .GetProperties().SingleOrDefault(x =>
+            var potentialCosmosEntityId = entity.GetType().GetInterface(nameof(ICosmosEntity))?
+                .GetProperties()?.SingleOrDefault(x =>
                     x.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName == "id");
 
             if (potentialCosmosEntityId != null && !string.IsNullOrEmpty(potentialCosmosEntityId.GetValue(entity)?.ToString()))

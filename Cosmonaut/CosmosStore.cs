@@ -123,7 +123,8 @@ namespace Cosmonaut
                 if (documentExists == null)
                     return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.ResourceNotFound);
 
-                var result = await DocumentClient.UpsertDocumentAsync((await _collection).DocumentsLink, entity);
+                var document = _documentProcessor.GetCosmosDbFriendlyEntity(entity);
+                var result = await DocumentClient.UpsertDocumentAsync((await _collection).DocumentsLink, document);
                 return new CosmosResponse<TEntity>(entity, result);
             }
             catch (DocumentClientException exception)

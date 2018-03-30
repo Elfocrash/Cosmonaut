@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Cosmonaut.Response;
 using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Client;
 
 namespace Cosmonaut.Tests
 {
@@ -23,11 +22,15 @@ namespace Cosmonaut.Tests
 
         public async Task<CosmosResponse<TEntity>> AddAsync(TEntity entity)
         {
-            _documentProcessor.ValidateEntityForCosmosDb(entity);
-            var id = _documentProcessor.GetDocumentId(entity);
-            if(_store.TryAdd(id, entity))
-                return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.Success);
-            return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.ResourceWithIdAlreadyExists);
+            return await Task.Run(() =>
+                {
+                    _documentProcessor.ValidateEntityForCosmosDb(entity);
+                    var id = _documentProcessor.GetDocumentId(entity);
+                    if (_store.TryAdd(id, entity))
+                        return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.Success);
+                    return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.ResourceWithIdAlreadyExists);
+                }
+            );
         }
 
         public async Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(params TEntity[] entities)
@@ -49,15 +52,17 @@ namespace Cosmonaut.Tests
 
         public async Task<CosmosResponse<TEntity>> UpdateAsync(TEntity entity)
         {
-            _documentProcessor.ValidateEntityForCosmosDb(entity);
-            var id = _documentProcessor.GetDocumentId(entity);
-            var exists = _store[id];
-            if (exists == null)
-                return new CosmosResponse<TEntity>(CosmosOperationStatus.ResourceNotFound);
+            return await Task.Run(() =>
+            {
+                _documentProcessor.ValidateEntityForCosmosDb(entity);
+                var id = _documentProcessor.GetDocumentId(entity);
 
-            _store[id] = entity;
+                if (!_store.ContainsKey(id))
+                    return new CosmosResponse<TEntity>(CosmosOperationStatus.ResourceNotFound);
 
-            return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.Success);
+                _store[id] = entity;
+                return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.Success);
+            });
         }
 
         public async Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(params TEntity[] entities)
@@ -106,10 +111,13 @@ namespace Cosmonaut.Tests
 
         public async Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id)
         {
-            if (_store.TryRemove(id, out var outEntity))
-                return new CosmosResponse<TEntity>(outEntity, CosmosOperationStatus.Success);
+            return await Task.Run(() =>
+            {
+                if (_store.TryRemove(id, out var outEntity))
+                    return new CosmosResponse<TEntity>(outEntity, CosmosOperationStatus.Success);
 
-            return new CosmosResponse<TEntity>(CosmosOperationStatus.ResourceNotFound);
+                return new CosmosResponse<TEntity>(CosmosOperationStatus.ResourceNotFound);
+            });
         }
         
         public async Task<CosmosMultipleResponse<TEntity>> RemoveAsync(Func<TEntity, bool> predicate)
@@ -129,10 +137,14 @@ namespace Cosmonaut.Tests
 
         public async Task<List<TEntity>> ToListAsync(Func<TEntity, bool> predicate = null)
         {
-            if (predicate == null)
-                predicate = entity => true;
+            return await Task.Run(() =>
+            {
 
-            return _store.Values.Where(predicate).ToList();
+                if (predicate == null)
+                    predicate = entity => true;
+
+                return _store.Values.Where(predicate).ToList();
+            });
         }
 
         public Task<IOrderedQueryable<TEntity>> QueryableAsync()
@@ -140,14 +152,18 @@ namespace Cosmonaut.Tests
             throw new NotImplementedException();
         }
 
-        public Task<IQueryable<TEntity>> WhereAsync(Expression<Func<TEntity, bool>> predicate)
+        public async Task<IQueryable<TEntity>> WhereAsync(Expression<Func<TEntity, bool>> predicate)
         {
-            throw new NotImplementedException();
+            return (IQueryable<TEntity>) await Task.Run(() =>
+            {
+                var pred = predicate.Compile();
+                return _store.Values.Where(pred);
+            });
         }
 
-        public Task<TEntity> FirstOrDefaultAsync(Func<TEntity, bool> predicate)
+        public async Task<TEntity> FirstOrDefaultAsync(Func<TEntity, bool> predicate)
         {
-            throw new NotImplementedException();
+            return await Task.Run(() => _store.Values.FirstOrDefault(predicate));
         }
     }
 }
