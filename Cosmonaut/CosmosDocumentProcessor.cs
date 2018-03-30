@@ -71,8 +71,13 @@ namespace Cosmonaut
 
             var propertyNamedId = propertyInfos.SingleOrDefault(x => x.Name.Equals("id", StringComparison.OrdinalIgnoreCase));
 
-            if (propertyNamedId != null && !string.IsNullOrEmpty(propertyNamedId.GetValue(entity)?.ToString()))
+            if (propertyNamedId != null)
+            {
+                if (!string.IsNullOrEmpty(propertyNamedId.GetValue(entity)?.ToString()))
+                    return propertyNamedId.GetValue(entity).ToString();
+                propertyNamedId.SetValue(entity, Guid.NewGuid().ToString());
                 return propertyNamedId.GetValue(entity).ToString();
+            }
 
             var potentialCosmosEntityId = entity.GetType().GetInterface(nameof(ICosmosEntity))?
                 .GetProperties()?.SingleOrDefault(x =>
