@@ -41,7 +41,20 @@ namespace Cosmonaut.Console
                     Name = "Test " + i
                 });
             }
-            
+
+            var added = cosmoStore.AddRangeAsync(books).Result;
+
+            var addedRetrieved = cosmoStore.ToListAsync(x => x.Name.StartsWith("Test ")).Result;
+
+            foreach (var addedre in addedRetrieved)
+            {
+                addedre.Name += " Nick";
+            }
+
+            var updated = cosmoStore.UpdateRangeAsync(addedRetrieved).Result;
+
+            var removed = cosmoStore.RemoveRangeAsync(addedRetrieved).Result;
+
             //cosmoStore.RemoveAsync(x => x.Name == "MYBOOK").GetAwaiter().GetResult();
             //var result = cosmoStore.WhereAsync(x => x.Author.Username == "nick").Result.ToList();
             //var results = cosmoStore.ToListAsync().Result;

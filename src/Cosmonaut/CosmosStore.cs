@@ -43,7 +43,7 @@ namespace Cosmonaut
             InitialiseCosmosStore();
         }
         
-        public async Task<CosmosResponse<TEntity>> AddAsync(TEntity entity, RequestOptions requestOptions = null)
+        public async Task<CosmosResponse<TEntity>> AddAsync(TEntity entity)
         {
             var collection = await _collection;
             var safeDocument = GetCosmosDbFriendlyEntity(entity);
@@ -51,7 +51,7 @@ namespace Cosmonaut
             try
             {
                 ResourceResponse<Document> addedDocument =
-                    await DocumentClient.CreateDocumentAsync(collection.SelfLink, safeDocument, requestOptions);
+                    await DocumentClient.CreateDocumentAsync(collection.SelfLink, safeDocument);
                 return new CosmosResponse<TEntity>(entity, addedDocument);
             }
             catch (DocumentClientException exception)
@@ -67,7 +67,7 @@ namespace Cosmonaut
 
         public async Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(IEnumerable<TEntity> entities)
         {
-            var addEntitiesTasks = entities.Select(entity => AddAsync(entity));
+            var addEntitiesTasks = entities.Select(AddAsync);
             return await HandleOperationWithRateLimitRetry(addEntitiesTasks);
         }
 
@@ -87,6 +87,7 @@ namespace Cosmonaut
         {
             try
             {
+                ValidateEntityForCosmosDb(entity);
                 var documentId = GetDocumentId(entity);
                 var documentSelfLink = GetDocumentSelfLink(documentId);
                 var result = await DocumentClient.DeleteDocumentAsync(documentSelfLink);
@@ -113,6 +114,7 @@ namespace Cosmonaut
         {
             try
             {
+                ValidateEntityForCosmosDb(entity);
                 var documentId = GetDocumentId(entity);
                 var documentExists = DocumentClient.CreateDocumentQuery<Document>((await _collection).DocumentsLink)
                     .Where(x => x.Id == documentId).ToList().SingleOrDefault();
@@ -274,16 +276,31 @@ namespace Cosmonaut
 
         internal dynamic GetCosmosDbFriendlyEntity(TEntity entity)
         {
+            var validatedEntity = ValidateEntityForCosmosDb(entity);
+
+            //TODO Clean this up. It is a very bad hack
+            dynamic mapped = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(validatedEntity));
+
+            SetTheCosmosDbIdBasedOnTheObjectIndex(validatedEntity, mapped);
+            
+            RemovePotentialDuplicateIdProperties(mapped);
+
+            return mapped;
+        }
+
+        internal TEntity ValidateEntityForCosmosDb(TEntity entity)
+        {
             var propertyInfos = entity.GetType().GetProperties();
 
             var containsJsonAttributeIdCount =
-                propertyInfos.Count(x => x.GetCustomAttributes().ToList().Contains(new JsonPropertyAttribute("id")))
-                + entity.GetType().GetInterfaces().Count(x=> x.GetProperties()
-                .Any(prop => prop.GetCustomAttributes<JsonPropertyAttribute>()
-                .Any(attr => attr.PropertyName.Equals("id", StringComparison.OrdinalIgnoreCase))));
+                propertyInfos.Count(x => x.GetCustomAttributes<JsonPropertyAttribute>()
+                    .Any(attr => attr.PropertyName.Equals("id", StringComparison.OrdinalIgnoreCase)))
+                + entity.GetType().GetInterfaces().Count(x => x.GetProperties()
+                    .Any(prop => prop.GetCustomAttributes<JsonPropertyAttribute>()
+                        .Any(attr => attr.PropertyName.Equals("id", StringComparison.OrdinalIgnoreCase))));
 
             if (containsJsonAttributeIdCount > 1)
-                throw new ArgumentException("An entity can only have one cosmos db id. Only one [JsonAttribute(\"id\")] allowed per entity.");
+                throw new MultipleCosmosIdsException("An entity can only have one cosmos db id. Only one [JsonAttribute(\"id\")] allowed per entity.");
 
             var idProperty = propertyInfos.FirstOrDefault(x =>
                 x.Name.Equals("id", StringComparison.OrdinalIgnoreCase) && x.PropertyType == typeof(string));
@@ -292,7 +309,7 @@ namespace Cosmonaut
             {
                 if (!idProperty.GetCustomAttributes<JsonPropertyAttribute>().Any(x =>
                     x.PropertyName.Equals("id", StringComparison.OrdinalIgnoreCase)))
-                    throw new ArgumentException(
+                    throw new MultipleCosmosIdsException(
                         "An entity can only have one cosmos db id. Either rename the Id property or remove the [JsonAttribute(\"id\")].");
                 return entity;
             }
@@ -300,17 +317,10 @@ namespace Cosmonaut
             if (idProperty == null || containsJsonAttributeIdCount == 1)
                 return entity;
 
-            if(idProperty.GetValue(entity) == null)
+            if (idProperty.GetValue(entity) == null)
                 idProperty.SetValue(entity, Guid.NewGuid().ToString());
 
-            //TODO Clean this up. It is a very bad hack
-            dynamic mapped = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(entity));
-
-            SetTheCosmosDbIdBasedOnTheObjectIndex(entity, mapped);
-            
-            RemovePotentialDuplicateIdProperties(mapped);
-
-            return mapped;
+            return entity;
         }
 
         internal void PingCosmosInOrderToOpenTheClientAndPreventInitialDelay()
