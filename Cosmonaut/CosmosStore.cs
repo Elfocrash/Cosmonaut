@@ -38,9 +38,10 @@ namespace Cosmonaut
         }
         
         internal CosmosStore(IDocumentClient documentClient, string databaseName)
-        {
+        {   
             DocumentClient = documentClient ?? throw new ArgumentNullException(nameof(documentClient));
             _databaseName = databaseName ?? throw new ArgumentNullException(nameof(documentClient));
+            Settings = new CosmosStoreSettings(databaseName, documentClient.ServiceEndpoint, documentClient.AuthKey.ToString(), documentClient.ConnectionPolicy);
             InitialiseCosmosStore();
         }
         
@@ -253,7 +254,8 @@ namespace Cosmonaut
         
         internal void PingCosmosInOrderToOpenTheClientAndPreventInitialDelay()
         {
-            DocumentClient.ReadDatabaseAsync(_database.GetAwaiter().GetResult().SelfLink);
+            DocumentClient.ReadDatabaseAsync(_database.GetAwaiter().GetResult().SelfLink).Wait();
+            DocumentClient.ReadDocumentCollectionAsync(_collection.GetAwaiter().GetResult().SelfLink).Wait();
         }
 
         internal string GetCollectionNameForEntity()
