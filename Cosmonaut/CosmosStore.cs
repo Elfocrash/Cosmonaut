@@ -32,7 +32,7 @@ namespace Cosmonaut
 
             var endpointUrl = Settings.EndpointUrl ?? throw new ArgumentNullException(nameof(Settings.DatabaseName));
             var authKey = Settings.AuthKey ?? throw new ArgumentNullException(nameof(Settings.AuthKey));
-            DocumentClient = new DocumentClient(endpointUrl, authKey, Settings.ConnectionPolicy ?? ConnectionPolicy.Default);
+            DocumentClient = CreateDocumentClient(endpointUrl, authKey);
             _databaseName = Settings.DatabaseName ?? throw new ArgumentNullException(nameof(Settings.DatabaseName));
             InitialiseCosmosStore();
         }
@@ -91,7 +91,7 @@ namespace Cosmonaut
             {
                 _documentProcessor.ValidateEntityForCosmosDb(entity);
                 var documentId = _documentProcessor.GetDocumentId(entity);
-                var documentSelfLink = GetDocumentSelfLink(documentId);
+                var documentSelfLink = _documentProcessor.GetDocumentSelfLink(_databaseName,_collectionName, documentId);
                 var result = await DocumentClient.DeleteDocumentAsync(documentSelfLink);
                 return new CosmosResponse<TEntity>(entity, result);
             }
@@ -169,7 +169,7 @@ namespace Cosmonaut
 
         public async Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id)
         {
-            var documentSelfLink = GetDocumentSelfLink(id);
+            var documentSelfLink = _documentProcessor.GetDocumentSelfLink(_databaseName, _collectionName, id);
             try
             {
                 var result = await DocumentClient.DeleteDocumentAsync(documentSelfLink);
@@ -309,9 +309,10 @@ namespace Cosmonaut
         {
             return HandleDocumentClientException(null, exception);
         }
-
-        internal string GetDocumentSelfLink(string documentId) =>
-            $"dbs/{_databaseName}/colls/{_collectionName}/docs/{documentId}/";
-
+        
+        internal DocumentClient CreateDocumentClient(Uri endpointUrl, string authKey)
+        {
+            return new DocumentClient(endpointUrl, authKey, Settings.ConnectionPolicy ?? ConnectionPolicy.Default);
+        }
     }
 }

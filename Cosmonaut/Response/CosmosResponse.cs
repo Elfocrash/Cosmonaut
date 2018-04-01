@@ -21,6 +21,7 @@ namespace Cosmonaut.Response
         {
             ResourceResponse = resourceResponse;
         }
+
         public CosmosResponse(CosmosOperationStatus statusType)
         {
             CosmosOperationStatus = statusType;

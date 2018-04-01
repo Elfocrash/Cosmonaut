@@ -22,6 +22,9 @@ namespace Cosmonaut
             return mapped;
         }
 
+        internal string GetDocumentSelfLink(string databaseName, string collectionName, string documentId) =>
+            $"dbs/{databaseName}/colls/{collectionName}/docs/{documentId}/";
+
         internal TEntity ValidateEntityForCosmosDb(TEntity entity)
         {
             var propertyInfos = entity.GetType().GetProperties();
