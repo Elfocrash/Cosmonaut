@@ -21,7 +21,7 @@ namespace Cosmonaut
 
             return mapped;
         }
-        
+
         internal TEntity ValidateEntityForCosmosDb(TEntity entity)
         {
             var propertyInfos = entity.GetType().GetProperties();

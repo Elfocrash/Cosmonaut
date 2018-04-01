@@ -1,18 +1,23 @@
 ﻿using System;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Cosmonaut.Exceptions;
 using Cosmonaut.Response;
+using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
+using Moq;
 using Xunit;
 
 namespace Cosmonaut.Tests
 {
     public class CosmosAddTests
     {
-        private readonly ICosmosStore<Dummy> _dummyStore;
-
+        private readonly Mock<IDocumentClient> _mockDocumentClient;
+        private readonly CosmosDocumentProcessor<Dummy> _documentProcessor;
         public CosmosAddTests()
         {
-            _dummyStore = new InMemoryCosmosStore<Dummy>();
+            _mockDocumentClient = MockHelpers.GetFakeDocumentClient();
+            _documentProcessor = new CosmosDocumentProcessor<Dummy>();
         }
 
         [Fact]
@@ -25,10 +30,15 @@ namespace Cosmonaut.Tests
                 Id = id,
                 Name = "Nick"
             };
+            _mockDocumentClient.Setup(x => x.CreateDocumentAsync(It.IsAny<string>(),
+                _documentProcessor.GetCosmosDbFriendlyEntity(dummy) as Document, null, false))
+                .ReturnsAsync(new ResourceResponse<Document>());
+                
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName");
 
             // Act
             var expectedResponse = new CosmosResponse<Dummy>(dummy, CosmosOperationStatus.Success);
-            var result = await _dummyStore.AddAsync(dummy);
+            var result = await entityStore.AddAsync(dummy);
             
             //Assert
             Assert.Equal(expectedResponse.Entity, result.Entity);
@@ -43,30 +53,19 @@ namespace Cosmonaut.Tests
             {
                 Name = "Nick"
             };
+            _mockDocumentClient.Setup(x => x.CreateDocumentAsync(It.IsAny<string>(),
+                    _documentProcessor.GetCosmosDbFriendlyEntity(dummy) as Document, null, false))
+                .ReturnsAsync(new ResourceResponse<Document>());
+
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName");
 
             // Act
-            var result = await _dummyStore.AddAsync(dummy);
+            var result = await entityStore.AddAsync(dummy);
 
             //Assert
             var isGuid = Guid.TryParse(result.Entity.Id, out var guid);
             Assert.True(isGuid);
             Assert.NotEqual(Guid.Empty, guid);
-        }
-
-        [Fact]
-        public async Task AddingEntityWithoutIdThrowsException()
-        {
-            // Arrange
-            var dummy = new
-            {
-                Name = "Name"
-            };
-
-            // Act
-            var addTask = new InMemoryCosmosStore<object>().AddAsync(dummy);
-
-            //Assert
-            await Assert.ThrowsAsync<CosmosEntityWithoutIdException<object>>(() => addTask);
         }
     }
 }
