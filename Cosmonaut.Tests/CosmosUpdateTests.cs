@@ -1,20 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Cosmonaut.Response;
+using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
+using Moq;
 using Xunit;
 
 namespace Cosmonaut.Tests
 {
     public class CosmosUpdateTests
     {
-        private readonly ICosmosStore<Dummy> _dummyStore;
+        private readonly Mock<IDocumentClient> _mockDocumentClient;
+        private readonly CosmosDocumentProcessor<Dummy> _documentProcessor;
 
         public CosmosUpdateTests()
         {
-            _dummyStore = new InMemoryCosmosStore<Dummy>();
+            _mockDocumentClient = MockHelpers.GetFakeDocumentClient();
+            _documentProcessor = new CosmosDocumentProcessor<Dummy>();
         }
-        
+
         [Fact]
         public async Task UpdateEntityUpdates()
         {
@@ -26,11 +32,14 @@ namespace Cosmonaut.Tests
                 Name = "Test"
             };
             var expectedName = "NewTest";
-            await _dummyStore.AddAsync(addedDummy);
+            _mockDocumentClient.Setup(x => x.CreateDocumentQuery<Document>(It.IsAny<string>(), null))
+                .Returns(new EnumerableQuery<Document>(new List<Document> { new Document { Id = id } }));
+
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName");
 
             // Act
             addedDummy.Name = expectedName;
-            var result = await _dummyStore.UpdateAsync(addedDummy);
+            var result = await entityStore.UpdateAsync(addedDummy);
 
             // Assert
             Assert.Equal(expectedName, result.Entity.Name);
@@ -40,21 +49,19 @@ namespace Cosmonaut.Tests
         public async Task UpdateRangeUpdatesEntities()
         {
             // Arrange
-            var addedEntities = new List<Dummy>();
-            for (int i = 0; i < 10; i++)
+            var id = Guid.NewGuid().ToString();
+            var addedDummy = new Dummy
             {
-                var id = Guid.NewGuid().ToString();
-                var addedDummy = new Dummy
-                {
-                    Id = id,
-                    Name = "UpdateMe"
-                };
-                var added = await _dummyStore.AddAsync(addedDummy);
-                addedEntities.Add(added.Entity);
-            }
-            
+                Id = id,
+                Name = "Test"
+            };
+            _mockDocumentClient.Setup(x => x.CreateDocumentQuery<Document>(It.IsAny<string>(), null))
+                .Returns(new EnumerableQuery<Document>(new List<Document> { new Document { Id = id } }));
+
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName");
+            addedDummy.Name = "newTest";
             // Act
-            var result = await _dummyStore.UpdateRangeAsync();
+            var result = await entityStore.UpdateRangeAsync(addedDummy);
 
             // Assert
             Assert.True(result.IsSuccess);
@@ -71,11 +78,14 @@ namespace Cosmonaut.Tests
                 Id = id,
                 Name = "Test"
             };
-            await _dummyStore.AddAsync(addedDummy);
+            _mockDocumentClient.Setup(x => x.CreateDocumentQuery<Document>(It.IsAny<string>(), null))
+                .Returns(new EnumerableQuery<Document>(new List<Document>{new Document{Id = id}}));
+
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName");
 
             // Act
             addedDummy.Id = Guid.NewGuid().ToString();
-            var result = await _dummyStore.UpdateAsync(addedDummy);
+            var result = await entityStore.UpdateAsync(addedDummy);
 
             // Assert
             Assert.False(result.IsSuccess);

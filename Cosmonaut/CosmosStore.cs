@@ -118,7 +118,8 @@ namespace Cosmonaut
             {
                 _documentProcessor.ValidateEntityForCosmosDb(entity);
                 var documentId = _documentProcessor.GetDocumentId(entity);
-                var documentExists = DocumentClient.CreateDocumentQuery<Document>((await _collection).DocumentsLink)
+                var collection = (await _collection);
+                var documentExists = DocumentClient.CreateDocumentQuery<Document>(collection.DocumentsLink)
                     .Where(x => x.Id == documentId).ToList().SingleOrDefault();
 
                 if (documentExists == null)
