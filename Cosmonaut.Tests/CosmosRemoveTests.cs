@@ -3,16 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Cosmonaut.Response;
+using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
+using Moq;
 using Xunit;
 
 namespace Cosmonaut.Tests
 {
     public class CosmosRemoveTests
     {
+        private readonly Mock<IDocumentClient> _mockDocumentClient;
+        private readonly CosmosDocumentProcessor<Dummy> _documentProcessor;
         private readonly ICosmosStore<Dummy> _dummyStore;
 
         public CosmosRemoveTests()
         {
+            _mockDocumentClient = MockHelpers.GetFakeDocumentClient();
+            _documentProcessor = new CosmosDocumentProcessor<Dummy>();
             _dummyStore = new InMemoryCosmosStore<Dummy>();
         }
 
@@ -26,13 +33,15 @@ namespace Cosmonaut.Tests
                 Id = id,
                 Name = "Test"
             };
-            await _dummyStore.AddAsync(addedDummy);
+
+            _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<string>(), null))
+                .ReturnsAsync(new ResourceResponse<Document>(new Document { Id = id }));
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName");
 
             // Act
-            var result = await _dummyStore.RemoveAsync(addedDummy);
+            var result = await entityStore.RemoveAsync(addedDummy);
 
             // Assert
-            Assert.True(result.IsSuccess);
             Assert.Equal(CosmosOperationStatus.Success, result.CosmosOperationStatus);
         }
 
@@ -46,13 +55,15 @@ namespace Cosmonaut.Tests
                 Id = id,
                 Name = "Test"
             };
-            await _dummyStore.AddAsync(addedDummy);
+            var response = new ResourceResponse<Document>(new Document { Id = addedDummy.Id });
+            _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<string>(), null))
+                .ReturnsAsync(response);
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName");
 
             // Act
-            var result = await _dummyStore.RemoveByIdAsync(id);
+            var result = await entityStore.RemoveByIdAsync(id);
 
             // Assert
-            Assert.True(result.IsSuccess);
             Assert.Equal(CosmosOperationStatus.Success, result.CosmosOperationStatus);
         }
 

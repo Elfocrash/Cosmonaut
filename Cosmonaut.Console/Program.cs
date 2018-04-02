@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Cosmonaut.Extensions;
-using Cosmonaut.Models;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,20 +17,14 @@ namespace Cosmonaut.Console
                 Id = Guid.NewGuid().ToString()
             };
 
-            var book = new Book
-            {
-                Name = "MYBOOK",
-                Author = newUser
-            };
             var connectionPolicy = new ConnectionPolicy
             {
                 ConnectionProtocol = Protocol.Tcp,
-                MaxConnectionLimit = 100,
                 ConnectionMode = ConnectionMode.Direct,
                 RetryOptions = new RetryOptions
                 {
-                    MaxRetryAttemptsOnThrottledRequests = 1,
-                    MaxRetryWaitTimeInSeconds = 0
+                    MaxRetryAttemptsOnThrottledRequests = 3,
+                    MaxRetryWaitTimeInSeconds = 5
                 }
             };
 

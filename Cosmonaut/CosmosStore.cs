@@ -30,7 +30,7 @@ namespace Cosmonaut
         {
             Settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
-            var endpointUrl = Settings.EndpointUrl ?? throw new ArgumentNullException(nameof(Settings.DatabaseName));
+            var endpointUrl = Settings.EndpointUrl ?? throw new ArgumentNullException(nameof(Settings.EndpointUrl));
             var authKey = Settings.AuthKey ?? throw new ArgumentNullException(nameof(Settings.AuthKey));
             DocumentClient = CreateDocumentClient(endpointUrl, authKey);
             _databaseName = Settings.DatabaseName ?? throw new ArgumentNullException(nameof(Settings.DatabaseName));
@@ -185,7 +185,9 @@ namespace Cosmonaut
         public async Task<List<TEntity>> ToListAsync(Func<TEntity, bool> predicate = null)
         {
             if (predicate == null)
+            {
                 predicate = entity => true;
+            }
 
             return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink)
                 .Where(predicate)

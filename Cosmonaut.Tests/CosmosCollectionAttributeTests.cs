@@ -1,4 +1,5 @@
-﻿using Cosmonaut.Attributes;
+﻿using System;
+using Cosmonaut.Attributes;
 using Xunit;
 
 namespace Cosmonaut.Tests
@@ -33,6 +34,20 @@ namespace Cosmonaut.Tests
             // Assert
             Assert.Equal(expectedThroughput, collectionAttribute.Throughput);
             Assert.Equal(expectedName, collectionAttribute.Name);
+        }
+
+        [Fact]
+        public void EmptyCtorCosmosCollectionAttributeDefaults()
+        {
+            // Arrange
+            var expectedThroughput = -1;
+
+            // Act
+            var collectionAttribute = new CosmosCollectionAttribute();
+
+            // Assert
+            Assert.Equal(expectedThroughput, collectionAttribute.Throughput);
+            Assert.Null(collectionAttribute.Name);
         }
     }
 }

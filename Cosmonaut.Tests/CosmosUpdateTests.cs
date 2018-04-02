@@ -89,6 +89,7 @@ namespace Cosmonaut.Tests
 
             // Assert
             Assert.False(result.IsSuccess);
+            Assert.Equal(addedDummy, result.Entity);
             Assert.Equal(CosmosOperationStatus.ResourceNotFound, result.CosmosOperationStatus);
         }
     }

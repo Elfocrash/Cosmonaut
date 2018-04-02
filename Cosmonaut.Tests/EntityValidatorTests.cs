@@ -32,7 +32,7 @@ namespace Cosmonaut.Tests
             // Arrange
             var id = Guid.NewGuid().ToString();
             var processor = new CosmosDocumentProcessor<DummyImplEntity>();
-            var dummy = new DummyImplEntity()
+            var dummy = new DummyImplEntity
             {
                 CosmosId = id,
                 Name = "Test"
@@ -52,7 +52,7 @@ namespace Cosmonaut.Tests
             // Arrange
             var id = Guid.NewGuid().ToString();
             var processor = new CosmosDocumentProcessor<DummyImplEntityWithAttr>();
-            var dummy = new DummyImplEntityWithAttr()
+            var dummy = new DummyImplEntityWithAttr
             {
                 CosmosId = id,
                 Name = "Test",
@@ -69,7 +69,7 @@ namespace Cosmonaut.Tests
             // Arrange
             var id = Guid.NewGuid().ToString();
             var processor = new CosmosDocumentProcessor<DummyWithIdAndWithAttr>();
-            var dummy = new DummyWithIdAndWithAttr()
+            var dummy = new DummyWithIdAndWithAttr
             {
                 ActualyId = id,
                 Name = "Test",
@@ -86,7 +86,7 @@ namespace Cosmonaut.Tests
             // Arrange
             var id = Guid.NewGuid().ToString();
             var processor = new CosmosDocumentProcessor<DummyWithMultipleAttr>();
-            var dummy = new DummyWithMultipleAttr()
+            var dummy = new DummyWithMultipleAttr
             {
                 ActualyId = id,
                 Name = "Test",
@@ -103,7 +103,7 @@ namespace Cosmonaut.Tests
             // Arrange
             var id = Guid.NewGuid().ToString();
             var processor = new CosmosDocumentProcessor<DummyWithIdAttrOnId>();
-            var dummy = new DummyWithIdAttrOnId()
+            var dummy = new DummyWithIdAttrOnId
             {
                 Id = id,
                 Name = "Test"

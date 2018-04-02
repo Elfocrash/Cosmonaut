@@ -52,7 +52,9 @@ namespace Cosmonaut
             }
 
             if (idProperty != null && idProperty.GetValue(entity) == null)
+            {
                 idProperty.SetValue(entity, Guid.NewGuid().ToString());
+            }
 
             return entity;
         }
@@ -69,15 +71,21 @@ namespace Cosmonaut
             var propertyWithJsonPropertyId =
                 propertyInfos.SingleOrDefault(x => x.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName == "id");
 
-            if (propertyWithJsonPropertyId != null && !string.IsNullOrEmpty(propertyWithJsonPropertyId.GetValue(entity)?.ToString()))
+            if (propertyWithJsonPropertyId != null &&
+                !string.IsNullOrEmpty(propertyWithJsonPropertyId.GetValue(entity)?.ToString()))
+            {
                 return propertyWithJsonPropertyId.GetValue(entity).ToString();
+            }
 
             var propertyNamedId = propertyInfos.SingleOrDefault(x => x.Name.Equals("id", StringComparison.OrdinalIgnoreCase));
 
             if (propertyNamedId != null)
             {
                 if (!string.IsNullOrEmpty(propertyNamedId.GetValue(entity)?.ToString()))
+                {
                     return propertyNamedId.GetValue(entity).ToString();
+                }
+
                 propertyNamedId.SetValue(entity, Guid.NewGuid().ToString());
                 return propertyNamedId.GetValue(entity).ToString();
             }
@@ -86,8 +94,11 @@ namespace Cosmonaut
                 .GetProperties()?.SingleOrDefault(x =>
                     x.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName == "id");
 
-            if (potentialCosmosEntityId != null && !string.IsNullOrEmpty(potentialCosmosEntityId.GetValue(entity)?.ToString()))
+            if (potentialCosmosEntityId != null &&
+                !string.IsNullOrEmpty(potentialCosmosEntityId.GetValue(entity)?.ToString()))
+            {
                 return potentialCosmosEntityId.GetValue(entity).ToString();
+            }
 
             throw new CosmosEntityWithoutIdException<TEntity>(entity);
         }
@@ -95,13 +106,19 @@ namespace Cosmonaut
         internal static void RemovePotentialDuplicateIdProperties(dynamic mapped)
         {
             if (mapped.Id != null)
+            {
                 mapped.Remove("Id");
+            }
 
             if (mapped.ID != null)
+            {
                 mapped.Remove("ID");
+            }
 
             if (mapped.iD != null)
+            {
                 mapped.Remove("iD");
+            }
         }
     }
 }

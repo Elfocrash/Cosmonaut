@@ -86,8 +86,10 @@ namespace Cosmonaut.Tests
         {
             _documentProcessor.ValidateEntityForCosmosDb(entity);
             var id = _documentProcessor.GetDocumentId(entity);
-            if(_store.TryRemove(id, out var outEntity))
+            if (_store.TryRemove(id, out var outEntity))
+            {
                 return new CosmosResponse<TEntity>(outEntity, CosmosOperationStatus.Success);
+            }
 
             return new CosmosResponse<TEntity>(CosmosOperationStatus.ResourceNotFound);
         }

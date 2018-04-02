@@ -7,13 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut", "Cosmonaut\Cosm
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut.Console", "Cosmonaut.Console\Cosmonaut.Console.csproj", "{6E770C8F-3D14-4527-B713-C3845BA507DE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut.Models", "Cosmonaut.Models\Cosmonaut.Models.csproj", "{0B5A8CF8-7F13-44FB-8E64-97061DC74076}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{6BEC6D60-9DEC-4A4C-8FC3-E255EE8B6D95}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3688635B-693B-43B4-AFEE-2F95640D2C7C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cosmonaut.Tests", "Cosmonaut.Tests\Cosmonaut.Tests.csproj", "{35FB474B-E172-4850-BFEC-54F86A8E03C4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut.Tests", "Cosmonaut.Tests\Cosmonaut.Tests.csproj", "{35FB474B-E172-4850-BFEC-54F86A8E03C4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,10 +27,6 @@ Global
 		{6E770C8F-3D14-4527-B713-C3845BA507DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E770C8F-3D14-4527-B713-C3845BA507DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6E770C8F-3D14-4527-B713-C3845BA507DE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0B5A8CF8-7F13-44FB-8E64-97061DC74076}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0B5A8CF8-7F13-44FB-8E64-97061DC74076}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0B5A8CF8-7F13-44FB-8E64-97061DC74076}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0B5A8CF8-7F13-44FB-8E64-97061DC74076}.Release|Any CPU.Build.0 = Release|Any CPU
 		{35FB474B-E172-4850-BFEC-54F86A8E03C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{35FB474B-E172-4850-BFEC-54F86A8E03C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{35FB474B-E172-4850-BFEC-54F86A8E03C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -44,7 +38,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{70D43CE3-CCB1-41C4-AF30-EF67E29D87F9} = {3688635B-693B-43B4-AFEE-2F95640D2C7C}
 		{6E770C8F-3D14-4527-B713-C3845BA507DE} = {3688635B-693B-43B4-AFEE-2F95640D2C7C}
-		{0B5A8CF8-7F13-44FB-8E64-97061DC74076} = {3688635B-693B-43B4-AFEE-2F95640D2C7C}
 		{35FB474B-E172-4850-BFEC-54F86A8E03C4} = {6BEC6D60-9DEC-4A4C-8FC3-E255EE8B6D95}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

@@ -28,11 +28,11 @@ namespace Cosmonaut.Tests
             mockDocumentClient.Setup(x => x.ReadDocumentCollectionAsync(It.IsAny<string>(), null))
                 .ReturnsAsync(new ResourceResponse<DocumentCollection>(mockCollection.Object));
             mockDocumentClient.Setup(x => x.CreateDatabaseQuery(null))
-                .Returns(new EnumerableQuery<Database>(new List<Database>() { mockDatabase.Object }));
+                .Returns(new EnumerableQuery<Database>(new List<Database> { mockDatabase.Object }));
             mockDocumentClient.Setup(x => x.CreateDocumentCollectionQuery(It.IsAny<string>(), null))
-                .Returns(new EnumerableQuery<DocumentCollection>(new List<DocumentCollection>() { mockCollection.Object }));
+                .Returns(new EnumerableQuery<DocumentCollection>(new List<DocumentCollection> { mockCollection.Object }));
             mockDocumentClient.Setup(x => x.CreateOfferQuery(null)).Returns(
-                new EnumerableQuery<OfferV2>(new List<OfferV2>()
+                new EnumerableQuery<OfferV2>(new List<OfferV2>
                 {
                     new OfferV2(mockOffer.Object, 400)
                 }));

@@ -10,7 +10,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Cosmonaut.Models\Cosmonaut.Models.csproj" />
     <ProjectReference Include="..\Cosmonaut\Cosmonaut.csproj" />
   </ItemGroup>
 

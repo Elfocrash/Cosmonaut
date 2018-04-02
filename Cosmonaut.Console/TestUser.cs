@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json;
-
-namespace Cosmonaut.Models
+﻿namespace Cosmonaut.Console
 {
     public class TestUser
     {

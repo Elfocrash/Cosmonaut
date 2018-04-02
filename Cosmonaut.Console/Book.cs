@@ -1,7 +1,7 @@
 ﻿using Cosmonaut.Attributes;
 using Newtonsoft.Json;
 
-namespace Cosmonaut.Models
+namespace Cosmonaut.Console
 {
     [CosmosCollection(Throughput = 10000)]
     public class Book
