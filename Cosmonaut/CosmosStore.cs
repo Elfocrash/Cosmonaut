@@ -126,7 +126,7 @@ namespace Cosmonaut
                     return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.ResourceNotFound);
 
                 var document = _documentProcessor.GetCosmosDbFriendlyEntity(entity);
-                var result = await DocumentClient.UpsertDocumentAsync((await _collection).DocumentsLink, document);
+                var result = await DocumentClient.UpsertDocumentAsync(collection.DocumentsLink, document);
                 return new CosmosResponse<TEntity>(entity, result);
             }
             catch (DocumentClientException exception)
@@ -142,8 +142,35 @@ namespace Cosmonaut
 
         public async Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(IEnumerable<TEntity> entities)
         {
-            var removeEntitiesTasks = entities.Select(UpdateAsync);
-            return await HandleOperationWithRateLimitRetry(removeEntitiesTasks);
+            var updateEntitiesTasks = entities.Select(UpdateAsync);
+            return await HandleOperationWithRateLimitRetry(updateEntitiesTasks);
+        }
+
+        public async Task<CosmosResponse<TEntity>> UpsertAsync(TEntity entity)
+        {
+            try
+            {
+                _documentProcessor.ValidateEntityForCosmosDb(entity);
+                var collection = (await _collection);
+                var document = _documentProcessor.GetCosmosDbFriendlyEntity(entity);
+                ResourceResponse<Document> result = await DocumentClient.UpsertDocumentAsync(collection.DocumentsLink, document);
+                return new CosmosResponse<TEntity>(entity, result);
+            }
+            catch (DocumentClientException exception)
+            {
+                return HandleDocumentClientException(exception);
+            }
+        }
+        
+        public async Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(IEnumerable<TEntity> entities)
+        {
+            var upsertEntitiesTasks = entities.Select(UpsertAsync);
+            return await HandleOperationWithRateLimitRetry(upsertEntitiesTasks);
+        }
+
+        public async Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(params TEntity[] entities)
+        {
+            return await UpsertRangeAsync((IEnumerable<TEntity>)entities);
         }
 
         internal async Task<CosmosMultipleResponse<TEntity>> HandleOperationWithRateLimitRetry(IEnumerable<Task<CosmosResponse<TEntity>>> entitiesTasks)
@@ -243,13 +270,18 @@ namespace Cosmonaut
                 return collection;
             }
 
-            var collectionOffer = (OfferV2)DocumentClient.CreateOfferQuery().Where(x => x.ResourceLink == collection.SelfLink).AsEnumerable().Single();
-            var currentOfferThroughput = collectionOffer.Content.OfferThroughput;
-            if (_collectionThrouput != currentOfferThroughput)
+            if (Settings.AdjustCollectionThroughputOnStartup)
             {
-                var updated = await DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, _collectionThrouput));
-                if (updated.StatusCode != HttpStatusCode.OK)
-                    throw new CosmosCollectionThroughputUpdateException(collection);
+                var collectionOffer = (OfferV2) DocumentClient.CreateOfferQuery()
+                    .Where(x => x.ResourceLink == collection.SelfLink).AsEnumerable().Single();
+                var currentOfferThroughput = collectionOffer.Content.OfferThroughput;
+                if (_collectionThrouput != currentOfferThroughput)
+                {
+                    var updated =
+                        await DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, _collectionThrouput));
+                    if (updated.StatusCode != HttpStatusCode.OK)
+                        throw new CosmosCollectionThroughputUpdateException(collection);
+                }
             }
 
             return collection;
@@ -272,14 +304,22 @@ namespace Cosmonaut
 
         internal int GetCollectionThroughputForEntity()
         {
+            if (!Settings.AllowAttributesToConfigureThroughput)
+            {
+                EnsureThroughputIsInAcceptableRange(Settings.CollectionThroughput);
+                return Settings.CollectionThroughput;
+            }
+
             var collectionNameAttribute = typeof(TEntity).GetCustomAttribute<CosmosCollectionAttribute>();
-
             var throughput = collectionNameAttribute != null && collectionNameAttribute.Throughput != -1 ? collectionNameAttribute.Throughput : Settings.CollectionThroughput;
-
-            if (throughput < 400 || throughput > 10000)
-                throw new IllegalCosmosThroughputException();
-
+            EnsureThroughputIsInAcceptableRange(throughput);
             return throughput;
+        }
+
+        internal void EnsureThroughputIsInAcceptableRange(int throughtput)
+        {
+            if (throughtput < 400 || throughtput > 10000)
+                throw new IllegalCosmosThroughputException();
         }
 
         internal void InitialiseCosmosStore()

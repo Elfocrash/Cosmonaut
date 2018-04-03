@@ -82,6 +82,21 @@ namespace Cosmonaut.Tests
             return response;
         }
 
+        public Task<CosmosResponse<TEntity>> UpsertAsync(TEntity entity)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(params TEntity[] entities)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(IEnumerable<TEntity> entities)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<CosmosResponse<TEntity>> RemoveAsync(TEntity entity)
         {
             _documentProcessor.ValidateEntityForCosmosDb(entity);

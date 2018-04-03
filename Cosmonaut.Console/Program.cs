@@ -64,7 +64,7 @@ namespace Cosmonaut.Console
                 addedre.Name += " Nick";
             }
 
-            var updated = cosmoStore.UpdateRangeAsync(addedRetrieved).Result;
+            var updated = cosmoStore.UpsertRangeAsync(addedRetrieved).Result;
             System.Console.WriteLine($"Updated 1000 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
 

@@ -6,6 +6,7 @@ using Cosmonaut.Response;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Moq;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace Cosmonaut.Tests
@@ -91,6 +92,34 @@ namespace Cosmonaut.Tests
             Assert.False(result.IsSuccess);
             Assert.Equal(addedDummy, result.Entity);
             Assert.Equal(CosmosOperationStatus.ResourceNotFound, result.CosmosOperationStatus);
+        }
+
+        [Fact]
+        public async Task UpsertEntityUpsert()
+        {
+            // Arrange
+            var id = Guid.NewGuid().ToString();
+            var addedDummy = new Dummy
+            {
+                Id = id,
+                Name = "Test"
+            };
+            var expectedName = "NewTest";
+            var expectedDocument = new Document
+            {
+                Id = id
+            };
+            expectedDocument.SetPropertyValue("Name", expectedName);
+            _mockDocumentClient.Setup(x => x.UpsertDocumentAsync(It.IsAny<string>(), It.IsAny<object>(), null, false))
+                .ReturnsAsync(new ResourceResponse<Document>(expectedDocument));
+
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName");
+
+            // Act
+            var result = await entityStore.UpsertAsync(addedDummy);
+
+            // Assert
+            Assert.Equal(expectedName, result.ResourceResponse.Resource.GetPropertyValue<string>("Name"));
         }
     }
 }

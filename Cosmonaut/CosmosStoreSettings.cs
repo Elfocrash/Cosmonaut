@@ -17,22 +17,44 @@ namespace Cosmonaut
 
         public readonly int CollectionThroughput;
 
-        public CosmosStoreSettings(string databaseName, string endpointUrl, string authKey, ConnectionPolicy connectionPolicy = null, int? collectionThroughput = null)
+        public readonly bool AllowAttributesToConfigureThroughput;
+
+        public readonly bool AdjustCollectionThroughputOnStartup;
+
+        public CosmosStoreSettings(
+            string databaseName, 
+            string endpointUrl, 
+            string authKey, 
+            ConnectionPolicy connectionPolicy = null, 
+            int? collectionThroughput = null,
+            bool allowAttributesToConfigureThroughput = false,
+            bool adjustCollectionThroughputOnStartup = false)
         {
             DatabaseName = databaseName;
             AuthKey = authKey;
             EndpointUrl = new Uri(endpointUrl);
             ConnectionPolicy = connectionPolicy;
             CollectionThroughput = collectionThroughput ?? DefaultCollectionThroughput;
+            AllowAttributesToConfigureThroughput = allowAttributesToConfigureThroughput;
+            AdjustCollectionThroughputOnStartup = adjustCollectionThroughputOnStartup;
         }
 
-        public CosmosStoreSettings(string databaseName, Uri endpointUrl, string authKey, ConnectionPolicy connectionPolicy = null, int? collectionThroughput = null)
+        public CosmosStoreSettings(
+            string databaseName, 
+            Uri endpointUrl, 
+            string authKey,
+            ConnectionPolicy connectionPolicy = null,
+            int? collectionThroughput = null,
+            bool allowAttributesToConfigureThroughput = false,
+            bool adjustCollectionThroughputOnStartup = false)
         {
             DatabaseName = databaseName;
             AuthKey = authKey;
             EndpointUrl = endpointUrl;
             ConnectionPolicy = connectionPolicy;
             CollectionThroughput = collectionThroughput ?? DefaultCollectionThroughput;
+            AllowAttributesToConfigureThroughput = allowAttributesToConfigureThroughput;
+            AdjustCollectionThroughputOnStartup = adjustCollectionThroughputOnStartup;
         }
     }
 }
