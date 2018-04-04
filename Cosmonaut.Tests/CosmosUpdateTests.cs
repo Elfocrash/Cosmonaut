@@ -33,7 +33,7 @@ namespace Cosmonaut.Tests
                 Name = "Test"
             };
             var expectedName = "NewTest";
-            _mockDocumentClient.Setup(x => x.CreateDocumentQuery<Document>(It.IsAny<string>(), null))
+            _mockDocumentClient.Setup(x => x.CreateDocumentQuery<Document>(It.IsAny<string>(), It.IsAny<FeedOptions>()))
                 .Returns(new EnumerableQuery<Document>(new List<Document> { new Document { Id = id } }));
 
             var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName");
@@ -56,7 +56,7 @@ namespace Cosmonaut.Tests
                 Id = id,
                 Name = "Test"
             };
-            _mockDocumentClient.Setup(x => x.CreateDocumentQuery<Document>(It.IsAny<string>(), null))
+            _mockDocumentClient.Setup(x => x.CreateDocumentQuery<Document>(It.IsAny<string>(), It.IsAny<FeedOptions>()))
                 .Returns(new EnumerableQuery<Document>(new List<Document> { new Document { Id = id } }));
 
             var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName");
@@ -79,7 +79,7 @@ namespace Cosmonaut.Tests
                 Id = id,
                 Name = "Test"
             };
-            _mockDocumentClient.Setup(x => x.CreateDocumentQuery<Document>(It.IsAny<string>(), null))
+            _mockDocumentClient.Setup(x => x.CreateDocumentQuery<Document>(It.IsAny<string>(), It.IsAny<FeedOptions>()))
                 .Returns(new EnumerableQuery<Document>(new List<Document>{new Document{Id = id}}));
 
             var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName");

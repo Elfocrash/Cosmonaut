@@ -12,7 +12,6 @@ using Cosmonaut.Response;
 using Humanizer;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
-using Newtonsoft.Json;
 
 namespace Cosmonaut
 {
@@ -119,7 +118,10 @@ namespace Cosmonaut
                 _documentProcessor.ValidateEntityForCosmosDb(entity);
                 var documentId = _documentProcessor.GetDocumentId(entity);
                 var collection = (await _collection);
-                var documentExists = DocumentClient.CreateDocumentQuery<Document>(collection.DocumentsLink)
+                var documentExists = DocumentClient.CreateDocumentQuery<Document>(collection.DocumentsLink, new FeedOptions
+                    {
+                        EnableCrossPartitionQuery = true
+                    })
                     .Where(x => x.Id == documentId).ToList().SingleOrDefault();
 
                 if (documentExists == null)
@@ -216,7 +218,10 @@ namespace Cosmonaut
                 predicate = entity => true;
             }
 
-            return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink)
+            return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink, new FeedOptions
+                {
+                    EnableCrossPartitionQuery = true
+                })
                 .Where(predicate)
                 .ToList();
         }
@@ -232,7 +237,10 @@ namespace Cosmonaut
 
         public async Task<IOrderedQueryable<TEntity>> QueryableAsync()
         {
-            return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink);
+            return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink, new FeedOptions
+            {
+                EnableCrossPartitionQuery = true
+            });
         }
 
         internal async Task<Database> GetOrCreateDatabaseAsync()
