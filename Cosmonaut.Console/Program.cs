@@ -30,7 +30,7 @@ namespace Cosmonaut.Console
 
             var cosmosSettings = new CosmosStoreSettings("localtest", 
                 new Uri("https://localhost:8081"), 
-                "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==", connectionPolicy, collectionThroughput: 600);
+                "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==", connectionPolicy, collectionThroughput: 1000);
            
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddCosmosStore<Book>(cosmosSettings);
@@ -47,7 +47,8 @@ namespace Cosmonaut.Console
                 books.Add(new Book
                 {
                     Id = Guid.NewGuid().ToString(),
-                    Name = "Test " + i
+                    Name = "Test " + i,
+                    AnotherRandomProp = "Random " + i
                 });
             }
             var watch = new Stopwatch();
@@ -61,7 +62,7 @@ namespace Cosmonaut.Console
             watch.Restart();
             foreach (var addedre in addedRetrieved)
             {
-                addedre.Name += " Nick";
+                addedre.AnotherRandomProp += " Nick";
             }
 
             var updated = cosmoStore.UpsertRangeAsync(addedRetrieved).Result;

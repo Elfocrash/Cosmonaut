@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using Cosmonaut.Attributes;
 using Cosmonaut.Exceptions;
+using Microsoft.Azure.Documents;
 using Newtonsoft.Json;
 
 namespace Cosmonaut
@@ -120,6 +122,74 @@ namespace Cosmonaut
             {
                 mapped.Remove("iD");
             }
+        }
+
+        internal PartitionKeyDefinition GetPartitionKeyForEntity(Type type)
+        {
+            var partitionKeyProperties = type.GetProperties()
+                .Where(x => x.GetCustomAttribute<CosmosPartitionKeyAttribute>() != null).ToList();
+
+            if (partitionKeyProperties.Count > 1)
+                throw new MultiplePartitionKeysException(type);
+
+            if (partitionKeyProperties.Count == 0)
+                return null;
+
+            var partitionKeyProperty = partitionKeyProperties.Single();
+            var porentialJsonPropertyAttribute = partitionKeyProperty.GetCustomAttribute<JsonPropertyAttribute>();
+            if (HasJsonPropertyAttributeId(porentialJsonPropertyAttribute) 
+                || partitionKeyProperty.Name.Equals(nameof(ICosmosEntity.CosmosId))
+                || partitionKeyProperty.Name.Equals("id", StringComparison.OrdinalIgnoreCase))
+            {
+                return new PartitionKeyDefinition
+                {
+                    Paths = { "/id" }
+                };
+            }
+
+            if(porentialJsonPropertyAttribute != null && !string.IsNullOrEmpty(porentialJsonPropertyAttribute.PropertyName))
+                return new PartitionKeyDefinition
+                {
+                    Paths =
+                    {
+                        $"/{porentialJsonPropertyAttribute.PropertyName}"
+                    }
+                };
+
+            return new PartitionKeyDefinition
+            {
+                Paths =
+                {
+                    $"/{partitionKeyProperty.Name}"
+                }
+            };
+        }
+
+        private static bool HasJsonPropertyAttributeId(JsonPropertyAttribute porentialJsonPropertyAttribute)
+        {
+            return porentialJsonPropertyAttribute != null && 
+                   !string.IsNullOrEmpty(porentialJsonPropertyAttribute.PropertyName)
+                   && porentialJsonPropertyAttribute.PropertyName.Equals("id");
+        }
+
+        internal PartitionKey GetPartitionKeyValueForEntity(TEntity entity)
+        {
+            return new PartitionKey(GetPartitionKeyValueAsStringForEntity(entity));
+        }
+
+        internal string GetPartitionKeyValueAsStringForEntity(TEntity entity)
+        {
+            var type = entity.GetType();
+            var partitionKeyProperty = type.GetProperties()
+                .Where(x => x.GetCustomAttribute<CosmosPartitionKeyAttribute>() != null).ToList();
+
+            if (partitionKeyProperty.Count > 1)
+                throw new MultiplePartitionKeysException(type);
+
+            if (partitionKeyProperty.Count == 0)
+                return null;
+
+            return partitionKeyProperty.Single().GetValue(entity).ToString();
         }
     }
 }

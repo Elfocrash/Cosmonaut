@@ -10,8 +10,8 @@
     <PackageLicenseUrl>https://github.com/Elfocrash/Cosmonaut/blob/develop/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/Elfocrash/Cosmonaut</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Elfocrash/Cosmonaut</RepositoryUrl>
-    <PackageTags>cosmosdb azure cosmos entitystore entity db</PackageTags>
-    <PackageReleaseNotes>Initial release of Cosmonaut. Please report any issues on Github.</PackageReleaseNotes>
+    <PackageTags>cosmosdb azure cosmos entitystore entity db orm</PackageTags>
+    <PackageReleaseNotes>Please report any issues on Github.</PackageReleaseNotes>
     <Version>1.0.5</Version>
   </PropertyGroup>
 

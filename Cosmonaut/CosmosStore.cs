@@ -52,7 +52,10 @@ namespace Cosmonaut
             try
             {
                 ResourceResponse<Document> addedDocument =
-                    await DocumentClient.CreateDocumentAsync(collection.SelfLink, safeDocument);
+                    await DocumentClient.CreateDocumentAsync(collection.SelfLink, safeDocument, new RequestOptions
+                    {
+                        PartitionKey = _documentProcessor.GetPartitionKeyValueForEntity(entity)
+                    });
                 return new CosmosResponse<TEntity>(entity, addedDocument);
             }
             catch (DocumentClientException exception)
@@ -91,7 +94,10 @@ namespace Cosmonaut
                 _documentProcessor.ValidateEntityForCosmosDb(entity);
                 var documentId = _documentProcessor.GetDocumentId(entity);
                 var documentSelfLink = _documentProcessor.GetDocumentSelfLink(_databaseName,_collectionName, documentId);
-                var result = await DocumentClient.DeleteDocumentAsync(documentSelfLink);
+                var result = await DocumentClient.DeleteDocumentAsync(documentSelfLink, new RequestOptions
+                {
+                    PartitionKey = _documentProcessor.GetPartitionKeyValueForEntity(entity)
+                });
                 return new CosmosResponse<TEntity>(entity, result);
             }
             catch (DocumentClientException exception)
@@ -128,7 +134,10 @@ namespace Cosmonaut
                     return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.ResourceNotFound);
 
                 var document = _documentProcessor.GetCosmosDbFriendlyEntity(entity);
-                var result = await DocumentClient.UpsertDocumentAsync(collection.DocumentsLink, document);
+                var result = await DocumentClient.UpsertDocumentAsync(collection.DocumentsLink, document, new RequestOptions
+                {
+                    PartitionKey = _documentProcessor.GetPartitionKeyValueForEntity(entity)
+                });
                 return new CosmosResponse<TEntity>(entity, result);
             }
             catch (DocumentClientException exception)
@@ -155,7 +164,10 @@ namespace Cosmonaut
                 _documentProcessor.ValidateEntityForCosmosDb(entity);
                 var collection = (await _collection);
                 var document = _documentProcessor.GetCosmosDbFriendlyEntity(entity);
-                ResourceResponse<Document> result = await DocumentClient.UpsertDocumentAsync(collection.DocumentsLink, document);
+                ResourceResponse<Document> result = await DocumentClient.UpsertDocumentAsync(collection.DocumentsLink, document, new RequestOptions
+                {
+                    PartitionKey = _documentProcessor.GetPartitionKeyValueForEntity(entity)
+                });
                 return new CosmosResponse<TEntity>(entity, result);
             }
             catch (DocumentClientException exception)
@@ -191,6 +203,7 @@ namespace Cosmonaut
                 results.RemoveAll(x => x.CosmosOperationStatus == CosmosOperationStatus.RequestRateIsLarge);
                 entitiesTasks = failedBecauseOfRateLimit.Select(entity => operationFunc(entity.Entity));
                 results.AddRange(await Task.WhenAll(entitiesTasks));
+                await RetryPotentialRateLimitFailures();
             }
 
             await RetryPotentialRateLimitFailures();
@@ -269,7 +282,14 @@ namespace Cosmonaut
             
             if (collection == null)
             {
-                collection = new DocumentCollection { Id = _collectionName};
+                collection = new DocumentCollection
+                {
+                    Id = _collectionName
+                };
+                var partitionKey = _documentProcessor.GetPartitionKeyForEntity(typeof(TEntity));
+
+                if(partitionKey != null)
+                    collection.PartitionKey = _documentProcessor.GetPartitionKeyForEntity(typeof(TEntity));
 
                 collection = await DocumentClient.CreateDocumentCollectionAsync((await _database).SelfLink, collection, new RequestOptions
                 {
@@ -279,11 +299,12 @@ namespace Cosmonaut
                 return collection;
             }
 
+            var collectionOffer = (OfferV2)DocumentClient.CreateOfferQuery()
+                .Where(x => x.ResourceLink == collection.SelfLink).AsEnumerable().Single();
+            var currentOfferThroughput = collectionOffer.Content.OfferThroughput;
+
             if (Settings.AdjustCollectionThroughputOnStartup)
             {
-                var collectionOffer = (OfferV2) DocumentClient.CreateOfferQuery()
-                    .Where(x => x.ResourceLink == collection.SelfLink).AsEnumerable().Single();
-                var currentOfferThroughput = collectionOffer.Content.OfferThroughput;
                 if (_collectionThrouput != currentOfferThroughput)
                 {
                     var updated =
@@ -292,6 +313,7 @@ namespace Cosmonaut
                         throw new CosmosCollectionThroughputUpdateException(collection);
                 }
             }
+            _collectionThrouput = currentOfferThroughput;
 
             return collection;
         }
@@ -327,7 +349,7 @@ namespace Cosmonaut
 
         internal void EnsureThroughputIsInAcceptableRange(int throughtput)
         {
-            if (throughtput < 400 || throughtput > 10000)
+            if (throughtput < 400)
                 throw new IllegalCosmosThroughputException();
         }
 

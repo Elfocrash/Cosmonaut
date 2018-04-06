@@ -3,14 +3,17 @@ using Newtonsoft.Json;
 
 namespace Cosmonaut.Console
 {
-    [CosmosCollection("booky",Throughput = 5000)]
+    [CosmosCollection("bookwith",Throughput = 5000)]
     public class Book
     {
+        [CosmosPartitionKey]
+        [JsonProperty("namess")]
         public string Name { get; set; }
 
         public TestUser Author { get; set; }
 
-        [JsonProperty("id")]
+        public string AnotherRandomProp { get; set; }
+        
         public string Id { get; set; }
     }
 }
