@@ -4,7 +4,7 @@
 
 > The word was derived from "kosmos" (Ancient Greek: κόσμος) which means world/universe and "nautes" (Ancient Greek: ναῦς) which means sailor/navigator
 
-Cosmonaut is an object-relational mapper (O/RM) that enables .NET developers to work with a database using .NET objects. It eliminates the need for most of the data-access code that developers usually need to write. Sounds familiar? It's because it's heavily inspired by Entity Framework.
+Cosmonaut is an object-relational mapper (O/RM) that enables .NET developers to work with a CosmosDB using .NET objects. It eliminates the need for most of the data-access code that developers usually need to write. Sounds familiar? It's because it's heavily inspired by Entity Framework.
 
 ### Usage 
 The idea is pretty simple. You can have one CosmoStore per entity (POCO/dtos etc)
