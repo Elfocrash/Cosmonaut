@@ -69,7 +69,7 @@ namespace Cosmonaut
         public async Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(IEnumerable<TEntity> entities)
         {
             var addEntitiesTasks = entities.Select(AddAsync);
-            return await HandleOperationWithRateLimitRetry(addEntitiesTasks);
+            return await HandleOperationWithRateLimitRetry(addEntitiesTasks, AddAsync);
         }
 
         public async Task<IQueryable<TEntity>> WhereAsync(Expression<Func<TEntity, bool>> predicate)
@@ -108,7 +108,7 @@ namespace Cosmonaut
         public async Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(IEnumerable<TEntity> entities)
         {
             var removeEntitiesTasks = entities.Select(RemoveAsync);
-            return await HandleOperationWithRateLimitRetry(removeEntitiesTasks);
+            return await HandleOperationWithRateLimitRetry(removeEntitiesTasks, RemoveAsync);
         }
 
         public async Task<CosmosResponse<TEntity>> UpdateAsync(TEntity entity)
@@ -145,7 +145,7 @@ namespace Cosmonaut
         public async Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(IEnumerable<TEntity> entities)
         {
             var updateEntitiesTasks = entities.Select(UpdateAsync);
-            return await HandleOperationWithRateLimitRetry(updateEntitiesTasks);
+            return await HandleOperationWithRateLimitRetry(updateEntitiesTasks, UpdateAsync);
         }
 
         public async Task<CosmosResponse<TEntity>> UpsertAsync(TEntity entity)
@@ -160,14 +160,14 @@ namespace Cosmonaut
             }
             catch (DocumentClientException exception)
             {
-                return HandleDocumentClientException(exception);
+                return HandleDocumentClientException(entity, exception);
             }
         }
         
         public async Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(IEnumerable<TEntity> entities)
         {
             var upsertEntitiesTasks = entities.Select(UpsertAsync);
-            return await HandleOperationWithRateLimitRetry(upsertEntitiesTasks);
+            return await HandleOperationWithRateLimitRetry(upsertEntitiesTasks, UpsertAsync);
         }
 
         public async Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(params TEntity[] entities)
@@ -175,7 +175,8 @@ namespace Cosmonaut
             return await UpsertRangeAsync((IEnumerable<TEntity>)entities);
         }
 
-        internal async Task<CosmosMultipleResponse<TEntity>> HandleOperationWithRateLimitRetry(IEnumerable<Task<CosmosResponse<TEntity>>> entitiesTasks)
+        internal async Task<CosmosMultipleResponse<TEntity>> HandleOperationWithRateLimitRetry(IEnumerable<Task<CosmosResponse<TEntity>>> entitiesTasks,
+            Func<TEntity, Task<CosmosResponse<TEntity>>> operationFunc)
         {
             var response = new CosmosMultipleResponse<TEntity>();
             var results = (await Task.WhenAll(entitiesTasks)).ToList();
@@ -188,7 +189,7 @@ namespace Cosmonaut
                     return;
 
                 results.RemoveAll(x => x.CosmosOperationStatus == CosmosOperationStatus.RequestRateIsLarge);
-                entitiesTasks = failedBecauseOfRateLimit.Select(entity => RemoveAsync(entity.Entity));
+                entitiesTasks = failedBecauseOfRateLimit.Select(entity => operationFunc(entity.Entity));
                 results.AddRange(await Task.WhenAll(entitiesTasks));
             }
 

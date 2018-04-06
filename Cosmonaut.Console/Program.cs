@@ -23,8 +23,8 @@ namespace Cosmonaut.Console
                 ConnectionMode = ConnectionMode.Direct,
                 RetryOptions = new RetryOptions
                 {
-                    MaxRetryAttemptsOnThrottledRequests = 3,
-                    MaxRetryWaitTimeInSeconds = 5
+                    MaxRetryAttemptsOnThrottledRequests = 2,
+                    MaxRetryWaitTimeInSeconds = 3
                 }
             };
 

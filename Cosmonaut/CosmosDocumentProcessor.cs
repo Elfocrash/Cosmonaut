@@ -37,7 +37,8 @@ namespace Cosmonaut
                         .Any(attr => attr.PropertyName.Equals("id", StringComparison.OrdinalIgnoreCase))));
 
             if (containsJsonAttributeIdCount > 1)
-                throw new MultipleCosmosIdsException("An entity can only have one cosmos db id. Only one [JsonAttribute(\"id\")] allowed per entity.");
+                throw new MultipleCosmosIdsException(
+                    "An entity can only have one cosmos db id. Only one [JsonAttribute(\"id\")] allowed per entity.");
 
             var idProperty = propertyInfos.FirstOrDefault(x =>
                 x.Name.Equals("id", StringComparison.OrdinalIgnoreCase) && x.PropertyType == typeof(string));

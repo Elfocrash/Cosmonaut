@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace Cosmonaut.Console
 {
-    [CosmosCollection(Throughput = 5000)]
+    [CosmosCollection("booky",Throughput = 5000)]
     public class Book
     {
         public string Name { get; set; }
