@@ -1,19 +1,14 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/au32jna62iue4wut?svg=true)](https://ci.appveyor.com/project/Elfocrash/cosmonaut) [![NuGet Package](https://img.shields.io/nuget/v/Cosmonaut.svg)](https://www.nuget.org/packages/Cosmonaut)
 
-# Cosmonaut
-A simple and easy to use entity store for Microsoft's CosmosDB. (Which is in work in progress atm so don't use it)
+# What is Cosmonaut?
 
-# Summary
-I really like CosmosDB. However working with it is not as straightforward as you'd expect it to be. 
-The usage I'm personally making is to store data in CosmosDB the same way I would store data in Entity Framework.
-However even basic CRUD operations with Microsoft's SDK is not as simple and easy for everyone.
+> The word was derived from "kosmos" (Ancient Greek: κόσμος) which means world/universe and "nautes" (Ancient Greek: ναῦς) which means sailor/navigator
 
-That's where Cosmonaut come's in the picture. It's meant to be what the DbContext is for Entity Framework.
-A simple and easy way to basic CRUD without missing out on the depth that Microsoft's low level SDK is offering.
+Cosmonaut is an object-relational mapper (O/RM) that enables .NET developers to work with a database using .NET objects. It eliminates the need for most of the data-access code that developers usually need to write. Sounds familiar? It's because it's heavily inspired by Entity Framework.
 
 ### Usage 
 The idea is pretty simple. You can have one CosmoStore per entity (POCO/dtos etc)
-This entity will be used to create a collection in the cosmosdb and it will offer CRUD+ operations for this object
+This entity will be used to create a collection in the cosmosdb and it will offer all the data access for this object
 
 Registering the CosmosStores in ServiceCollection for DI support
 ```csharp
