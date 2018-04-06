@@ -62,6 +62,27 @@ await cosmoStore.RemoveAsync(entity);// Removes the specific entity
 await cosmoStore.RemoveByIdAsync("<<anId>>");// Removes an entity with the specified ID
 ```
 
+#### Partitioning
+Cosmonaut supports partitions out of the box. You can specify which property you want to be your Partition Key by adding the `[CosmosPartitionKey]` attribute above it.
+
+Unless you really know what you're doing, it is recommended make your `Id` property the Partition Key. This will enable random distribution for your collection.
+
+If you do not set a Partition Key then the collection created will be single partition. Here is a quote from Microsoft about single partition collections: 
+> Single-partition collections have lower price options and the ability to execute queries and perform transactions across all collection data. They have the scalability and storage limits of a single partition (10GB and 10,000 RU/s). You do not have to specify a partition key for these collections. For scenarios that do not need large volumes of storage or throughput, single partition collections are a good fit.
+[link](https://azure.microsoft.com/en-gb/blog/10-things-to-know-about-documentdb-partitioned-collections/)
+
+##### Known hiccups
+Partitions are great but you should these 3 very important things about them and about the way Cosmonaut will react.
+
+* Once a collection is created with a partition key, it cannot be removed or changed.
+* You cannot add a partition key later to a single partition collection.
+* If you use the Update or the Upsert methods to update an entity that had the value of the property that is the partition key changed, then CosmosDB won't update the document but instead it will create a whole different document with the same id but the changed partition key value.
+
+There is a plan however to deal with this on the Update method eventually.
+
+More on the third issue here [Unique keys in Azure Cosmos DB](https://docs.microsoft.com/en-us/azure/cosmos-db/unique-keys)
+
+
 #### Performance
 Performance can vary dramatically based on the throughput (RU/s*) you are using.
 By default Cosmonaut will set the throughput to the lowest value of `400` mainly because I don't want to affect how much you pay accidentaly.
