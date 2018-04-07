@@ -21,6 +21,10 @@ namespace Cosmonaut
 
         public readonly bool AdjustCollectionThroughputOnStartup;
 
+        public readonly bool ScaleCollectionRUsAutomatically;
+
+        public readonly int MaximumUpscaleRequestUnits;
+
         public CosmosStoreSettings(
             string databaseName, 
             string endpointUrl, 
@@ -28,7 +32,9 @@ namespace Cosmonaut
             ConnectionPolicy connectionPolicy = null, 
             int? collectionThroughput = null,
             bool allowAttributesToConfigureThroughput = false,
-            bool adjustCollectionThroughputOnStartup = false)
+            bool adjustCollectionThroughputOnStartup = false,
+            bool scaleCollectionRUsAutomatically = false,
+            int maximumUpscaleRequestUnits = 10000)
         {
             DatabaseName = databaseName;
             AuthKey = authKey;
@@ -37,6 +43,8 @@ namespace Cosmonaut
             CollectionThroughput = collectionThroughput ?? DefaultCollectionThroughput;
             AllowAttributesToConfigureThroughput = allowAttributesToConfigureThroughput;
             AdjustCollectionThroughputOnStartup = adjustCollectionThroughputOnStartup;
+            ScaleCollectionRUsAutomatically = scaleCollectionRUsAutomatically;
+            MaximumUpscaleRequestUnits = maximumUpscaleRequestUnits;
         }
 
         public CosmosStoreSettings(
@@ -46,7 +54,9 @@ namespace Cosmonaut
             ConnectionPolicy connectionPolicy = null,
             int? collectionThroughput = null,
             bool allowAttributesToConfigureThroughput = false,
-            bool adjustCollectionThroughputOnStartup = false)
+            bool adjustCollectionThroughputOnStartup = false,
+            bool scaleCollectionRUsAutomatically = false,
+            int maximumUpscaleRequestUnits = 10000)
         {
             DatabaseName = databaseName;
             AuthKey = authKey;
@@ -55,6 +65,8 @@ namespace Cosmonaut
             CollectionThroughput = collectionThroughput ?? DefaultCollectionThroughput;
             AllowAttributesToConfigureThroughput = allowAttributesToConfigureThroughput;
             AdjustCollectionThroughputOnStartup = adjustCollectionThroughputOnStartup;
+            ScaleCollectionRUsAutomatically = scaleCollectionRUsAutomatically;
+            MaximumUpscaleRequestUnits = maximumUpscaleRequestUnits;
         }
     }
 }

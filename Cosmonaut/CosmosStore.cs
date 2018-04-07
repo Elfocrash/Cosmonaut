@@ -24,6 +24,7 @@ namespace Cosmonaut
         public readonly CosmosStoreSettings Settings;
         private string _collectionName;
         private CosmosDocumentProcessor<TEntity> _documentProcessor;
+        private bool _isUpscaled;
 
         public CosmosStore(CosmosStoreSettings settings)
         {
@@ -71,8 +72,16 @@ namespace Cosmonaut
 
         public async Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(IEnumerable<TEntity> entities)
         {
-            var addEntitiesTasks = entities.Select(AddAsync);
-            return await HandleOperationWithRateLimitRetry(addEntitiesTasks, AddAsync);
+            var entitiesList = entities.ToList();
+            if (!entitiesList.Any())
+                return new CosmosMultipleResponse<TEntity>();
+            
+            var collection = await _collection;
+            await HandlePotentialUpscalingForRangeOperation(entitiesList, collection, AddAsync);
+            var addEntitiesTasks = entitiesList.Select(AddAsync);
+            var operationResult = await HandleOperationWithRateLimitRetry(addEntitiesTasks, AddAsync);
+            await DownscaleCollectionRequestUnitsToDefault(collection);
+            return operationResult;
         }
 
         public async Task<IQueryable<TEntity>> WhereAsync(Expression<Func<TEntity, bool>> predicate)
@@ -113,8 +122,16 @@ namespace Cosmonaut
 
         public async Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(IEnumerable<TEntity> entities)
         {
-            var removeEntitiesTasks = entities.Select(RemoveAsync);
-            return await HandleOperationWithRateLimitRetry(removeEntitiesTasks, RemoveAsync);
+            var entitiesList = entities.ToList();
+            if(!entitiesList.Any())
+                return new CosmosMultipleResponse<TEntity>();
+
+            var collection = await _collection;
+            await HandlePotentialUpscalingForRangeOperation(entitiesList, collection, RemoveAsync);
+            var removeEntitiesTasks = entitiesList.Select(RemoveAsync);
+            var operationResult = await HandleOperationWithRateLimitRetry(removeEntitiesTasks, RemoveAsync);
+            await DownscaleCollectionRequestUnitsToDefault(collection);
+            return operationResult;
         }
 
         public async Task<CosmosResponse<TEntity>> UpdateAsync(TEntity entity)
@@ -153,8 +170,17 @@ namespace Cosmonaut
 
         public async Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(IEnumerable<TEntity> entities)
         {
-            var updateEntitiesTasks = entities.Select(UpdateAsync);
-            return await HandleOperationWithRateLimitRetry(updateEntitiesTasks, UpdateAsync);
+            var entitiesList = entities.ToList();
+
+            if(!entitiesList.Any())
+                return new CosmosMultipleResponse<TEntity>();
+
+            var collection = await _collection;
+            await HandlePotentialUpscalingForRangeOperation(entitiesList, collection, UpdateAsync);
+            var updateEntitiesTasks = entitiesList.Select(UpdateAsync);
+            var operationResult = await HandleOperationWithRateLimitRetry(updateEntitiesTasks, UpdateAsync);
+            await DownscaleCollectionRequestUnitsToDefault(collection);
+            return operationResult;
         }
 
         public async Task<CosmosResponse<TEntity>> UpsertAsync(TEntity entity)
@@ -178,37 +204,21 @@ namespace Cosmonaut
         
         public async Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(IEnumerable<TEntity> entities)
         {
-            var upsertEntitiesTasks = entities.Select(UpsertAsync);
-            return await HandleOperationWithRateLimitRetry(upsertEntitiesTasks, UpsertAsync);
+            var entitiesList = entities.ToList();
+            if(!entitiesList.Any())
+                return new CosmosMultipleResponse<TEntity>();
+
+            var collection = await _collection;
+            await HandlePotentialUpscalingForRangeOperation(entitiesList, collection, UpdateAsync);
+            var upsertEntitiesTasks = entitiesList.Select(UpsertAsync);
+            var operationResult = await HandleOperationWithRateLimitRetry(upsertEntitiesTasks, UpsertAsync);
+            await DownscaleCollectionRequestUnitsToDefault(collection);
+            return operationResult;
         }
 
         public async Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(params TEntity[] entities)
         {
             return await UpsertRangeAsync((IEnumerable<TEntity>)entities);
-        }
-
-        internal async Task<CosmosMultipleResponse<TEntity>> HandleOperationWithRateLimitRetry(IEnumerable<Task<CosmosResponse<TEntity>>> entitiesTasks,
-            Func<TEntity, Task<CosmosResponse<TEntity>>> operationFunc)
-        {
-            var response = new CosmosMultipleResponse<TEntity>();
-            var results = (await Task.WhenAll(entitiesTasks)).ToList();
-
-            async Task RetryPotentialRateLimitFailures()
-            {
-                var failedBecauseOfRateLimit =
-                    results.Where(x => x.CosmosOperationStatus == CosmosOperationStatus.RequestRateIsLarge).ToList();
-                if (!failedBecauseOfRateLimit.Any())
-                    return;
-
-                results.RemoveAll(x => x.CosmosOperationStatus == CosmosOperationStatus.RequestRateIsLarge);
-                entitiesTasks = failedBecauseOfRateLimit.Select(entity => operationFunc(entity.Entity));
-                results.AddRange(await Task.WhenAll(entitiesTasks));
-                await RetryPotentialRateLimitFailures();
-            }
-
-            await RetryPotentialRateLimitFailures();
-            response.FailedEntities.AddRange(results.Where(x => !x.IsSuccess));
-            return response;
         }
 
         public async Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id)
@@ -255,6 +265,45 @@ namespace Cosmonaut
             {
                 EnableCrossPartitionQuery = true
             });
+        }
+
+        internal async Task<CosmosMultipleResponse<TEntity>> HandleOperationWithRateLimitRetry(IEnumerable<Task<CosmosResponse<TEntity>>> entitiesTasks,
+            Func<TEntity, Task<CosmosResponse<TEntity>>> operationFunc)
+        {
+            var response = new CosmosMultipleResponse<TEntity>();
+            var results = (await Task.WhenAll(entitiesTasks)).ToList();
+
+            async Task RetryPotentialRateLimitFailures()
+            {
+                var failedBecauseOfRateLimit =
+                    results.Where(x => x.CosmosOperationStatus == CosmosOperationStatus.RequestRateIsLarge).ToList();
+                if (!failedBecauseOfRateLimit.Any())
+                    return;
+
+                results.RemoveAll(x => x.CosmosOperationStatus == CosmosOperationStatus.RequestRateIsLarge);
+                entitiesTasks = failedBecauseOfRateLimit.Select(entity => operationFunc(entity.Entity));
+                results.AddRange(await Task.WhenAll(entitiesTasks));
+                await RetryPotentialRateLimitFailures();
+            }
+
+            await RetryPotentialRateLimitFailures();
+            response.FailedEntities.AddRange(results.Where(x => !x.IsSuccess));
+            return response;
+        }
+        
+        private async Task HandlePotentialUpscalingForRangeOperation(List<TEntity> entitiesList, DocumentCollection collection, Func<TEntity, Task<CosmosResponse<TEntity>>> operationAsync)
+        {
+            if (Settings.ScaleCollectionRUsAutomatically)
+            {
+                var sampleEntity = entitiesList.First();
+                var sampleResponse = await operationAsync(sampleEntity);
+                if (sampleResponse.IsSuccess)
+                {
+                    entitiesList.Remove(sampleEntity);
+                    var requestCharge = sampleResponse.ResourceResponse.RequestCharge;
+                    await UpscaleCollectionRequestUnitsForRequest(collection, entitiesList.Count, requestCharge);
+                }
+            }
         }
 
         internal async Task<Database> GetOrCreateDatabaseAsync()
@@ -317,7 +366,7 @@ namespace Cosmonaut
 
             return collection;
         }
-        
+
         internal void PingCosmosInOrderToOpenTheClientAndPreventInitialDelay()
         {
             DocumentClient.ReadDatabaseAsync(_database.GetAwaiter().GetResult().SelfLink).Wait();
@@ -351,6 +400,38 @@ namespace Cosmonaut
         {
             if (throughtput < 400)
                 throw new IllegalCosmosThroughputException();
+        }
+
+        internal async Task UpscaleCollectionRequestUnitsForRequest(DocumentCollection collection, int documentCount, double operationCost)
+        {
+            if (!Settings.ScaleCollectionRUsAutomatically)
+                return;
+
+            if (_collectionThrouput >= documentCount * operationCost)
+                return;
+
+            var upscaleRequestUnits = (int)(Math.Round(documentCount * operationCost / 100d, 0) * 100);
+
+            var collectionOffer = (OfferV2)DocumentClient.CreateOfferQuery()
+                .Where(x => x.ResourceLink == collection.SelfLink).AsEnumerable().Single();
+            _collectionThrouput =upscaleRequestUnits >= Settings.MaximumUpscaleRequestUnits ? Settings.MaximumUpscaleRequestUnits : upscaleRequestUnits;
+            await DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, _collectionThrouput));
+            _isUpscaled = true;
+        }
+
+        internal async Task DownscaleCollectionRequestUnitsToDefault(DocumentCollection collection)
+        {
+            if (!Settings.ScaleCollectionRUsAutomatically)
+                return;
+
+            if (!_isUpscaled)
+                return;
+
+            var collectionOffer = (OfferV2)DocumentClient.CreateOfferQuery()
+                .Where(x => x.ResourceLink == collection.SelfLink).AsEnumerable().Single();
+            _collectionThrouput = GetCollectionThroughputForEntity();
+            await DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, _collectionThrouput));
+            _isUpscaled = false;
         }
 
         internal void InitialiseCosmosStore()
