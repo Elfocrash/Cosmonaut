@@ -1,13 +1,44 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Reflection;
+using Cosmonaut.Attributes;
+using Cosmonaut.Exceptions;
+using Humanizer;
 using Microsoft.Azure.Documents;
 
 namespace Cosmonaut.Extensions
 {
-    public static class CollectionExtensions
+    internal static class CollectionExtensions
     {
-        public static string GetCollectionPartitionKeyName(this DocumentCollection collection)
+        internal static string GetCollectionPartitionKeyName(this DocumentCollection collection)
         {
             return collection?.PartitionKey?.Paths?.FirstOrDefault()?.Trim('/') ?? string.Empty;
+        }
+
+        internal static string GetCollectionName(this Type entityType)
+        {
+            var collectionNameAttribute = entityType.GetCustomAttribute<CosmosCollectionAttribute>();
+
+            var collectionName = collectionNameAttribute?.Name;
+
+            return !string.IsNullOrEmpty(collectionName) ? collectionName : entityType.Name.ToLower().Pluralize();
+        }
+
+        internal static int GetCollectionThroughputForEntity(this Type entityType, 
+            bool allowAttributesToConfigureThroughput,
+            int collectionThroughput)
+        {
+            if (!allowAttributesToConfigureThroughput)
+            {
+                if (collectionThroughput < CosmosConstants.MinimumCosmosThroughput) throw new IllegalCosmosThroughputException();
+                return collectionThroughput;
+            }
+
+            var collectionAttribute = entityType.GetCustomAttribute<CosmosCollectionAttribute>();
+            var throughput = collectionAttribute != null && collectionAttribute.Throughput != -1 ? collectionAttribute.Throughput : collectionThroughput;
+
+            if (collectionThroughput < CosmosConstants.MinimumCosmosThroughput) throw new IllegalCosmosThroughputException();
+            return throughput;
         }
     }
 }

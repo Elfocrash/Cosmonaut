@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Cosmonaut.Response;
+using Cosmonaut.Storage;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Moq;
@@ -36,7 +37,7 @@ namespace Cosmonaut.Tests
 
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<string>(), null))
                 .ReturnsAsync(new ResourceResponse<Document>(new Document { Id = id }));
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName");
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator<Dummy>(_mockDocumentClient.Object, new CosmosDocumentProcessor<Dummy>()));
 
             // Act
             var result = await entityStore.RemoveAsync(addedDummy);
@@ -58,7 +59,7 @@ namespace Cosmonaut.Tests
             var response = new ResourceResponse<Document>(new Document { Id = addedDummy.Id });
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<string>(), null))
                 .ReturnsAsync(response);
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName");
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator<Dummy>(_mockDocumentClient.Object, new CosmosDocumentProcessor<Dummy>()));
 
             // Act
             var result = await entityStore.RemoveByIdAsync(id);

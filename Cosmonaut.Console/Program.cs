@@ -60,7 +60,7 @@ namespace Cosmonaut.Console
             System.Console.WriteLine($"Added 1000 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
 
-            var addedRetrieved = cosmoStore.ToListAsync(x => x.Name.StartsWith("Test ")).Result;
+            var addedRetrieved = cosmoStore.ToListAsync().Result;
             System.Console.WriteLine($"Retrieved 1000 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
             foreach (var addedre in addedRetrieved)

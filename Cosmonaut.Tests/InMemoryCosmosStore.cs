@@ -99,14 +99,17 @@ namespace Cosmonaut.Tests
 
         public async Task<CosmosResponse<TEntity>> RemoveAsync(TEntity entity)
         {
-            _documentProcessor.ValidateEntityForCosmosDb(entity);
-            var id = _documentProcessor.GetDocumentId(entity);
-            if (_store.TryRemove(id, out var outEntity))
+            return await Task.Run(()=>
             {
-                return new CosmosResponse<TEntity>(outEntity, CosmosOperationStatus.Success);
-            }
+                _documentProcessor.ValidateEntityForCosmosDb(entity);
+                var id = _documentProcessor.GetDocumentId(entity);
+                if (_store.TryRemove(id, out var outEntity))
+                {
+                    return new CosmosResponse<TEntity>(outEntity, CosmosOperationStatus.Success);
+                }
 
-            return new CosmosResponse<TEntity>(CosmosOperationStatus.ResourceNotFound);
+                return new CosmosResponse<TEntity>(CosmosOperationStatus.ResourceNotFound);
+            });
         }
 
         public async Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(params TEntity[] entities)

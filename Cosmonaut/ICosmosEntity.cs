@@ -4,7 +4,7 @@ namespace Cosmonaut
 {
     public interface ICosmosEntity
     {
-        [JsonProperty("id")]
+        [JsonProperty(CosmosConstants.CosmosId)]
         string CosmosId { get; set; }
     }
 }

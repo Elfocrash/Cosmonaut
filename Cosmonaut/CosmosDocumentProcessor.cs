@@ -33,22 +33,22 @@ namespace Cosmonaut
 
             var containsJsonAttributeIdCount =
                 propertyInfos.Count(x => x.GetCustomAttributes<JsonPropertyAttribute>()
-                    .Any(attr => attr.PropertyName.Equals("id", StringComparison.OrdinalIgnoreCase)))
+                    .Any(attr => attr.PropertyName.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase)))
                 + entity.GetType().GetInterfaces().Count(x => x.GetProperties()
                     .Any(prop => prop.GetCustomAttributes<JsonPropertyAttribute>()
-                        .Any(attr => attr.PropertyName.Equals("id", StringComparison.OrdinalIgnoreCase))));
+                        .Any(attr => attr.PropertyName.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase))));
 
             if (containsJsonAttributeIdCount > 1)
                 throw new MultipleCosmosIdsException(
                     "An entity can only have one cosmos db id. Only one [JsonAttribute(\"id\")] allowed per entity.");
 
             var idProperty = propertyInfos.FirstOrDefault(x =>
-                x.Name.Equals("id", StringComparison.OrdinalIgnoreCase) && x.PropertyType == typeof(string));
+                x.Name.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase) && x.PropertyType == typeof(string));
 
             if (idProperty != null && containsJsonAttributeIdCount == 1)
             {
                 if (!idProperty.GetCustomAttributes<JsonPropertyAttribute>().Any(x =>
-                    x.PropertyName.Equals("id", StringComparison.OrdinalIgnoreCase)))
+                    x.PropertyName.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase)))
                     throw new MultipleCosmosIdsException(
                         "An entity can only have one cosmos db id. Either rename the Id property or remove the [JsonAttribute(\"id\")].");
                 return entity;
@@ -72,7 +72,7 @@ namespace Cosmonaut
             var propertyInfos = entity.GetType().GetProperties();
 
             var propertyWithJsonPropertyId =
-                propertyInfos.SingleOrDefault(x => x.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName == "id");
+                propertyInfos.SingleOrDefault(x => x.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName == CosmosConstants.CosmosId);
 
             if (propertyWithJsonPropertyId != null &&
                 !string.IsNullOrEmpty(propertyWithJsonPropertyId.GetValue(entity)?.ToString()))
@@ -80,7 +80,7 @@ namespace Cosmonaut
                 return propertyWithJsonPropertyId.GetValue(entity).ToString();
             }
 
-            var propertyNamedId = propertyInfos.SingleOrDefault(x => x.Name.Equals("id", StringComparison.OrdinalIgnoreCase));
+            var propertyNamedId = propertyInfos.SingleOrDefault(x => x.Name.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase));
 
             if (propertyNamedId != null)
             {
@@ -95,7 +95,7 @@ namespace Cosmonaut
 
             var potentialCosmosEntityId = entity.GetType().GetInterface(nameof(ICosmosEntity))?
                 .GetProperties()?.SingleOrDefault(x =>
-                    x.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName == "id");
+                    x.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName == CosmosConstants.CosmosId);
 
             if (potentialCosmosEntityId != null &&
                 !string.IsNullOrEmpty(potentialCosmosEntityId.GetValue(entity)?.ToString()))
@@ -139,7 +139,7 @@ namespace Cosmonaut
             var porentialJsonPropertyAttribute = partitionKeyProperty.GetCustomAttribute<JsonPropertyAttribute>();
             if (HasJsonPropertyAttributeId(porentialJsonPropertyAttribute) 
                 || partitionKeyProperty.Name.Equals(nameof(ICosmosEntity.CosmosId))
-                || partitionKeyProperty.Name.Equals("id", StringComparison.OrdinalIgnoreCase))
+                || partitionKeyProperty.Name.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase))
             {
                 return new PartitionKeyDefinition
                 {
@@ -169,7 +169,7 @@ namespace Cosmonaut
         {
             return porentialJsonPropertyAttribute != null && 
                    !string.IsNullOrEmpty(porentialJsonPropertyAttribute.PropertyName)
-                   && porentialJsonPropertyAttribute.PropertyName.Equals("id");
+                   && porentialJsonPropertyAttribute.PropertyName.Equals(CosmosConstants.CosmosId);
         }
 
         internal PartitionKey GetPartitionKeyValueForEntity(TEntity entity)

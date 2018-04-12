@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Cosmonaut.Exceptions;
 using Cosmonaut.Response;
+using Cosmonaut.Storage;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Moq;
@@ -34,7 +35,7 @@ namespace Cosmonaut.Tests
                 _documentProcessor.GetCosmosDbFriendlyEntity(dummy) as Document, null, false))
                 .ReturnsAsync(new ResourceResponse<Document>());
                 
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName");
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator<Dummy>(_mockDocumentClient.Object, new CosmosDocumentProcessor<Dummy>()));
 
             // Act
             var expectedResponse = new CosmosResponse<Dummy>(dummy, CosmosOperationStatus.Success);
@@ -57,7 +58,7 @@ namespace Cosmonaut.Tests
                     _documentProcessor.GetCosmosDbFriendlyEntity(dummy) as Document, null, false))
                 .ReturnsAsync(new ResourceResponse<Document>());
 
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName");
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator<Dummy>(_mockDocumentClient.Object, new CosmosDocumentProcessor<Dummy>()));
 
             // Act
             var result = await entityStore.AddAsync(dummy);
