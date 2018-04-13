@@ -33,7 +33,7 @@ namespace Cosmonaut.Console
                 "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
                 , connectionPolicy
                 , collectionThroughput: 600
-                , scaleCollectionRUsAutomatically: true);
+                , scaleCollectionRUsAutomatically: false);
            
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddCosmosStore<Book>(cosmosSettings);

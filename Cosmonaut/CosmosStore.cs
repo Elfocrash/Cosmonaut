@@ -3,14 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
-using System.Reflection;
 using System.Threading.Tasks;
-using Cosmonaut.Attributes;
 using Cosmonaut.Exceptions;
 using Cosmonaut.Extensions;
 using Cosmonaut.Response;
 using Cosmonaut.Storage;
-using Humanizer;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 
@@ -96,7 +93,7 @@ namespace Cosmonaut
                 await DownscaleCollectionRequestUnitsToDefault(collection);
                 return operationResult;
             }
-            catch (Exception exception)
+            catch (Exception)
             {
                 await DownscaleCollectionRequestUnitsToDefault(collection);
                 return new CosmosMultipleResponse<TEntity>(CosmosOperationStatus.GeneralFailure);
@@ -154,7 +151,7 @@ namespace Cosmonaut
                 await DownscaleCollectionRequestUnitsToDefault(collection);
                 return operationResult;
             }
-            catch (Exception exception)
+            catch (Exception)
             {
                 //TODO Handle exception
                 await DownscaleCollectionRequestUnitsToDefault(collection);
@@ -172,8 +169,8 @@ namespace Cosmonaut
                 var collection = (await _collection);
                 var documentExists = DocumentClient.CreateDocumentQuery<Document>(collection.DocumentsLink, new FeedOptions
                     {
-                        EnableCrossPartitionQuery = true
-                    })
+                        EnableCrossPartitionQuery = _documentProcessor.HasPartitionKey(typeof(TEntity))
+                })
                     .Where(x => x.Id == documentId).ToList().SingleOrDefault();
 
                 if (documentExists == null)
@@ -213,7 +210,7 @@ namespace Cosmonaut
                 await DownscaleCollectionRequestUnitsToDefault(collection);
                 return operationResult;
             }
-            catch (Exception exception)
+            catch (Exception)
             {
                 await DownscaleCollectionRequestUnitsToDefault(collection);
                 return new CosmosMultipleResponse<TEntity>(CosmosOperationStatus.GeneralFailure);
@@ -254,7 +251,7 @@ namespace Cosmonaut
                 await DownscaleCollectionRequestUnitsToDefault(collection);
                 return operationResult;
             }
-            catch (Exception exception)
+            catch (Exception)
             {
                 await DownscaleCollectionRequestUnitsToDefault(collection);
                 return new CosmosMultipleResponse<TEntity>(CosmosOperationStatus.GeneralFailure);
@@ -289,7 +286,7 @@ namespace Cosmonaut
 
             return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink, new FeedOptions
                 {
-                    EnableCrossPartitionQuery = true
+                    EnableCrossPartitionQuery = _documentProcessor.HasPartitionKey(typeof(TEntity))
                 })
                 .Where(predicate)
                 .ToList();
@@ -308,7 +305,7 @@ namespace Cosmonaut
         {
             return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink, new FeedOptions
             {
-                EnableCrossPartitionQuery = true
+                EnableCrossPartitionQuery = _documentProcessor.HasPartitionKey(typeof(TEntity))
             });
         }
 
@@ -417,7 +414,7 @@ namespace Cosmonaut
                 .Where(x => x.ResourceLink == collection.SelfLink).AsEnumerable().Single();
             _collectionThrouput = upscaleRequestUnits >= Settings.MaximumUpscaleRequestUnits ? Settings.MaximumUpscaleRequestUnits : upscaleRequestUnits;
             var replaced = await DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, _collectionThrouput));
-            _isUpscaled = true;
+            _isUpscaled = replaced.StatusCode == HttpStatusCode.OK;
         }
 
         internal async Task DownscaleCollectionRequestUnitsToDefault(DocumentCollection collection)
@@ -431,8 +428,8 @@ namespace Cosmonaut
             var collectionOffer = (OfferV2)DocumentClient.CreateOfferQuery()
                 .Where(x => x.ResourceLink == collection.SelfLink).AsEnumerable().Single();
             _collectionThrouput = typeof(TEntity).GetCollectionThroughputForEntity(Settings.AllowAttributesToConfigureThroughput, Settings.CollectionThroughput);
-            await DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, _collectionThrouput));
-            _isUpscaled = false;
+            var replaced = await DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, _collectionThrouput));
+            _isUpscaled = replaced.StatusCode != HttpStatusCode.OK;
         }
 
         internal void InitialiseCosmosStore()

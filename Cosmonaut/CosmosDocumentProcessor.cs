@@ -191,5 +191,16 @@ namespace Cosmonaut
 
             return partitionKeyProperty.Single().GetValue(entity).ToString();
         }
+
+        internal bool HasPartitionKey(Type type)
+        {
+            var partitionKeyProperty = type.GetProperties()
+                .Where(x => x.GetCustomAttribute<CosmosPartitionKeyAttribute>() != null).ToList();
+
+            if (partitionKeyProperty.Count > 1)
+                throw new MultiplePartitionKeysException(type);
+
+            return partitionKeyProperty.Count != 0;
+        }
     }
 }
