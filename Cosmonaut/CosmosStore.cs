@@ -23,11 +23,11 @@ namespace Cosmonaut
         private string _collectionName;
         private bool _isUpscaled;
         private readonly IDatabaseCreator _databaseCreator;
-        private readonly ICollectionCreator<TEntity> _collectionCreator;
+        private readonly ICollectionCreator _collectionCreator;
 
         public CosmosStore(CosmosStoreSettings settings, 
             IDatabaseCreator databaseCreator, 
-            ICollectionCreator<TEntity> collectionCreator)
+            ICollectionCreator collectionCreator)
         {
             _collectionCreator = collectionCreator ?? throw new ArgumentNullException(nameof(collectionCreator));
             Settings = settings ?? throw new ArgumentNullException(nameof(settings));
@@ -38,11 +38,11 @@ namespace Cosmonaut
             _databaseName = Settings.DatabaseName ?? throw new ArgumentNullException(nameof(Settings.DatabaseName));
             InitialiseCosmosStore();
         }
-        
+
         internal CosmosStore(IDocumentClient documentClient, 
             string databaseName, 
             IDatabaseCreator databaseCreator, 
-            ICollectionCreator<TEntity> collectionCreator)
+            ICollectionCreator collectionCreator)
         {
             _databaseCreator = databaseCreator ?? throw new ArgumentNullException(nameof(databaseCreator));
             _collectionCreator = collectionCreator ?? throw new ArgumentNullException(nameof(collectionCreator));
@@ -53,7 +53,9 @@ namespace Cosmonaut
         }
 
         internal CosmosStore(IDocumentClient documentClient,
-            string databaseName) : this(documentClient,databaseName,new CosmosDatabaseCreator(documentClient), new CosmosCollectionCreator<TEntity>(documentClient))
+            string databaseName) : this(documentClient,databaseName,
+            new CosmosDatabaseCreator(documentClient), 
+            new CosmosCollectionCreator(documentClient))
         {
         }
 

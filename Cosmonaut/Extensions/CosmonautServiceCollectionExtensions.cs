@@ -12,7 +12,7 @@ namespace Cosmonaut.Extensions
             var documentClient = DocumentClientFactory.CreateDocumentClient(settings);
             services.AddSingleton<ICosmosStore<TEntity>>(x=> new CosmosStore<TEntity>(settings, 
                 new CosmosDatabaseCreator(documentClient), 
-                new CosmosCollectionCreator<TEntity>(documentClient)));
+                new CosmosCollectionCreator(documentClient)));
             return services;
         }
 
@@ -20,7 +20,7 @@ namespace Cosmonaut.Extensions
             IDocumentClient documentClient, 
             string databaseName,
             IDatabaseCreator databaseCreator,
-            ICollectionCreator<TEntity> collectionCreator) where TEntity : class
+            ICollectionCreator collectionCreator) where TEntity : class
         {
             services.AddSingleton<ICosmosStore<TEntity>>(x => new CosmosStore<TEntity>(documentClient, databaseName, databaseCreator, collectionCreator));
             return services;

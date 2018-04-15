@@ -7,7 +7,7 @@ using Microsoft.Azure.Documents.Client;
 
 namespace Cosmonaut.Storage
 {
-    internal class CosmosCollectionCreator<TEntity> : ICollectionCreator<TEntity> where TEntity : class
+    public class CosmosCollectionCreator : ICollectionCreator
     {
         private readonly IDocumentClient _documentClient;
 
@@ -20,7 +20,7 @@ namespace Cosmonaut.Storage
             Database database, 
             int collectionThroughput)
         {
-            var collectionName = typeof(TEntity).GetCollectionName();
+            var collectionName = entityType.GetCollectionName();
             var collection = _documentClient
                 .CreateDocumentCollectionQuery(database.SelfLink)
                 .ToArray()
@@ -33,7 +33,7 @@ namespace Cosmonaut.Storage
             {
                 Id = collectionName
             };
-            var partitionKey = typeof(TEntity).GetPartitionKeyForEntity();
+            var partitionKey = entityType.GetPartitionKeyForEntity();
 
             if (partitionKey != null)
                 collection.PartitionKey = partitionKey;

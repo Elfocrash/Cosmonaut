@@ -35,7 +35,7 @@ namespace Cosmonaut.Tests
                     dummy.GetCosmosDbFriendlyEntity() as Document, null, false))
                 .ReturnsAsync(new ResourceResponse<Document>());
                 
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator<Dummy>(_mockDocumentClient.Object));
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
 
             // Act
             var expectedResponse = new CosmosResponse<Dummy>(dummy, CosmosOperationStatus.Success);
@@ -58,7 +58,7 @@ namespace Cosmonaut.Tests
                     dummy.GetCosmosDbFriendlyEntity() as Document, null, false))
                 .ReturnsAsync(new ResourceResponse<Document>());
 
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator<Dummy>(_mockDocumentClient.Object));
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
 
             // Act
             var result = await entityStore.AddAsync(dummy);

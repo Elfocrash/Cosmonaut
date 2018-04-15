@@ -35,7 +35,7 @@ namespace Cosmonaut.Tests
 
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<string>(), null))
                 .ReturnsAsync(new ResourceResponse<Document>(new Document { Id = id }));
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator<Dummy>(_mockDocumentClient.Object));
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
 
             // Act
             var result = await entityStore.RemoveAsync(addedDummy);
@@ -57,7 +57,7 @@ namespace Cosmonaut.Tests
             var response = new ResourceResponse<Document>(new Document { Id = addedDummy.Id });
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<string>(), null))
                 .ReturnsAsync(response);
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator<Dummy>(_mockDocumentClient.Object));
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
 
             // Act
             var result = await entityStore.RemoveByIdAsync(id);

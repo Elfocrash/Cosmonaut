@@ -4,7 +4,7 @@ using Microsoft.Azure.Documents;
 
 namespace Cosmonaut.Storage
 {
-    public interface ICollectionCreator<TEntity> where TEntity : class
+    public interface ICollectionCreator
     {
         Task<bool> EnsureCreatedAsync(Type entityType, Database database, int collectionThroughput);
     }
