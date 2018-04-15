@@ -10,13 +10,10 @@ namespace Cosmonaut.Storage
     internal class CosmosCollectionCreator<TEntity> : ICollectionCreator<TEntity> where TEntity : class
     {
         private readonly IDocumentClient _documentClient;
-        private readonly CosmosDocumentProcessor<TEntity> _documentProcessor;
 
-        public CosmosCollectionCreator(IDocumentClient documentClient, 
-            CosmosDocumentProcessor<TEntity> documentProcessor)
+        public CosmosCollectionCreator(IDocumentClient documentClient)
         {
             _documentClient = documentClient;
-            _documentProcessor = documentProcessor;
         }
 
         public async Task<bool> EnsureCreatedAsync(Type entityType, 
@@ -36,10 +33,10 @@ namespace Cosmonaut.Storage
             {
                 Id = collectionName
             };
-            var partitionKey = _documentProcessor.GetPartitionKeyForEntity(typeof(TEntity));
+            var partitionKey = typeof(TEntity).GetPartitionKeyForEntity();
 
             if (partitionKey != null)
-                collection.PartitionKey = _documentProcessor.GetPartitionKeyForEntity(typeof(TEntity));
+                collection.PartitionKey = partitionKey;
 
             collection = await _documentClient.CreateDocumentCollectionAsync(database.SelfLink, collection, new RequestOptions
             {

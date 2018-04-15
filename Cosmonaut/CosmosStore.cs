@@ -21,7 +21,6 @@ namespace Cosmonaut
         private AsyncLazy<DocumentCollection> _collection;
         public readonly CosmosStoreSettings Settings;
         private string _collectionName;
-        private CosmosDocumentProcessor<TEntity> _documentProcessor;
         private bool _isUpscaled;
         private readonly IDatabaseCreator _databaseCreator;
         private readonly ICollectionCreator<TEntity> _collectionCreator;
@@ -52,18 +51,23 @@ namespace Cosmonaut
             Settings = new CosmosStoreSettings(databaseName, documentClient.ServiceEndpoint, documentClient.AuthKey.ToString(), documentClient.ConnectionPolicy);
             InitialiseCosmosStore();
         }
-        
+
+        internal CosmosStore(IDocumentClient documentClient,
+            string databaseName) : this(documentClient,databaseName,new CosmosDatabaseCreator(documentClient), new CosmosCollectionCreator<TEntity>(documentClient))
+        {
+        }
+
         public async Task<CosmosResponse<TEntity>> AddAsync(TEntity entity)
         {
             var collection = await _collection;
-            var safeDocument = _documentProcessor.GetCosmosDbFriendlyEntity(entity);
+            var safeDocument = entity.GetCosmosDbFriendlyEntity();
 
             try
             {
                 ResourceResponse<Document> addedDocument =
                     await DocumentClient.CreateDocumentAsync(collection.SelfLink, safeDocument, new RequestOptions
                     {
-                        PartitionKey = _documentProcessor.GetPartitionKeyValueForEntity(entity)
+                        PartitionKey = entity.GetPartitionKeyValueForEntity()
                     });
                 return new CosmosResponse<TEntity>(entity, addedDocument);
             }
@@ -116,12 +120,12 @@ namespace Cosmonaut
         {
             try
             {
-                _documentProcessor.ValidateEntityForCosmosDb(entity);
-                var documentId = _documentProcessor.GetDocumentId(entity);
-                var documentSelfLink = _documentProcessor.GetDocumentSelfLink(_databaseName, _collectionName, documentId);
+                entity.ValidateEntityForCosmosDb();
+                var documentId = entity.GetDocumentId();
+                var documentSelfLink = DocumentHelpers.GetDocumentSelfLink(_databaseName, _collectionName, documentId);
                 var result = await DocumentClient.DeleteDocumentAsync(documentSelfLink, new RequestOptions
                 {
-                    PartitionKey = _documentProcessor.GetPartitionKeyValueForEntity(entity)
+                    PartitionKey = entity.GetPartitionKeyValueForEntity()
                 });
                 return new CosmosResponse<TEntity>(entity, result);
             }
@@ -164,22 +168,22 @@ namespace Cosmonaut
         {
             try
             {
-                _documentProcessor.ValidateEntityForCosmosDb(entity);
-                var documentId = _documentProcessor.GetDocumentId(entity);
+                entity.ValidateEntityForCosmosDb();
+                var documentId = entity.GetDocumentId();
                 var collection = (await _collection);
                 var documentExists = DocumentClient.CreateDocumentQuery<Document>(collection.DocumentsLink, new FeedOptions
                     {
-                        EnableCrossPartitionQuery = _documentProcessor.HasPartitionKey(typeof(TEntity))
+                        EnableCrossPartitionQuery = typeof(TEntity).HasPartitionKey()
                 })
                     .Where(x => x.Id == documentId).ToList().SingleOrDefault();
 
                 if (documentExists == null)
                     return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.ResourceNotFound);
 
-                var document = _documentProcessor.GetCosmosDbFriendlyEntity(entity);
+                var document = entity.GetCosmosDbFriendlyEntity();
                 var result = await DocumentClient.UpsertDocumentAsync(collection.DocumentsLink, document, new RequestOptions
                 {
-                    PartitionKey = _documentProcessor.GetPartitionKeyValueForEntity(entity)
+                    PartitionKey = entity.GetPartitionKeyValueForEntity()
                 });
                 return new CosmosResponse<TEntity>(entity, result);
             }
@@ -221,12 +225,12 @@ namespace Cosmonaut
         {
             try
             {
-                _documentProcessor.ValidateEntityForCosmosDb(entity);
+                entity.ValidateEntityForCosmosDb();
                 var collection = (await _collection);
-                var document = _documentProcessor.GetCosmosDbFriendlyEntity(entity);
+                var document = entity.GetCosmosDbFriendlyEntity();
                 ResourceResponse<Document> result = await DocumentClient.UpsertDocumentAsync(collection.DocumentsLink, document, new RequestOptions
                 {
-                    PartitionKey = _documentProcessor.GetPartitionKeyValueForEntity(entity)
+                    PartitionKey = entity.GetPartitionKeyValueForEntity()
                 });
                 return new CosmosResponse<TEntity>(entity, result);
             }
@@ -265,7 +269,7 @@ namespace Cosmonaut
 
         public async Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id)
         {
-            var documentSelfLink = _documentProcessor.GetDocumentSelfLink(_databaseName, _collectionName, id);
+            var documentSelfLink = DocumentHelpers.GetDocumentSelfLink(_databaseName, _collectionName, id);
             try
             {
                 var result = await DocumentClient.DeleteDocumentAsync(documentSelfLink);
@@ -286,7 +290,7 @@ namespace Cosmonaut
 
             return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink, new FeedOptions
                 {
-                    EnableCrossPartitionQuery = _documentProcessor.HasPartitionKey(typeof(TEntity))
+                    EnableCrossPartitionQuery = typeof(TEntity).HasPartitionKey()
                 })
                 .Where(predicate)
                 .ToList();
@@ -305,7 +309,7 @@ namespace Cosmonaut
         {
             return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink, new FeedOptions
             {
-                EnableCrossPartitionQuery = _documentProcessor.HasPartitionKey(typeof(TEntity))
+                EnableCrossPartitionQuery = typeof(TEntity).HasPartitionKey()
             });
         }
 
@@ -434,7 +438,6 @@ namespace Cosmonaut
 
         internal void InitialiseCosmosStore()
         {
-            _documentProcessor = new CosmosDocumentProcessor<TEntity>();
             _collectionName = typeof(TEntity).GetCollectionName();
             _collectionThrouput = typeof(TEntity).GetCollectionThroughputForEntity(Settings.AllowAttributesToConfigureThroughput, Settings.CollectionThroughput);
 

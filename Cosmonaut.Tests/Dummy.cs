@@ -54,4 +54,9 @@ namespace Cosmonaut.Tests
         [JsonProperty("id")]
         public string Id { get; set; }
     }
+
+    public class DummyNoId
+    {
+        public string Name { get; set; }
+    }
 }

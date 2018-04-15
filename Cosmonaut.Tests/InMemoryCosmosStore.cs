@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Cosmonaut.Extensions;
 using Cosmonaut.Response;
 using Microsoft.Azure.Documents;
 
@@ -12,20 +13,18 @@ namespace Cosmonaut.Tests
     public class InMemoryCosmosStore<TEntity> : ICosmosStore<TEntity> where TEntity : class
     {
         private readonly ConcurrentDictionary<string, TEntity> _store;
-        private readonly CosmosDocumentProcessor<TEntity> _documentProcessor;
 
         public InMemoryCosmosStore()
         {
             _store = new ConcurrentDictionary<string, TEntity>();
-            _documentProcessor = new CosmosDocumentProcessor<TEntity>();
         }
 
         public async Task<CosmosResponse<TEntity>> AddAsync(TEntity entity)
         {
             return await Task.Run(() =>
                 {
-                    _documentProcessor.ValidateEntityForCosmosDb(entity);
-                    var id = _documentProcessor.GetDocumentId(entity);
+                    entity.ValidateEntityForCosmosDb();
+                    var id = entity.GetDocumentId();
                     if (_store.TryAdd(id, entity))
                         return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.Success);
                     return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.ResourceWithIdAlreadyExists);
@@ -54,8 +53,8 @@ namespace Cosmonaut.Tests
         {
             return await Task.Run(() =>
             {
-                _documentProcessor.ValidateEntityForCosmosDb(entity);
-                var id = _documentProcessor.GetDocumentId(entity);
+                entity.ValidateEntityForCosmosDb();
+                var id = entity.GetDocumentId();
 
                 if (!_store.ContainsKey(id))
                     return new CosmosResponse<TEntity>(CosmosOperationStatus.ResourceNotFound);
@@ -101,8 +100,8 @@ namespace Cosmonaut.Tests
         {
             return await Task.Run(()=>
             {
-                _documentProcessor.ValidateEntityForCosmosDb(entity);
-                var id = _documentProcessor.GetDocumentId(entity);
+                entity.ValidateEntityForCosmosDb();
+                var id = entity.GetDocumentId();
                 if (_store.TryRemove(id, out var outEntity))
                 {
                     return new CosmosResponse<TEntity>(outEntity, CosmosOperationStatus.Success);

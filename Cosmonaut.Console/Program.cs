@@ -33,7 +33,7 @@ namespace Cosmonaut.Console
                 "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
                 , connectionPolicy
                 , collectionThroughput: 600
-                , scaleCollectionRUsAutomatically: false);
+                , scaleCollectionRUsAutomatically: true);
            
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddCosmosStore<Book>(cosmosSettings);
@@ -63,18 +63,18 @@ namespace Cosmonaut.Console
             var addedRetrieved = cosmoStore.ToListAsync().Result;
             System.Console.WriteLine($"Retrieved 1000 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
-            foreach (var addedre in addedRetrieved)
-            {
-                addedre.AnotherRandomProp += " Nick";
-            }
+            //foreach (var addedre in addedRetrieved)
+            //{
+            //    addedre.AnotherRandomProp += " Nick";
+            //}
 
-            var updated = cosmoStore.UpsertRangeAsync(addedRetrieved).Result;
-            System.Console.WriteLine($"Updated 1000 documents in {watch.ElapsedMilliseconds}ms");
-            watch.Restart();
+            //var updated = cosmoStore.UpsertRangeAsync(addedRetrieved).Result;
+            //System.Console.WriteLine($"Updated 1000 documents in {watch.ElapsedMilliseconds}ms");
+            //watch.Restart();
 
-            var removed = cosmoStore.RemoveRangeAsync(addedRetrieved).Result;
-            System.Console.WriteLine($"Removed 1000 documents in {watch.ElapsedMilliseconds}ms");
-            watch.Reset();
+           // var removed = cosmoStore.RemoveRangeAsync(addedRetrieved).Result;
+            //System.Console.WriteLine($"Removed 1000 documents in {watch.ElapsedMilliseconds}ms");
+            //watch.Reset();
             watch.Stop();
             System.Console.ReadKey();
             //cosmoStore.RemoveAsync(x => x.Name == "MYBOOK").GetAwaiter().GetResult();

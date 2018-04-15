@@ -6,13 +6,13 @@ using Cosmonaut.Exceptions;
 using Microsoft.Azure.Documents;
 using Newtonsoft.Json;
 
-namespace Cosmonaut
+namespace Cosmonaut.Extensions
 {
-    internal class CosmosDocumentProcessor<TEntity> where TEntity : class
+    public static class DocumentEntityExtensions
     {
-        internal dynamic GetCosmosDbFriendlyEntity(TEntity entity)
+        internal static dynamic GetCosmosDbFriendlyEntity<TEntity>(this TEntity entity) where TEntity : class
         {
-            var validatedEntity = ValidateEntityForCosmosDb(entity);
+            var validatedEntity = entity.ValidateEntityForCosmosDb();
 
             //TODO Clean this up. It is a very bad hack
             dynamic mapped = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(validatedEntity));
@@ -24,10 +24,71 @@ namespace Cosmonaut
             return mapped;
         }
 
-        internal string GetDocumentSelfLink(string databaseName, string collectionName, string documentId) =>
-            $"dbs/{databaseName}/colls/{collectionName}/docs/{documentId}/";
+        internal static void SetTheCosmosDbIdBasedOnTheObjectIndex<TEntity>(TEntity entity, dynamic mapped) where TEntity : class
+        {
+            mapped.id = entity.GetDocumentId();
+        }
 
-        internal TEntity ValidateEntityForCosmosDb(TEntity entity)
+        internal static PartitionKeyDefinition GetPartitionKeyForEntity(this Type type)
+        {
+            var partitionKeyProperties = type.GetProperties()
+                .Where(x => x.GetCustomAttribute<CosmosPartitionKeyAttribute>() != null).ToList();
+
+            if (partitionKeyProperties.Count > 1)
+                throw new MultiplePartitionKeysException(type);
+
+            if (partitionKeyProperties.Count == 0)
+                return null;
+
+            var partitionKeyProperty = partitionKeyProperties.Single();
+            var porentialJsonPropertyAttribute = partitionKeyProperty.GetCustomAttribute<JsonPropertyAttribute>();
+            if (porentialJsonPropertyAttribute.HasJsonPropertyAttributeId()
+                || partitionKeyProperty.Name.Equals(nameof(ICosmosEntity.CosmosId))
+                || partitionKeyProperty.Name.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase))
+            {
+                return DocumentHelpers.GetPartitionKeyDefinition(CosmosConstants.CosmosId);
+            }
+
+            if (porentialJsonPropertyAttribute != null &&
+                !string.IsNullOrEmpty(porentialJsonPropertyAttribute.PropertyName))
+                return DocumentHelpers.GetPartitionKeyDefinition(porentialJsonPropertyAttribute.PropertyName);
+
+            return DocumentHelpers.GetPartitionKeyDefinition(partitionKeyProperty.Name);
+        }
+
+        internal static PartitionKey GetPartitionKeyValueForEntity<TEntity>(this TEntity entity) where TEntity : class
+        {
+            return new PartitionKey(entity.GetPartitionKeyValueAsStringForEntity());
+        }
+
+
+        internal static string GetPartitionKeyValueAsStringForEntity<TEntity>(this TEntity entity) where TEntity : class
+        {
+            var type = entity.GetType();
+            var partitionKeyProperty = type.GetProperties()
+                .Where(x => x.GetCustomAttribute<CosmosPartitionKeyAttribute>() != null).ToList();
+
+            if (partitionKeyProperty.Count > 1)
+                throw new MultiplePartitionKeysException(type);
+
+            if (partitionKeyProperty.Count == 0)
+                return null;
+
+            return partitionKeyProperty.Single().GetValue(entity).ToString();
+        }
+
+        internal static bool HasPartitionKey(this Type type)
+        {
+            var partitionKeyProperty = type.GetProperties()
+                .Where(x => x.GetCustomAttribute<CosmosPartitionKeyAttribute>() != null).ToList();
+
+            if (partitionKeyProperty.Count > 1)
+                throw new MultiplePartitionKeysException(type);
+
+            return partitionKeyProperty.Count != 0;
+        }
+
+        internal static TEntity ValidateEntityForCosmosDb<TEntity>(this TEntity entity) where TEntity : class
         {
             var propertyInfos = entity.GetType().GetProperties();
 
@@ -62,12 +123,14 @@ namespace Cosmonaut
             return entity;
         }
 
-        internal void SetTheCosmosDbIdBasedOnTheObjectIndex(TEntity entity, dynamic mapped)
+        internal static bool HasJsonPropertyAttributeId(this JsonPropertyAttribute porentialJsonPropertyAttribute)
         {
-            mapped.id = GetDocumentId(entity);
+            return porentialJsonPropertyAttribute != null &&
+                   !string.IsNullOrEmpty(porentialJsonPropertyAttribute.PropertyName)
+                   && porentialJsonPropertyAttribute.PropertyName.Equals(CosmosConstants.CosmosId);
         }
 
-        internal string GetDocumentId(TEntity entity)
+        internal static string GetDocumentId<TEntity>(this TEntity entity) where TEntity : class
         {
             var propertyInfos = entity.GetType().GetProperties();
 
@@ -75,7 +138,7 @@ namespace Cosmonaut
                 propertyInfos.SingleOrDefault(x => x.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName == CosmosConstants.CosmosId);
 
             if (propertyWithJsonPropertyId != null &&
-                !string.IsNullOrEmpty(propertyWithJsonPropertyId.GetValue(entity)?.ToString()))
+                !String.IsNullOrEmpty(propertyWithJsonPropertyId.GetValue(entity)?.ToString()))
             {
                 return propertyWithJsonPropertyId.GetValue(entity).ToString();
             }
@@ -84,7 +147,7 @@ namespace Cosmonaut
 
             if (propertyNamedId != null)
             {
-                if (!string.IsNullOrEmpty(propertyNamedId.GetValue(entity)?.ToString()))
+                if (!String.IsNullOrEmpty(propertyNamedId.GetValue(entity)?.ToString()))
                 {
                     return propertyNamedId.GetValue(entity).ToString();
                 }
@@ -98,7 +161,7 @@ namespace Cosmonaut
                     x.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName == CosmosConstants.CosmosId);
 
             if (potentialCosmosEntityId != null &&
-                !string.IsNullOrEmpty(potentialCosmosEntityId.GetValue(entity)?.ToString()))
+                !String.IsNullOrEmpty(potentialCosmosEntityId.GetValue(entity)?.ToString()))
             {
                 return potentialCosmosEntityId.GetValue(entity).ToString();
             }
@@ -122,85 +185,6 @@ namespace Cosmonaut
             {
                 mapped.Remove("iD");
             }
-        }
-
-        internal PartitionKeyDefinition GetPartitionKeyForEntity(Type type)
-        {
-            var partitionKeyProperties = type.GetProperties()
-                .Where(x => x.GetCustomAttribute<CosmosPartitionKeyAttribute>() != null).ToList();
-
-            if (partitionKeyProperties.Count > 1)
-                throw new MultiplePartitionKeysException(type);
-
-            if (partitionKeyProperties.Count == 0)
-                return null;
-
-            var partitionKeyProperty = partitionKeyProperties.Single();
-            var porentialJsonPropertyAttribute = partitionKeyProperty.GetCustomAttribute<JsonPropertyAttribute>();
-            if (HasJsonPropertyAttributeId(porentialJsonPropertyAttribute) 
-                || partitionKeyProperty.Name.Equals(nameof(ICosmosEntity.CosmosId))
-                || partitionKeyProperty.Name.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase))
-            {
-                return new PartitionKeyDefinition
-                {
-                    Paths = { "/id" }
-                };
-            }
-
-            if(porentialJsonPropertyAttribute != null && !string.IsNullOrEmpty(porentialJsonPropertyAttribute.PropertyName))
-                return new PartitionKeyDefinition
-                {
-                    Paths =
-                    {
-                        $"/{porentialJsonPropertyAttribute.PropertyName}"
-                    }
-                };
-
-            return new PartitionKeyDefinition
-            {
-                Paths =
-                {
-                    $"/{partitionKeyProperty.Name}"
-                }
-            };
-        }
-
-        private static bool HasJsonPropertyAttributeId(JsonPropertyAttribute porentialJsonPropertyAttribute)
-        {
-            return porentialJsonPropertyAttribute != null && 
-                   !string.IsNullOrEmpty(porentialJsonPropertyAttribute.PropertyName)
-                   && porentialJsonPropertyAttribute.PropertyName.Equals(CosmosConstants.CosmosId);
-        }
-
-        internal PartitionKey GetPartitionKeyValueForEntity(TEntity entity)
-        {
-            return new PartitionKey(GetPartitionKeyValueAsStringForEntity(entity));
-        }
-
-        internal string GetPartitionKeyValueAsStringForEntity(TEntity entity)
-        {
-            var type = entity.GetType();
-            var partitionKeyProperty = type.GetProperties()
-                .Where(x => x.GetCustomAttribute<CosmosPartitionKeyAttribute>() != null).ToList();
-
-            if (partitionKeyProperty.Count > 1)
-                throw new MultiplePartitionKeysException(type);
-
-            if (partitionKeyProperty.Count == 0)
-                return null;
-
-            return partitionKeyProperty.Single().GetValue(entity).ToString();
-        }
-
-        internal bool HasPartitionKey(Type type)
-        {
-            var partitionKeyProperty = type.GetProperties()
-                .Where(x => x.GetCustomAttribute<CosmosPartitionKeyAttribute>() != null).ToList();
-
-            if (partitionKeyProperty.Count > 1)
-                throw new MultiplePartitionKeysException(type);
-
-            return partitionKeyProperty.Count != 0;
         }
     }
 }

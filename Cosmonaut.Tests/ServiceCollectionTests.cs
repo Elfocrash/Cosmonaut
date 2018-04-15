@@ -23,7 +23,7 @@ namespace Cosmonaut.Tests
             var documentClient = MockHelpers.GetFakeDocumentClient();
 
             //Act
-            serviceCollection.AddCosmosStore<Dummy>(documentClient.Object, "databaseName", new CosmosDatabaseCreator(documentClient.Object), new CosmosCollectionCreator<Dummy>(documentClient.Object, new CosmosDocumentProcessor<Dummy>()) );
+            serviceCollection.AddCosmosStore<Dummy>(documentClient.Object, "databaseName", new CosmosDatabaseCreator(documentClient.Object), new CosmosCollectionCreator<Dummy>(documentClient.Object));
             var provider = serviceCollection.BuildServiceProvider();
 
             //Assert

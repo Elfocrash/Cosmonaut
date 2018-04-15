@@ -1,5 +1,6 @@
 ﻿using System;
 using Cosmonaut.Exceptions;
+using Cosmonaut.Extensions;
 using Xunit;
 
 namespace Cosmonaut.Tests
@@ -11,7 +12,6 @@ namespace Cosmonaut.Tests
         {
             // Arrange
             var id = Guid.NewGuid().ToString();
-            var processor = new CosmosDocumentProcessor<Dummy>();
             var dummy = new Dummy
             {
                 Id = id,
@@ -19,8 +19,8 @@ namespace Cosmonaut.Tests
             };
 
             // Act
-            processor.ValidateEntityForCosmosDb(dummy);
-            var idFromDocument = processor.GetDocumentId(dummy);
+            dummy.ValidateEntityForCosmosDb();
+            var idFromDocument = dummy.GetDocumentId();
 
             // Assert
             Assert.Equal(id, idFromDocument);
@@ -31,7 +31,6 @@ namespace Cosmonaut.Tests
         {
             // Arrange
             var id = Guid.NewGuid().ToString();
-            var processor = new CosmosDocumentProcessor<DummyImplEntity>();
             var dummy = new DummyImplEntity
             {
                 CosmosId = id,
@@ -39,8 +38,8 @@ namespace Cosmonaut.Tests
             };
 
             // Act
-            processor.ValidateEntityForCosmosDb(dummy);
-            var idFromDocument = processor.GetDocumentId(dummy);
+            dummy.ValidateEntityForCosmosDb();
+            var idFromDocument = dummy.GetDocumentId();
 
             // Assert
             Assert.Equal(id, idFromDocument);
@@ -51,7 +50,6 @@ namespace Cosmonaut.Tests
         {
             // Arrange
             var id = Guid.NewGuid().ToString();
-            var processor = new CosmosDocumentProcessor<DummyImplEntityWithAttr>();
             var dummy = new DummyImplEntityWithAttr
             {
                 CosmosId = id,
@@ -60,7 +58,7 @@ namespace Cosmonaut.Tests
             };
 
             // Act & Assert
-            Assert.Throws<MultipleCosmosIdsException>(() => processor.ValidateEntityForCosmosDb(dummy));
+            Assert.Throws<MultipleCosmosIdsException>(() => dummy.ValidateEntityForCosmosDb());
         }
 
         [Fact]
@@ -68,7 +66,6 @@ namespace Cosmonaut.Tests
         {
             // Arrange
             var id = Guid.NewGuid().ToString();
-            var processor = new CosmosDocumentProcessor<DummyWithIdAndWithAttr>();
             var dummy = new DummyWithIdAndWithAttr
             {
                 ActualyId = id,
@@ -77,7 +74,7 @@ namespace Cosmonaut.Tests
             };
 
             // Act & Assert
-            Assert.Throws<MultipleCosmosIdsException>(() => processor.ValidateEntityForCosmosDb(dummy));
+            Assert.Throws<MultipleCosmosIdsException>(() => dummy.ValidateEntityForCosmosDb());
         }
 
         [Fact]
@@ -85,7 +82,6 @@ namespace Cosmonaut.Tests
         {
             // Arrange
             var id = Guid.NewGuid().ToString();
-            var processor = new CosmosDocumentProcessor<DummyWithMultipleAttr>();
             var dummy = new DummyWithMultipleAttr
             {
                 ActualyId = id,
@@ -94,7 +90,7 @@ namespace Cosmonaut.Tests
             };
 
             // Act & Assert
-            Assert.Throws<MultipleCosmosIdsException>(() => processor.ValidateEntityForCosmosDb(dummy));
+            Assert.Throws<MultipleCosmosIdsException>(() => dummy.ValidateEntityForCosmosDb());
         }
 
         [Fact]
@@ -102,7 +98,6 @@ namespace Cosmonaut.Tests
         {
             // Arrange
             var id = Guid.NewGuid().ToString();
-            var processor = new CosmosDocumentProcessor<DummyWithIdAttrOnId>();
             var dummy = new DummyWithIdAttrOnId
             {
                 Id = id,
@@ -110,8 +105,8 @@ namespace Cosmonaut.Tests
             };
 
             // Act
-            processor.ValidateEntityForCosmosDb(dummy);
-            var idFromDocument = processor.GetDocumentId(dummy);
+            dummy.ValidateEntityForCosmosDb();
+            var idFromDocument = dummy.GetDocumentId();
 
             // Assert
             Assert.Equal(id, idFromDocument);
@@ -121,17 +116,16 @@ namespace Cosmonaut.Tests
         public void ObjectWithoutAnyIdThrowsException()
         {
             // Arrange
-            var processor = new CosmosDocumentProcessor<object>();
-            var dummy = new
+            var dummy = new DummyNoId
             {
                 Name = "Test"
             };
 
             // Act & Assert
-            Assert.Throws<CosmosEntityWithoutIdException<object>>(() =>
+            Assert.Throws<CosmosEntityWithoutIdException<DummyNoId>>(() =>
             {
-                processor.ValidateEntityForCosmosDb(dummy);
-                processor.GetDocumentId(dummy);
+                dummy.ValidateEntityForCosmosDb();
+                dummy.GetDocumentId();
             });
         }
     }
