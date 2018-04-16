@@ -121,6 +121,14 @@ There is a plan however to deal with this on the Update method eventually.
 
 More on the third issue here [Unique keys in Azure Cosmos DB](https://docs.microsoft.com/en-us/azure/cosmos-db/unique-keys)
 
+#### Collection naming
+Your collections will automatically be named based on the plural of the object you are using in the generic type.
+However you can override that by decorating the class with the `CosmosCollection` attribute.
+
+Example:
+```csharp
+[CosmosCollection("somename")]
+```
 
 #### Performance
 Performance can vary dramatically based on the throughput (RU/s*) you are using.
@@ -132,17 +140,28 @@ Example:
 ```csharp
 [CosmosCollection(Throughput = 1000)]
 ```
-
 Note here that this functionality is disabled by default. Usage of Azure to adjust is recommended.
 
-#### Collection naming
-Your collections will automatically be named based on the plural of the object you are using in the generic type.
-However you can override that by decorating the class with the `CosmosCollection` attribute.
+#### Benchmarks
 
-Example:
-```csharp
-[CosmosCollection("somename")]
-```
+##### Averages of 1000 iterations for 500 documents per operation on collection with default indexing and 5000 RU/s (POCO serialization)
+
+| Uperation used | Duration |
+| ------------- |:-------------:|
+| AddRangeAsync | 596.5ms |
+| ToListAsync |23.1ms|
+| UpdateRangeAsync |653.6ms|
+| UpsertRangeAsync |620.2ms|
+| RemoveAsync | 502.2ms |
+
+##### Averages of 10000 iterations for 1 document per operation on collection with default indexing and 5000 RU/s (POCO serialization)
+| Uperation used | Duration |
+| ------------- |:-------------:|
+| AddAsync | 3.9433ms |
+| FirstOrDefaultAsync | 2.7492ms |
+| UpdateAsync | 4.1562ms |
+| UpsertAsync | 4.1842ms |
+| RemoveAsync | 3.9682ms |
 
 ### Restrictions
 Because of the way the internal `id` property of Cosmosdb works, there is a mandatory restriction made.
