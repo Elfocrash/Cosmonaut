@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Cosmonaut.Exceptions;
 using Cosmonaut.Response;
 using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Linq;
 
 namespace Cosmonaut
 {
@@ -302,7 +303,9 @@ namespace Cosmonaut
         ///     Exposes the lower level DocumentClient to the consumer.
         /// </summary>
         IDocumentClient DocumentClient { get; }
-        
+
+        Task<IDocumentQuery<TEntity>> AsDocumentQueryAsync(Expression<Func<TEntity, bool>> predicate = null);
+
         Task<List<TEntity>> ToListAsync(Expression<Func<TEntity, bool>> predicate = null);
 
         Task<IQueryable<TEntity>> WhereAsync(Expression<Func<TEntity, bool>> predicate);

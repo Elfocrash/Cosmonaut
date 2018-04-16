@@ -115,7 +115,17 @@ namespace Cosmonaut
                 })
                 .Where(predicate);
         }
-        
+
+        public async Task<IDocumentQuery<TEntity>> AsDocumentQueryAsync(Expression<Func<TEntity, bool>> predicate = null)
+        {
+            if (predicate == null)
+            {
+                predicate = entity => true;
+            }
+
+            return (await WhereAsync(predicate)).AsDocumentQuery();
+        }
+
         public async Task<CosmosMultipleResponse<TEntity>> RemoveAsync(Expression<Func<TEntity, bool>> predicate)
         {
             var entitiesToRemove = await ToListAsync(predicate);

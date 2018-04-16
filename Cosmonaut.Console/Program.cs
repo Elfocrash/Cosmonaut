@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Cosmonaut.Extensions;
+using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -29,11 +30,11 @@ namespace Cosmonaut.Console
             };
 
             var cosmosSettings = new CosmosStoreSettings("localtest", 
-                new Uri("https://localhost:8081"), 
+                "https://localhost:8081", 
                 "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
                 , connectionPolicy
                 , collectionThroughput: 600
-                , scaleCollectionRUsAutomatically: true);
+                , scaleCollectionRUsAutomatically: false);
            
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddCosmosStore<Book>(cosmosSettings);
@@ -45,7 +46,7 @@ namespace Cosmonaut.Console
             System.Console.WriteLine($"Started");
             
             var books = new List<Book>();
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 1000; i++)
             {
                 books.Add(new Book
                 {
@@ -71,7 +72,7 @@ namespace Cosmonaut.Console
             var updated = cosmoStore.UpdateRangeAsync(addedRetrieved).Result;
             System.Console.WriteLine($"Updated 1000 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
-
+            
             var removed = cosmoStore.RemoveRangeAsync(addedRetrieved).Result;
             System.Console.WriteLine($"Removed 1000 documents in {watch.ElapsedMilliseconds}ms");
             watch.Reset();

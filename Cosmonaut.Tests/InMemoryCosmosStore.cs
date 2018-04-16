@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Cosmonaut.Response;
 using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Linq;
 
 namespace Cosmonaut.Tests
 {
@@ -153,6 +154,11 @@ namespace Cosmonaut.Tests
         }
 
         public IDocumentClient DocumentClient { get; }
+
+        public Task<IDocumentQuery<TEntity>> AsDocumentQueryAsync(Expression<Func<TEntity, bool>> predicate = null)
+        {
+            throw new NotImplementedException();
+        }
 
         public async Task<List<TEntity>> ToListAsync(Expression<Func<TEntity, bool>> predicate = null)
         {
