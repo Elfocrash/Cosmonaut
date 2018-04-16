@@ -62,6 +62,45 @@ await cosmoStore.RemoveAsync(entity);// Removes the specific entity
 await cosmoStore.RemoveByIdAsync("<<anId>>");// Removes an entity with the specified ID
 ```
 
+#### Indexing
+By default CosmosDB is created with the following indexing rules
+
+```javascript
+{
+    "indexingMode": "consistent",
+    "automatic": true,
+    "includedPaths": [
+        {
+            "path": "/*",
+            "indexes": [
+                {
+                    "kind": "Range",
+                    "dataType": "Number",
+                    "precision": -1
+                },
+                {
+                    "kind": "Hash",
+                    "dataType": "String",
+                    "precision": 3
+                }
+            ]
+        }
+    ],
+    "excludedPaths": []
+}
+```
+
+Indexing in necessary for things like querying the collections.
+Keep in mind that when you manage indexing policy, you can make fine-grained trade-offs between index storage overhead, write and query throughput, and query consistency.
+
+For example if the String datatype is Hash then exact matches like the following,
+`cosmoStore.FirstOrDefaultAsync(x => x.SomeProperty.Equals($"Nick Chapsas")`
+will return the item if it exists in CosmosDB but 
+`cosmoStore.FirstOrDefaultAsync(x => x.SomeProperty.StartsWith($"Nick Ch")`
+will throw an error. Changing the Hash to Range will work.
+
+More about CosmosDB Indexing [here](https://docs.microsoft.com/en-us/azure/cosmos-db/indexing-policies)
+
 #### Partitioning
 Cosmonaut supports partitions out of the box. You can specify which property you want to be your Partition Key by adding the `[CosmosPartitionKey]` attribute above it.
 
