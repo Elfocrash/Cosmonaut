@@ -18,7 +18,8 @@ namespace Cosmonaut.Storage
 
         public async Task<bool> EnsureCreatedAsync(Type entityType, 
             Database database, 
-            int collectionThroughput)
+            int collectionThroughput,
+            IndexingPolicy indexingPolicy = null)
         {
             var collectionName = entityType.GetCollectionName();
             var collection = _documentClient
@@ -37,6 +38,9 @@ namespace Cosmonaut.Storage
 
             if (partitionKey != null)
                 collection.PartitionKey = partitionKey;
+
+            if (indexingPolicy != null)
+                collection.IndexingPolicy = indexingPolicy;
 
             collection = await _documentClient.CreateDocumentCollectionAsync(database.SelfLink, collection, new RequestOptions
             {

@@ -217,7 +217,7 @@ namespace Cosmonaut
         ///     various response information such as whether it was successful or what (if anything) went wrong
         ///     at the individual entity level.
         /// </returns>
-        Task<CosmosMultipleResponse<TEntity>> RemoveAsync(Func<TEntity, bool> predicate);
+        Task<CosmosMultipleResponse<TEntity>> RemoveAsync(Expression<Func<TEntity, bool>> predicate);
 
 
         /// <summary>
@@ -303,12 +303,10 @@ namespace Cosmonaut
         /// </summary>
         IDocumentClient DocumentClient { get; }
         
-        Task<List<TEntity>> ToListAsync(Func<TEntity, bool> predicate = null);
-
-        Task<IOrderedQueryable<TEntity>> QueryableAsync();
+        Task<List<TEntity>> ToListAsync(Expression<Func<TEntity, bool>> predicate = null);
 
         Task<IQueryable<TEntity>> WhereAsync(Expression<Func<TEntity, bool>> predicate);
 
-        Task<TEntity> FirstOrDefaultAsync(Func<TEntity, bool> predicate);
+        Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate);
     }
 }

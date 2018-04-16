@@ -139,9 +139,9 @@ namespace Cosmonaut.Tests
             });
         }
         
-        public async Task<CosmosMultipleResponse<TEntity>> RemoveAsync(Func<TEntity, bool> predicate)
+        public async Task<CosmosMultipleResponse<TEntity>> RemoveAsync(Expression<Func<TEntity, bool>> predicate)
         {
-            var toRemove = _store.Values.Where(predicate).ToList();
+            var toRemove = _store.Values.Where(predicate.Compile()).ToList();
             var response = new CosmosMultipleResponse<TEntity>();
             foreach (var entity in toRemove)
             {
@@ -154,7 +154,7 @@ namespace Cosmonaut.Tests
 
         public IDocumentClient DocumentClient { get; }
 
-        public async Task<List<TEntity>> ToListAsync(Func<TEntity, bool> predicate = null)
+        public async Task<List<TEntity>> ToListAsync(Expression<Func<TEntity, bool>> predicate = null)
         {
             return await Task.Run(() =>
             {
@@ -162,7 +162,7 @@ namespace Cosmonaut.Tests
                 if (predicate == null)
                     predicate = entity => true;
 
-                return _store.Values.Where(predicate).ToList();
+                return _store.Values.Where(predicate.Compile()).ToList();
             });
         }
 
@@ -180,9 +180,9 @@ namespace Cosmonaut.Tests
             });
         }
 
-        public async Task<TEntity> FirstOrDefaultAsync(Func<TEntity, bool> predicate)
+        public async Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
         {
-            return await Task.Run(() => _store.Values.FirstOrDefault(predicate));
+            return await Task.Run(() => _store.Values.FirstOrDefault(predicate.Compile()));
         }
     }
 }

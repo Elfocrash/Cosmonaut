@@ -6,6 +6,6 @@ namespace Cosmonaut.Storage
 {
     public interface ICollectionCreator
     {
-        Task<bool> EnsureCreatedAsync(Type entityType, Database database, int collectionThroughput);
+        Task<bool> EnsureCreatedAsync(Type entityType, Database database, int collectionThroughput, IndexingPolicy indexingPolicy = null);
     }
 }

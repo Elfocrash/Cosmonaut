@@ -10,6 +10,7 @@ using Cosmonaut.Response;
 using Cosmonaut.Storage;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
+using Microsoft.Azure.Documents.Linq;
 
 namespace Cosmonaut
 {
@@ -108,11 +109,14 @@ namespace Cosmonaut
 
         public async Task<IQueryable<TEntity>> WhereAsync(Expression<Func<TEntity, bool>> predicate)
         {
-            return (await QueryableAsync())
+            return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink, new FeedOptions
+                {
+                    EnableCrossPartitionQuery = typeof(TEntity).HasPartitionKey()
+                })
                 .Where(predicate);
         }
         
-        public async Task<CosmosMultipleResponse<TEntity>> RemoveAsync(Func<TEntity, bool> predicate)
+        public async Task<CosmosMultipleResponse<TEntity>> RemoveAsync(Expression<Func<TEntity, bool>> predicate)
         {
             var entitiesToRemove = await ToListAsync(predicate);
             return await RemoveRangeAsync(entitiesToRemove);
@@ -273,37 +277,44 @@ namespace Cosmonaut
             }
         }
 
-        public async Task<List<TEntity>> ToListAsync(Func<TEntity, bool> predicate = null)
+        public async Task<List<TEntity>> ToListAsync(Expression<Func<TEntity, bool>> predicate = null)
         {
             if (predicate == null)
             {
                 predicate = entity => true;
             }
 
-            return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink, new FeedOptions
-                {
-                    EnableCrossPartitionQuery = typeof(TEntity).HasPartitionKey()
-                })
-                .Where(predicate)
-                .ToList();
+            var query = DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink, new FeedOptions
+            {
+                EnableCrossPartitionQuery = typeof(TEntity).HasPartitionKey()
+            })
+            .Where(predicate)
+            .AsDocumentQuery();
+
+            var result = new List<TEntity>();
+            while (query.HasMoreResults)
+            {
+                var item = await query.ExecuteNextAsync<TEntity>();
+                result.AddRange(item);
+            }
+            return result;
         }
 
-        public async Task<TEntity> FirstOrDefaultAsync(Func<TEntity, bool> predicate)
+        public async Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
         {
-            return
-                (await QueryableAsync())
-                    .FirstOrDefault(predicate);
+            var query = DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink, new FeedOptions
+            {
+                EnableCrossPartitionQuery = typeof(TEntity).HasPartitionKey()
+            })
+            .Where(predicate)
+            .AsDocumentQuery();
+
+            if (!query.HasMoreResults) return null;
+            var item = await query.ExecuteNextAsync<TEntity>();
+            return item.FirstOrDefault();
         }
         
         public IDocumentClient DocumentClient { get; }
-
-        public async Task<IOrderedQueryable<TEntity>> QueryableAsync()
-        {
-            return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink, new FeedOptions
-            {
-                EnableCrossPartitionQuery = typeof(TEntity).HasPartitionKey()
-            });
-        }
 
         internal async Task<CosmosMultipleResponse<TEntity>> HandleOperationWithRateLimitRetry(IEnumerable<Task<CosmosResponse<TEntity>>> entitiesTasks,
             Func<TEntity, Task<CosmosResponse<TEntity>>> operationFunc)
@@ -359,7 +370,7 @@ namespace Cosmonaut
         internal async Task<DocumentCollection> GetCollectionAsync()
         {
             var database = await _database;
-            await _collectionCreator.EnsureCreatedAsync(typeof(TEntity), database, _collectionThrouput);
+            await _collectionCreator.EnsureCreatedAsync(typeof(TEntity), database, _collectionThrouput, Settings.IndexingPolicy);
 
             var collection = DocumentClient
                 .CreateDocumentCollectionQuery(database.SelfLink)
