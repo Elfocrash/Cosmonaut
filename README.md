@@ -146,7 +146,7 @@ Note here that this functionality is disabled by default. Usage of Azure to adju
 
 ##### Averages of 1000 iterations for 500 documents per operation on collection with default indexing and 5000 RU/s (POCO serialization)
 
-| Uperation used | Duration |
+| Operation used | Duration |
 | ------------- |:-------------:|
 | AddRangeAsync | 596.5ms |
 | ToListAsync |23.1ms|
@@ -155,7 +155,7 @@ Note here that this functionality is disabled by default. Usage of Azure to adju
 | RemoveAsync | 502.2ms |
 
 ##### Averages of 10000 iterations for 1 document per operation on collection with default indexing and 5000 RU/s (POCO serialization)
-| Uperation used | Duration |
+| Operation used | Duration |
 | ------------- |:-------------:|
 | AddAsync | 3.9433ms |
 | FirstOrDefaultAsync | 2.7492ms |
