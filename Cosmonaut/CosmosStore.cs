@@ -13,7 +13,7 @@ using Microsoft.Azure.Documents.Client;
 
 namespace Cosmonaut
 {
-    public class CosmosStore<TEntity> : ICosmosStore<TEntity> where TEntity : class
+    public sealed class CosmosStore<TEntity> : ICosmosStore<TEntity> where TEntity : class
     {
         private readonly string _databaseName;
         private int _collectionThrouput = CosmosStoreSettings.DefaultCollectionThroughput;
@@ -172,18 +172,8 @@ namespace Cosmonaut
             {
                 entity.ValidateEntityForCosmosDb();
                 var documentId = entity.GetDocumentId();
-                var collection = (await _collection);
-                var documentExists = DocumentClient.CreateDocumentQuery<Document>(collection.DocumentsLink, new FeedOptions
-                    {
-                        EnableCrossPartitionQuery = typeof(TEntity).HasPartitionKey()
-                })
-                    .Where(x => x.Id == documentId).ToList().SingleOrDefault();
-
-                if (documentExists == null)
-                    return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.ResourceNotFound);
-
                 var document = entity.GetCosmosDbFriendlyEntity();
-                var result = await DocumentClient.UpsertDocumentAsync(collection.DocumentsLink, document, new RequestOptions
+                var result = await DocumentClient.ReplaceDocumentAsync(DocumentHelpers.GetDocumentSelfLink(_databaseName, _collectionName, documentId), document, new RequestOptions
                 {
                     PartitionKey = entity.GetPartitionKeyValueForEntity()
                 });

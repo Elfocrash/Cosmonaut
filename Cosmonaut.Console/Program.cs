@@ -45,7 +45,7 @@ namespace Cosmonaut.Console
             System.Console.WriteLine($"Started");
             
             var books = new List<Book>();
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 100; i++)
             {
                 books.Add(new Book
                 {
@@ -63,24 +63,20 @@ namespace Cosmonaut.Console
             var addedRetrieved = cosmoStore.ToListAsync().Result;
             System.Console.WriteLine($"Retrieved 1000 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
-            //foreach (var addedre in addedRetrieved)
-            //{
-            //    addedre.AnotherRandomProp += " Nick";
-            //}
+            foreach (var addedre in addedRetrieved)
+            {
+                addedre.AnotherRandomProp += " Nick";
+            }
 
-            //var updated = cosmoStore.UpsertRangeAsync(addedRetrieved).Result;
-            //System.Console.WriteLine($"Updated 1000 documents in {watch.ElapsedMilliseconds}ms");
-            //watch.Restart();
+            var updated = cosmoStore.UpdateRangeAsync(addedRetrieved).Result;
+            System.Console.WriteLine($"Updated 1000 documents in {watch.ElapsedMilliseconds}ms");
+            watch.Restart();
 
-           // var removed = cosmoStore.RemoveRangeAsync(addedRetrieved).Result;
-            //System.Console.WriteLine($"Removed 1000 documents in {watch.ElapsedMilliseconds}ms");
-            //watch.Reset();
+            var removed = cosmoStore.RemoveRangeAsync(addedRetrieved).Result;
+            System.Console.WriteLine($"Removed 1000 documents in {watch.ElapsedMilliseconds}ms");
+            watch.Reset();
             watch.Stop();
             System.Console.ReadKey();
-            //cosmoStore.RemoveAsync(x => x.Name == "MYBOOK").GetAwaiter().GetResult();
-            //var result = cosmoStore.WhereAsync(x => x.Author.Username == "nick").Result.ToList();
-            //var results = cosmoStore.ToListAsync().Result;
-            // System.Console.ReadKey();
         }
     }
 }

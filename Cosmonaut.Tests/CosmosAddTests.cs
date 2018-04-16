@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Cosmonaut.Exceptions;
 using Cosmonaut.Extensions;
 using Cosmonaut.Response;
 using Cosmonaut.Storage;

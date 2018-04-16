@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Cosmonaut.Response;
+using Cosmonaut.Extensions;
 using Cosmonaut.Storage;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Moq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace Cosmonaut.Tests
@@ -32,8 +31,14 @@ namespace Cosmonaut.Tests
                 Name = "Test"
             };
             var expectedName = "NewTest";
-            _mockDocumentClient.Setup(x => x.CreateDocumentQuery<Document>(It.IsAny<string>(), It.IsAny<FeedOptions>()))
-                .Returns(new EnumerableQuery<Document>(new List<Document> { new Document { Id = id } }));
+            addedDummy.ValidateEntityForCosmosDb();
+            var documentId = addedDummy.GetDocumentId();
+            var document = addedDummy.GetCosmosDbFriendlyEntity();
+            JsonReader reader = new JTokenReader(document);
+            var actualDocument = new Document();
+            actualDocument.LoadFrom(reader);
+            JToken jtoken = JToken.FromObject(document);
+            _mockDocumentClient.Setup(x => x.ReplaceDocumentAsync(DocumentHelpers.GetDocumentSelfLink("databaseName", It.IsAny<string>(), documentId), jtoken, It.IsAny<RequestOptions>())).ReturnsAsync(new ResourceResponse<Document>(actualDocument));
 
             var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
 
@@ -55,44 +60,24 @@ namespace Cosmonaut.Tests
                 Id = id,
                 Name = "Test"
             };
-            _mockDocumentClient.Setup(x => x.CreateDocumentQuery<Document>(It.IsAny<string>(), It.IsAny<FeedOptions>()))
-                .Returns(new EnumerableQuery<Document>(new List<Document> { new Document { Id = id } }));
-
+            addedDummy.ValidateEntityForCosmosDb();
+            var documentId = addedDummy.GetDocumentId();
+            var document = addedDummy.GetCosmosDbFriendlyEntity();
+            JsonReader reader = new JTokenReader(document);
+            var actualDocument = new Document();
+            actualDocument.LoadFrom(reader);
+            JToken jtoken = JToken.FromObject(document);
+            _mockDocumentClient.Setup(x => x.ReplaceDocumentAsync(DocumentHelpers.GetDocumentSelfLink("databaseName", It.IsAny<string>(), documentId), jtoken, It.IsAny<RequestOptions>())).ReturnsAsync(new ResourceResponse<Document>(actualDocument));
+            
             var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
             addedDummy.Name = "newTest";
             // Act
             var result = await entityStore.UpdateRangeAsync(addedDummy);
 
             // Assert
-            Assert.True(result.IsSuccess);
             Assert.Empty(result.FailedEntities);
         }
         
-        [Fact]
-        public async Task UpdateEntityThatHasIdChangedFails()
-        {
-            // Arrange
-            var id = Guid.NewGuid().ToString();
-            var addedDummy = new Dummy
-            {
-                Id = id,
-                Name = "Test"
-            };
-            _mockDocumentClient.Setup(x => x.CreateDocumentQuery<Document>(It.IsAny<string>(), It.IsAny<FeedOptions>()))
-                .Returns(new EnumerableQuery<Document>(new List<Document>{new Document{Id = id}}));
-
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
-
-            // Act
-            addedDummy.Id = Guid.NewGuid().ToString();
-            var result = await entityStore.UpdateAsync(addedDummy);
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(addedDummy, result.Entity);
-            Assert.Equal(CosmosOperationStatus.ResourceNotFound, result.CosmosOperationStatus);
-        }
-
         [Fact]
         public async Task UpsertEntityUpsert()
         {

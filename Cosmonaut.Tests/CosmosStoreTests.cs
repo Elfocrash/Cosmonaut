@@ -1,5 +1,4 @@
 ﻿using Cosmonaut.Extensions;
-using Moq;
 using Xunit;
 
 namespace Cosmonaut.Tests

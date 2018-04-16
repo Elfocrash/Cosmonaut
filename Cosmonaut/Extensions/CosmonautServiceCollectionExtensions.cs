@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Cosmonaut.Storage;
+﻿using Cosmonaut.Storage;
 using Microsoft.Azure.Documents;
 using Microsoft.Extensions.DependencyInjection;
 

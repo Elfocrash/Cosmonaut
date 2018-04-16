@@ -1,5 +1,4 @@
-﻿using System;
-using Cosmonaut.Attributes;
+﻿using Cosmonaut.Attributes;
 using Xunit;
 
 namespace Cosmonaut.Tests

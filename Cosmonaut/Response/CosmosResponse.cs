@@ -5,7 +5,7 @@ namespace Cosmonaut.Response
 {
     public class CosmosResponse<TEntity> where TEntity : class
     {
-        public bool IsSuccess => (ResourceResponse != null &&
+        public bool IsSuccess => (ResourceResponse?.StatusCode != null &&
             (int)ResourceResponse.StatusCode >= 200 && 
             (int)ResourceResponse.StatusCode <= 299 && 
             CosmosOperationStatus == CosmosOperationStatus.Success) || 
