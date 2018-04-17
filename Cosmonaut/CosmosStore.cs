@@ -195,7 +195,7 @@ namespace Cosmonaut
             }
             catch (DocumentClientException exception)
             {
-                return HandleDocumentClientException(exception);
+                return HandleDocumentClientException(entity, exception);
             }
         }
 
