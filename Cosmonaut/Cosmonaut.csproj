@@ -5,14 +5,14 @@
     <Authors>Nick Chapsas</Authors>
     <Description>A simple and lightweight ORM for Microsoft's CosmosDB.</Description>
 	<Summary>A simple and easy to use entity store for Microsoft's CosmosDB.</Summary>
-    <Copyright>Copyright 2018</Copyright>
+    <Copyright>Copyright 2018 - Nick Chapsas</Copyright>
 	<Title>Cosmonaut</Title>
     <PackageLicenseUrl>https://github.com/Elfocrash/Cosmonaut/blob/develop/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/Elfocrash/Cosmonaut</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Elfocrash/Cosmonaut</RepositoryUrl>
     <PackageTags>cosmosdb azure cosmos entitystore entity db orm</PackageTags>
     <PackageReleaseNotes>Please report any issues on Github.</PackageReleaseNotes>
-    <Version>1.0.6</Version>
+    <Version>1.0.7</Version>
   </PropertyGroup>
 
   <ItemGroup>

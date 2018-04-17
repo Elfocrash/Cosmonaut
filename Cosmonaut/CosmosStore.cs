@@ -16,7 +16,6 @@ namespace Cosmonaut
 {
     public sealed class CosmosStore<TEntity> : ICosmosStore<TEntity> where TEntity : class
     {
-        private readonly string _databaseName;
         private int _collectionThrouput = CosmosStoreSettings.DefaultCollectionThroughput;
         private AsyncLazy<Database> _database;
         private AsyncLazy<DocumentCollection> _collection;
@@ -30,13 +29,13 @@ namespace Cosmonaut
             IDatabaseCreator databaseCreator, 
             ICollectionCreator collectionCreator)
         {
-            _collectionCreator = collectionCreator ?? throw new ArgumentNullException(nameof(collectionCreator));
             Settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            _databaseCreator = databaseCreator ?? throw new ArgumentNullException(nameof(databaseCreator));
             var endpointUrl = Settings.EndpointUrl ?? throw new ArgumentNullException(nameof(Settings.EndpointUrl));
             var authKey = Settings.AuthKey ?? throw new ArgumentNullException(nameof(Settings.AuthKey));
             DocumentClient = DocumentClientFactory.CreateDocumentClient(endpointUrl, authKey);
-            _databaseName = Settings.DatabaseName ?? throw new ArgumentNullException(nameof(Settings.DatabaseName));
+            if (string.IsNullOrEmpty(Settings.DatabaseName)) throw new ArgumentNullException(nameof(Settings.DatabaseName));
+            _collectionCreator = collectionCreator ?? throw new ArgumentNullException(nameof(collectionCreator));
+            _databaseCreator = databaseCreator ?? throw new ArgumentNullException(nameof(databaseCreator));
             InitialiseCosmosStore();
         }
 
@@ -45,11 +44,11 @@ namespace Cosmonaut
             IDatabaseCreator databaseCreator, 
             ICollectionCreator collectionCreator)
         {
+            DocumentClient = documentClient ?? throw new ArgumentNullException(nameof(documentClient));
+            Settings = new CosmosStoreSettings(databaseName, documentClient.ServiceEndpoint, documentClient.AuthKey.ToString(), documentClient.ConnectionPolicy);
+            if (string.IsNullOrEmpty(Settings.DatabaseName)) throw new ArgumentNullException(nameof(Settings.DatabaseName));
             _databaseCreator = databaseCreator ?? throw new ArgumentNullException(nameof(databaseCreator));
             _collectionCreator = collectionCreator ?? throw new ArgumentNullException(nameof(collectionCreator));
-            DocumentClient = documentClient ?? throw new ArgumentNullException(nameof(documentClient));
-            _databaseName = databaseName ?? throw new ArgumentNullException(nameof(documentClient));
-            Settings = new CosmosStoreSettings(databaseName, documentClient.ServiceEndpoint, documentClient.AuthKey.ToString(), documentClient.ConnectionPolicy);
             InitialiseCosmosStore();
         }
 
@@ -138,7 +137,7 @@ namespace Cosmonaut
             {
                 entity.ValidateEntityForCosmosDb();
                 var documentId = entity.GetDocumentId();
-                var documentSelfLink = DocumentHelpers.GetDocumentSelfLink(_databaseName, _collectionName, documentId);
+                var documentSelfLink = DocumentHelpers.GetDocumentSelfLink(Settings.DatabaseName, _collectionName, documentId);
                 var result = await DocumentClient.DeleteDocumentAsync(documentSelfLink, new RequestOptions
                 {
                     PartitionKey = entity.GetPartitionKeyValueForEntity()
@@ -187,7 +186,7 @@ namespace Cosmonaut
                 entity.ValidateEntityForCosmosDb();
                 var documentId = entity.GetDocumentId();
                 var document = entity.GetCosmosDbFriendlyEntity();
-                var result = await DocumentClient.ReplaceDocumentAsync(DocumentHelpers.GetDocumentSelfLink(_databaseName, _collectionName, documentId), document, new RequestOptions
+                var result = await DocumentClient.ReplaceDocumentAsync(DocumentHelpers.GetDocumentSelfLink(Settings.DatabaseName, _collectionName, documentId), document, new RequestOptions
                 {
                     PartitionKey = entity.GetPartitionKeyValueForEntity()
                 });
@@ -272,10 +271,10 @@ namespace Cosmonaut
         {
             return await UpsertRangeAsync((IEnumerable<TEntity>)entities);
         }
-
+        
         public async Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id)
         {
-            var documentSelfLink = DocumentHelpers.GetDocumentSelfLink(_databaseName, _collectionName, id);
+            var documentSelfLink = DocumentHelpers.GetDocumentSelfLink(Settings.DatabaseName, _collectionName, id);
             try
             {
                 var result = await DocumentClient.DeleteDocumentAsync(documentSelfLink);
@@ -367,12 +366,12 @@ namespace Cosmonaut
 
         internal async Task<Database> GetDatabaseAsync()
         {
-            await _databaseCreator.EnsureCreatedAsync(_databaseName);
+            await _databaseCreator.EnsureCreatedAsync(Settings.DatabaseName);
 
             Database database = DocumentClient.CreateDatabaseQuery()
-                .Where(db => db.Id == _databaseName)
+                .Where(db => db.Id == Settings.DatabaseName)
                 .ToArray()
-                .FirstOrDefault();
+                .First();
             
             return database;
         }

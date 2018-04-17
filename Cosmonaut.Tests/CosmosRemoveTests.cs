@@ -25,7 +25,7 @@ namespace Cosmonaut.Tests
         [Fact]
         public async Task RemoveEntityRemoves()
         {
-            // Assign
+            // Arrange
             var id = Guid.NewGuid().ToString();
             var addedDummy = new Dummy
             {
@@ -47,7 +47,7 @@ namespace Cosmonaut.Tests
         [Fact]
         public async Task RemoveByIdRemoves()
         {
-            // Assign
+            // Arrange
             var id = Guid.NewGuid().ToString();
             var addedDummy = new Dummy
             {
@@ -69,7 +69,7 @@ namespace Cosmonaut.Tests
         [Fact]
         public async Task RemoveByExpressionRemoves()
         {
-            // Assign
+            // Arrange
             foreach (var i in Enumerable.Range(0, 10))
             {
                 var id = Guid.NewGuid().ToString();
@@ -92,7 +92,7 @@ namespace Cosmonaut.Tests
         [Fact]
         public async Task RemoveRangeRemoves()
         {
-            // Assign
+            // Arrange
             var addedList = new List<Dummy>();
             foreach (var i in Enumerable.Range(0, 10))
             {

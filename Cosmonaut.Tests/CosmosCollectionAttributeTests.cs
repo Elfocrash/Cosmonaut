@@ -8,7 +8,7 @@ namespace Cosmonaut.Tests
         [Fact]
         public void SettingTheNameSetsNameAndDefaultThroughput()
         {
-            // Assign
+            // Arrange
             var expectedThroughput = -1;
             var expectedName = "name";
 
@@ -23,7 +23,7 @@ namespace Cosmonaut.Tests
         [Fact]
         public void SettingTheNameAndAttributeSetsNameAndDefaultThroughput()
         {
-            // Assign
+            // Arrange
             var expectedThroughput = 1000;
             var expectedName = "name";
 
