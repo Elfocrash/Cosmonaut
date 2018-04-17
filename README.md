@@ -50,10 +50,8 @@ await cosmoStore.UpsertAsync(entity);
 ```
 
 The main difference is of course in the functionality.
-Update will check if the item exists and it will only update it if it does exist.
+Update will only update if the item you are updating exists in the database with this id.
 Upsert on the other hand will either add the item if there is no item with this id or update it if an item with this id exists.
-
-Upsert is significantly faster than Update as it doesn't check if the item exists before it operates. It is also cheaper when it comes to RUs.
 
 ##### Removing entities
 ```csharp
