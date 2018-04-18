@@ -68,7 +68,7 @@ namespace Cosmonaut.Console
             {
                 addedre.AnotherRandomProp += " Nick";
             }
-            
+
             var updated = cosmoStore.UpdateRangeAsync(addedRetrieved).Result;
             System.Console.WriteLine($"Updated 1000 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();

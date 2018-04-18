@@ -286,6 +286,23 @@ namespace Cosmonaut
             }
         }
 
+        public async Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate = null)
+        {
+            if (predicate == null)
+            {
+                predicate = entity => true;
+            }
+
+            var count = await DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink, new FeedOptions
+                {
+                    EnableCrossPartitionQuery = typeof(TEntity).HasPartitionKey()
+                })
+                .Where(predicate)
+                .CountAsync();
+
+            return count;
+        }
+
         public async Task<List<TEntity>> ToListAsync(Expression<Func<TEntity, bool>> predicate = null)
         {
             if (predicate == null)

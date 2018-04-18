@@ -139,7 +139,12 @@ namespace Cosmonaut.Tests
                 return new CosmosResponse<TEntity>(CosmosOperationStatus.ResourceNotFound);
             });
         }
-        
+
+        public Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<CosmosMultipleResponse<TEntity>> RemoveAsync(Expression<Func<TEntity, bool>> predicate)
         {
             var toRemove = _store.Values.Where(predicate.Compile()).ToList();

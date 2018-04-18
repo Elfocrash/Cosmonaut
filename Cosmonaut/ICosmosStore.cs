@@ -298,7 +298,17 @@ namespace Cosmonaut
         ///     various response information such as whether it was successful or what (if anything) went wrong.
         /// </returns>
         Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id);
-        
+
+        /// <summary>
+        ///     Returns the count of documents that much the query in the cosmos db store.
+        /// </summary>
+        /// <param name="predicate">The expression that the query is based on. </param>
+        /// <returns> 
+        ///     A task that represents the asynchronous Count operation. The task result contains the
+        ///     count of the collection.
+        /// </returns>
+        Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate = null);
+
         /// <summary>
         ///     Exposes the lower level DocumentClient to the consumer.
         /// </summary>
