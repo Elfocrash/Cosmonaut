@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Cosmonaut.Response;
@@ -140,7 +141,7 @@ namespace Cosmonaut.Tests
             });
         }
 
-        public Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate = null)
+        public Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate = null, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
@@ -165,7 +166,7 @@ namespace Cosmonaut.Tests
             throw new NotImplementedException();
         }
 
-        public async Task<List<TEntity>> ToListAsync(Expression<Func<TEntity, bool>> predicate = null)
+        public async Task<List<TEntity>> ToListAsync(Expression<Func<TEntity, bool>> predicate = null, CancellationToken cancellationToken = default)
         {
             return await Task.Run(() =>
             {
@@ -174,7 +175,7 @@ namespace Cosmonaut.Tests
                     predicate = entity => true;
 
                 return _store.Values.Where(predicate.Compile()).ToList();
-            });
+            }, cancellationToken);
         }
 
         public Task<IOrderedQueryable<TEntity>> QueryableAsync()
@@ -191,9 +192,9 @@ namespace Cosmonaut.Tests
             });
         }
 
-        public async Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
+        public async Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)
         {
-            return await Task.Run(() => _store.Values.FirstOrDefault(predicate.Compile()));
+            return await Task.Run(() => _store.Values.FirstOrDefault(predicate.Compile()), cancellationToken);
         }
     }
 }

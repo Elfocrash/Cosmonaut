@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Cosmonaut.Exceptions;
 using Cosmonaut.Extensions;
@@ -286,7 +287,7 @@ namespace Cosmonaut
             }
         }
 
-        public async Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate = null)
+        public async Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate = null, CancellationToken cancellationToken = default)
         {
             if (predicate == null)
             {
@@ -298,12 +299,12 @@ namespace Cosmonaut
                     EnableCrossPartitionQuery = typeof(TEntity).HasPartitionKey()
                 })
                 .Where(predicate)
-                .CountAsync();
+                .CountAsync(cancellationToken);
 
             return count;
         }
 
-        public async Task<List<TEntity>> ToListAsync(Expression<Func<TEntity, bool>> predicate = null)
+        public async Task<List<TEntity>> ToListAsync(Expression<Func<TEntity, bool>> predicate = null, CancellationToken cancellationToken = default)
         {
             if (predicate == null)
             {
@@ -320,13 +321,13 @@ namespace Cosmonaut
             var result = new List<TEntity>();
             while (query.HasMoreResults)
             {
-                var item = await query.ExecuteNextAsync<TEntity>();
+                var item = await query.ExecuteNextAsync<TEntity>(cancellationToken);
                 result.AddRange(item);
             }
             return result;
         }
 
-        public async Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
+        public async Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)
         {
             var query = DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink, new FeedOptions
             {
@@ -336,7 +337,7 @@ namespace Cosmonaut
             .AsDocumentQuery();
 
             if (!query.HasMoreResults) return null;
-            var item = await query.ExecuteNextAsync<TEntity>();
+            var item = await query.ExecuteNextAsync<TEntity>(cancellationToken);
             return item.FirstOrDefault();
         }
         

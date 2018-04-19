@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Cosmonaut.Exceptions;
 using Cosmonaut.Response;
@@ -303,11 +304,12 @@ namespace Cosmonaut
         ///     Returns the count of documents that much the query in the cosmos db store.
         /// </summary>
         /// <param name="predicate">The expression that the query is based on. </param>
+        /// <param name="cancellationToken">The cancellation token for this operation.</param>
         /// <returns> 
         ///     A task that represents the asynchronous Count operation. The task result contains the
         ///     count of the collection.
         /// </returns>
-        Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate = null);
+        Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         ///     Exposes the lower level DocumentClient to the consumer.
@@ -316,10 +318,10 @@ namespace Cosmonaut
 
         Task<IDocumentQuery<TEntity>> AsDocumentQueryAsync(Expression<Func<TEntity, bool>> predicate = null);
 
-        Task<List<TEntity>> ToListAsync(Expression<Func<TEntity, bool>> predicate = null);
+        Task<List<TEntity>> ToListAsync(Expression<Func<TEntity, bool>> predicate = null, CancellationToken cancellationToken = default);
 
         Task<IQueryable<TEntity>> WhereAsync(Expression<Func<TEntity, bool>> predicate);
 
-        Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate);
+        Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
     }
 }
