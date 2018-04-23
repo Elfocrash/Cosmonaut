@@ -25,7 +25,7 @@
 
   <ItemGroup>
     <PackageReference Include="Humanizer.Core.uk" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="1.9.1" />
+    <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="1.10.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.0.0" />
   </ItemGroup>
 
