@@ -24,6 +24,24 @@ namespace Cosmonaut.Extensions
             return !string.IsNullOrEmpty(collectionName) ? collectionName : entityType.Name.ToLower().Pluralize();
         }
 
+        internal static string GetSharedCollectionName(this Type entityType)
+        {
+            var collectionNameAttribute = entityType.GetCustomAttribute<SharedCosmosCollectionAttribute>();
+
+            var collectionName = collectionNameAttribute?.SharedCollectionName;
+
+            if (string.IsNullOrEmpty(collectionName))
+                throw new SharedCollectionNameMissingException(entityType);
+
+            return collectionName;
+        }
+
+        internal static bool UsesSharedCollection(this Type entityType)
+        {
+            var collectionNameAttribute = entityType.GetCustomAttribute<SharedCosmosCollectionAttribute>();
+            return collectionNameAttribute != null;
+        }
+
         internal static int GetCollectionThroughputForEntity(this Type entityType, 
             bool allowAttributesToConfigureThroughput,
             int collectionThroughput)

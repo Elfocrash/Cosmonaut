@@ -23,6 +23,7 @@ namespace Cosmonaut
         public readonly CosmosStoreSettings Settings;
         private string _collectionName;
         private bool _isUpscaled;
+        private bool _isShared;
         private readonly IDatabaseCreator _databaseCreator;
         private readonly ICollectionCreator _collectionCreator;
 
@@ -468,6 +469,7 @@ namespace Cosmonaut
 
         internal void InitialiseCosmosStore()
         {
+            _isShared = typeof(TEntity).UsesSharedCollection();
             _collectionName = typeof(TEntity).GetCollectionName();
             _collectionThrouput = typeof(TEntity).GetCollectionThroughputForEntity(Settings.AllowAttributesToConfigureThroughput, Settings.CollectionThroughput);
 

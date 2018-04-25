@@ -12,12 +12,6 @@ namespace Cosmonaut.Console
     {
         static void Main(string[] args)
         {
-            var newUser = new TestUser
-            {
-                Username = "nick",
-                Id = Guid.NewGuid().ToString()
-            };
-
             var connectionPolicy = new ConnectionPolicy
             {
                 ConnectionProtocol = Protocol.Tcp,
@@ -38,11 +32,15 @@ namespace Cosmonaut.Console
            
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddCosmosStore<Book>(cosmosSettings);
+            serviceCollection.AddCosmosStore<Car>(cosmosSettings);
 
             var provider = serviceCollection.BuildServiceProvider();
 
-            var cosmoStore = provider.GetService<ICosmosStore<Book>>();
-            cosmoStore.RemoveAsync(x => true).GetAwaiter().GetResult();
+            var booksStore = provider.GetService<ICosmosStore<Book>>();
+            var carStore = provider.GetService<ICosmosStore<Car>>();
+
+
+            booksStore.RemoveAsync(x => true).GetAwaiter().GetResult();
             System.Console.WriteLine($"Started");
             
             var books = new List<Book>();
@@ -57,11 +55,11 @@ namespace Cosmonaut.Console
             }
             var watch = new Stopwatch();
             watch.Start();
-            var added = cosmoStore.AddRangeAsync(books).Result;
+            var added = booksStore.AddRangeAsync(books).Result;
             System.Console.WriteLine($"Added 1000 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
 
-            var addedRetrieved = cosmoStore.ToListAsync().Result;
+            var addedRetrieved = booksStore.ToListAsync().Result;
             System.Console.WriteLine($"Retrieved 1000 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
             foreach (var addedre in addedRetrieved)
@@ -69,11 +67,11 @@ namespace Cosmonaut.Console
                 addedre.AnotherRandomProp += " Nick";
             }
 
-            var updated = cosmoStore.UpdateRangeAsync(addedRetrieved).Result;
+            var updated = booksStore.UpdateRangeAsync(addedRetrieved).Result;
             System.Console.WriteLine($"Updated 1000 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
             
-            var removed = cosmoStore.RemoveRangeAsync(addedRetrieved).Result;
+            var removed = booksStore.RemoveRangeAsync(addedRetrieved).Result;
             System.Console.WriteLine($"Removed 1000 documents in {watch.ElapsedMilliseconds}ms");
             watch.Reset();
             watch.Stop();
