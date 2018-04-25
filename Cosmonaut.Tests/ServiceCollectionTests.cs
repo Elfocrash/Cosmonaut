@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security;
-using System.Threading.Tasks;
-using Cosmonaut.Extensions;
-using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Client;
+﻿using Cosmonaut.Extensions;
+using Cosmonaut.Storage;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
 using Xunit;
 
 namespace Cosmonaut.Tests
@@ -17,15 +10,15 @@ namespace Cosmonaut.Tests
         [Fact]
         public void AddCosmosStoreRegistersStore()
         {
-            // Assign
+            // Arrange
             var serviceCollection = new ServiceCollection();
             var documentClient = MockHelpers.GetFakeDocumentClient();
-            
-            //Act
-            serviceCollection.AddCosmosStore<Dummy>(documentClient.Object, "databaseName");
+
+            // Act
+            serviceCollection.AddCosmosStore<Dummy>(documentClient.Object, "databaseName", new CosmosDatabaseCreator(documentClient.Object), new CosmosCollectionCreator(documentClient.Object));
             var provider = serviceCollection.BuildServiceProvider();
 
-            //Assert
+            // Assert
             var cosmosStore = provider.GetService<ICosmosStore<Dummy>>();
             Assert.NotNull(cosmosStore);
         }

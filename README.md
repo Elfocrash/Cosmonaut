@@ -4,7 +4,7 @@
 
 > The word was derived from "kosmos" (Ancient Greek: κόσμος) which means world/universe and "nautes" (Ancient Greek: ναῦς) which means sailor/navigator
 
-Cosmonaut is an object-relational mapper (O/RM) that enables .NET developers to work with a CosmosDB using .NET objects. It eliminates the need for most of the data-access code that developers usually need to write. Sounds familiar? It's because it's heavily inspired by Entity Framework.
+Cosmonaut is an object mapper that enables .NET developers to work with a CosmosDB using .NET objects. It eliminates the need for most of the data-access code that developers usually need to write.
 
 ### Usage 
 The idea is pretty simple. You can have one CosmoStore per entity (POCO/dtos etc)
@@ -50,10 +50,8 @@ await cosmoStore.UpsertAsync(entity);
 ```
 
 The main difference is of course in the functionality.
-Update will check if the item exists and it will only update it if it does exist.
+Update will only update if the item you are updating exists in the database with this id.
 Upsert on the other hand will either add the item if there is no item with this id or update it if an item with this id exists.
-
-Upsert is significantly faster than Update as it doesn't check if the item exists before it operates. It is also cheaper when it comes to RUs.
 
 ##### Removing entities
 ```csharp
@@ -61,6 +59,45 @@ await cosmoStore.RemoveAsync(x => x.Name == "Nick"); // Removes all the entities
 await cosmoStore.RemoveAsync(entity);// Removes the specific entity
 await cosmoStore.RemoveByIdAsync("<<anId>>");// Removes an entity with the specified ID
 ```
+
+#### Indexing
+By default CosmosDB is created with the following indexing rules
+
+```javascript
+{
+    "indexingMode": "consistent",
+    "automatic": true,
+    "includedPaths": [
+        {
+            "path": "/*",
+            "indexes": [
+                {
+                    "kind": "Range",
+                    "dataType": "Number",
+                    "precision": -1
+                },
+                {
+                    "kind": "Hash",
+                    "dataType": "String",
+                    "precision": 3
+                }
+            ]
+        }
+    ],
+    "excludedPaths": []
+}
+```
+
+Indexing in necessary for things like querying the collections.
+Keep in mind that when you manage indexing policy, you can make fine-grained trade-offs between index storage overhead, write and query throughput, and query consistency.
+
+For example if the String datatype is Hash then exact matches like the following,
+`cosmoStore.FirstOrDefaultAsync(x => x.SomeProperty.Equals($"Nick Chapsas")`
+will return the item if it exists in CosmosDB but 
+`cosmoStore.FirstOrDefaultAsync(x => x.SomeProperty.StartsWith($"Nick Ch")`
+will throw an error. Changing the Hash to Range will work.
+
+More about CosmosDB Indexing [here](https://docs.microsoft.com/en-us/azure/cosmos-db/indexing-policies)
 
 #### Partitioning
 Cosmonaut supports partitions out of the box. You can specify which property you want to be your Partition Key by adding the `[CosmosPartitionKey]` attribute above it.
@@ -82,6 +119,14 @@ There is a plan however to deal with this on the Update method eventually.
 
 More on the third issue here [Unique keys in Azure Cosmos DB](https://docs.microsoft.com/en-us/azure/cosmos-db/unique-keys)
 
+#### Collection naming
+Your collections will automatically be named based on the plural of the object you are using in the generic type.
+However you can override that by decorating the class with the `CosmosCollection` attribute.
+
+Example:
+```csharp
+[CosmosCollection("somename")]
+```
 
 #### Performance
 Performance can vary dramatically based on the throughput (RU/s*) you are using.
@@ -93,17 +138,28 @@ Example:
 ```csharp
 [CosmosCollection(Throughput = 1000)]
 ```
-
 Note here that this functionality is disabled by default. Usage of Azure to adjust is recommended.
 
-#### Collection naming
-Your collections will automatically be named based on the plural of the object you are using in the generic type.
-However you can override that by decorating the class with the `CosmosCollection` attribute.
+#### Benchmarks
 
-Example:
-```csharp
-[CosmosCollection("somename")]
-```
+##### Averages of 1000 iterations for 500 documents per operation on collection with default indexing and 5000 RU/s (POCO serialization)
+
+| Operation used | Duration |
+| ------------- |:-------------:|
+| AddRangeAsync | 596.5ms |
+| ToListAsync |23.1ms|
+| UpdateRangeAsync |653.6ms|
+| UpsertRangeAsync |620.2ms|
+| RemoveAsync | 502.2ms |
+
+##### Averages of 10000 iterations for 1 document per operation on collection with default indexing and 5000 RU/s (POCO serialization)
+| Operation used | Duration |
+| ------------- |:-------------:|
+| AddAsync | 3.9433ms |
+| FirstOrDefaultAsync | 2.7492ms |
+| UpdateAsync | 4.1562ms |
+| UpsertAsync | 4.1842ms |
+| RemoveAsync | 3.9682ms |
 
 ### Restrictions
 Because of the way the internal `id` property of Cosmosdb works, there is a mandatory restriction made.

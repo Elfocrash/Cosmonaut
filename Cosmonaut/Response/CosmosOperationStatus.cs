@@ -5,6 +5,7 @@
         Success,
         ResourceNotFound,
         ResourceWithIdAlreadyExists,
-        RequestRateIsLarge
+        RequestRateIsLarge,
+        GeneralFailure
     }
 }

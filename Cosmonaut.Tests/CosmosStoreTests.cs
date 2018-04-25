@@ -1,4 +1,4 @@
-﻿using Moq;
+﻿using Cosmonaut.Extensions;
 using Xunit;
 
 namespace Cosmonaut.Tests
@@ -15,7 +15,7 @@ namespace Cosmonaut.Tests
             var expectedSelfLink = $"dbs/{databaseName}/colls/{collectionName}/docs/{documentId}/";
 
             // Act
-            var selfLink = new CosmosDocumentProcessor<Dummy>().GetDocumentSelfLink(databaseName,collectionName,documentId);
+            var selfLink = DocumentHelpers.GetDocumentSelfLink(databaseName,collectionName,documentId);
 
             // Assert
             Assert.Equal(expectedSelfLink, selfLink);

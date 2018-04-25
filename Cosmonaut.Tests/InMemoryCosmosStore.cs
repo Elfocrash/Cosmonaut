@@ -3,29 +3,30 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
+using Cosmonaut.Extensions;
 using Cosmonaut.Response;
 using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Linq;
 
 namespace Cosmonaut.Tests
 {
     public class InMemoryCosmosStore<TEntity> : ICosmosStore<TEntity> where TEntity : class
     {
         private readonly ConcurrentDictionary<string, TEntity> _store;
-        private readonly CosmosDocumentProcessor<TEntity> _documentProcessor;
 
         public InMemoryCosmosStore()
         {
             _store = new ConcurrentDictionary<string, TEntity>();
-            _documentProcessor = new CosmosDocumentProcessor<TEntity>();
         }
 
         public async Task<CosmosResponse<TEntity>> AddAsync(TEntity entity)
         {
             return await Task.Run(() =>
                 {
-                    _documentProcessor.ValidateEntityForCosmosDb(entity);
-                    var id = _documentProcessor.GetDocumentId(entity);
+                    entity.ValidateEntityForCosmosDb();
+                    var id = entity.GetDocumentId();
                     if (_store.TryAdd(id, entity))
                         return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.Success);
                     return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.ResourceWithIdAlreadyExists);
@@ -54,8 +55,8 @@ namespace Cosmonaut.Tests
         {
             return await Task.Run(() =>
             {
-                _documentProcessor.ValidateEntityForCosmosDb(entity);
-                var id = _documentProcessor.GetDocumentId(entity);
+                entity.ValidateEntityForCosmosDb();
+                var id = entity.GetDocumentId();
 
                 if (!_store.ContainsKey(id))
                     return new CosmosResponse<TEntity>(CosmosOperationStatus.ResourceNotFound);
@@ -99,14 +100,17 @@ namespace Cosmonaut.Tests
 
         public async Task<CosmosResponse<TEntity>> RemoveAsync(TEntity entity)
         {
-            _documentProcessor.ValidateEntityForCosmosDb(entity);
-            var id = _documentProcessor.GetDocumentId(entity);
-            if (_store.TryRemove(id, out var outEntity))
+            return await Task.Run(()=>
             {
-                return new CosmosResponse<TEntity>(outEntity, CosmosOperationStatus.Success);
-            }
+                entity.ValidateEntityForCosmosDb();
+                var id = entity.GetDocumentId();
+                if (_store.TryRemove(id, out var outEntity))
+                {
+                    return new CosmosResponse<TEntity>(outEntity, CosmosOperationStatus.Success);
+                }
 
-            return new CosmosResponse<TEntity>(CosmosOperationStatus.ResourceNotFound);
+                return new CosmosResponse<TEntity>(CosmosOperationStatus.ResourceNotFound);
+            });
         }
 
         public async Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(params TEntity[] entities)
@@ -136,10 +140,15 @@ namespace Cosmonaut.Tests
                 return new CosmosResponse<TEntity>(CosmosOperationStatus.ResourceNotFound);
             });
         }
-        
-        public async Task<CosmosMultipleResponse<TEntity>> RemoveAsync(Func<TEntity, bool> predicate)
+
+        public Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate = null, CancellationToken cancellationToken = default)
         {
-            var toRemove = _store.Values.Where(predicate).ToList();
+            throw new NotImplementedException();
+        }
+
+        public async Task<CosmosMultipleResponse<TEntity>> RemoveAsync(Expression<Func<TEntity, bool>> predicate)
+        {
+            var toRemove = _store.Values.Where(predicate.Compile()).ToList();
             var response = new CosmosMultipleResponse<TEntity>();
             foreach (var entity in toRemove)
             {
@@ -152,7 +161,12 @@ namespace Cosmonaut.Tests
 
         public IDocumentClient DocumentClient { get; }
 
-        public async Task<List<TEntity>> ToListAsync(Func<TEntity, bool> predicate = null)
+        public Task<IDocumentQuery<TEntity>> AsDocumentQueryAsync(Expression<Func<TEntity, bool>> predicate = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<List<TEntity>> ToListAsync(Expression<Func<TEntity, bool>> predicate = null, CancellationToken cancellationToken = default)
         {
             return await Task.Run(() =>
             {
@@ -160,8 +174,8 @@ namespace Cosmonaut.Tests
                 if (predicate == null)
                     predicate = entity => true;
 
-                return _store.Values.Where(predicate).ToList();
-            });
+                return _store.Values.Where(predicate.Compile()).ToList();
+            }, cancellationToken);
         }
 
         public Task<IOrderedQueryable<TEntity>> QueryableAsync()
@@ -178,9 +192,9 @@ namespace Cosmonaut.Tests
             });
         }
 
-        public async Task<TEntity> FirstOrDefaultAsync(Func<TEntity, bool> predicate)
+        public async Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)
         {
-            return await Task.Run(() => _store.Values.FirstOrDefault(predicate));
+            return await Task.Run(() => _store.Values.FirstOrDefault(predicate.Compile()), cancellationToken);
         }
     }
 }

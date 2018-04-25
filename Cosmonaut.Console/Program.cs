@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Cosmonaut.Extensions;
+using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -29,8 +30,11 @@ namespace Cosmonaut.Console
             };
 
             var cosmosSettings = new CosmosStoreSettings("localtest", 
-                new Uri("https://localhost:8081"), 
-                "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==", connectionPolicy, collectionThroughput: 1000);
+                "https://localhost:8081", 
+                "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
+                , connectionPolicy
+                , collectionThroughput: 5000
+                , scaleCollectionRUsAutomatically: false);
            
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddCosmosStore<Book>(cosmosSettings);
@@ -42,7 +46,7 @@ namespace Cosmonaut.Console
             System.Console.WriteLine($"Started");
             
             var books = new List<Book>();
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 500; i++)
             {
                 books.Add(new Book
                 {
@@ -57,7 +61,7 @@ namespace Cosmonaut.Console
             System.Console.WriteLine($"Added 1000 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
 
-            var addedRetrieved = cosmoStore.ToListAsync(x => x.Name.StartsWith("Test ")).Result;
+            var addedRetrieved = cosmoStore.ToListAsync().Result;
             System.Console.WriteLine($"Retrieved 1000 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
             foreach (var addedre in addedRetrieved)
@@ -65,19 +69,15 @@ namespace Cosmonaut.Console
                 addedre.AnotherRandomProp += " Nick";
             }
 
-            var updated = cosmoStore.UpsertRangeAsync(addedRetrieved).Result;
+            var updated = cosmoStore.UpdateRangeAsync(addedRetrieved).Result;
             System.Console.WriteLine($"Updated 1000 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
-
+            
             var removed = cosmoStore.RemoveRangeAsync(addedRetrieved).Result;
             System.Console.WriteLine($"Removed 1000 documents in {watch.ElapsedMilliseconds}ms");
             watch.Reset();
             watch.Stop();
             System.Console.ReadKey();
-            //cosmoStore.RemoveAsync(x => x.Name == "MYBOOK").GetAwaiter().GetResult();
-            //var result = cosmoStore.WhereAsync(x => x.Author.Username == "nick").Result.ToList();
-            //var results = cosmoStore.ToListAsync().Result;
-            // System.Console.ReadKey();
         }
     }
 }

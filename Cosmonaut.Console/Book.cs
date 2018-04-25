@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace Cosmonaut.Console
 {
-    [CosmosCollection("bookwith",Throughput = 5000)]
+    [CosmosCollection("bookwith")]
     public class Book
     {
         [CosmosPartitionKey]
