@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
@@ -44,30 +43,13 @@ namespace Cosmonaut.Storage
 
             if (indexingPolicy != null)
                 collection.IndexingPolicy = indexingPolicy;
-
-            //SetDefaultIndexingPolicyForSharedCollection(isSharedCollection, collection);
-
+            
             collection = await _documentClient.CreateDocumentCollectionAsync(database.SelfLink, collection, new RequestOptions
             {
                 OfferThroughput = collectionThroughput
             });
 
             return collection != null;
-        }
-
-        private static void SetDefaultIndexingPolicyForSharedCollection(bool isSharedCollection, DocumentCollection collection)
-        {
-            if (isSharedCollection)
-            {
-                collection.IndexingPolicy.IncludedPaths.Add(new IncludedPath
-                {
-                    Path = "/id",
-                    Indexes = new Collection<Index>
-                    {
-                        new RangeIndex(DataType.String, -1)
-                    }
-                });
-            }
         }
 
         private static void SetPartitionKeyAsIdIfCollectionIsShared(bool isSharedCollection, DocumentCollection collection)
