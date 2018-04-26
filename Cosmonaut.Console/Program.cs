@@ -40,11 +40,12 @@ namespace Cosmonaut.Console
             var carStore = provider.GetService<ICosmosStore<Car>>();
 
 
-            booksStore.RemoveAsync(x => true).GetAwaiter().GetResult();
+            var booksRemoved = booksStore.RemoveAsync(x => true).GetAwaiter().GetResult();
+            var carsRemoved = carStore.RemoveAsync(x => true).GetAwaiter().GetResult();
             System.Console.WriteLine($"Started");
             
             var books = new List<Book>();
-            for (int i = 0; i < 500; i++)
+            for (int i = 0; i < 50; i++)
             {
                 books.Add(new Book
                 {
@@ -53,14 +54,26 @@ namespace Cosmonaut.Console
                     AnotherRandomProp = "Random " + i
                 });
             }
+
+            var cars = new List<Car>();
+            for (int i = 0; i < 50; i++)
+            {
+                cars.Add(new Car
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    ModelName = "Car " + i,
+                });
+            }
+
             var watch = new Stopwatch();
             watch.Start();
-            var added = booksStore.AddRangeAsync(books).Result;
-            System.Console.WriteLine($"Added 1000 documents in {watch.ElapsedMilliseconds}ms");
+            var addedBooks = booksStore.AddRangeAsync(books).Result;
+            var addedCars = carStore.AddRangeAsync(cars).Result;
+            System.Console.WriteLine($"Added 100 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
 
             var addedRetrieved = booksStore.ToListAsync().Result;
-            System.Console.WriteLine($"Retrieved 1000 documents in {watch.ElapsedMilliseconds}ms");
+            System.Console.WriteLine($"Retrieved 50 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
             foreach (var addedre in addedRetrieved)
             {
@@ -68,11 +81,11 @@ namespace Cosmonaut.Console
             }
 
             var updated = booksStore.UpdateRangeAsync(addedRetrieved).Result;
-            System.Console.WriteLine($"Updated 1000 documents in {watch.ElapsedMilliseconds}ms");
+            System.Console.WriteLine($"Updated 50 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
-            
+
             var removed = booksStore.RemoveRangeAsync(addedRetrieved).Result;
-            System.Console.WriteLine($"Removed 1000 documents in {watch.ElapsedMilliseconds}ms");
+            System.Console.WriteLine($"Removed 50 documents in {watch.ElapsedMilliseconds}ms");
             watch.Reset();
             watch.Stop();
             System.Console.ReadKey();

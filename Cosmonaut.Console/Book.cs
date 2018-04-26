@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 namespace Cosmonaut.Console
 {
     [SharedCosmosCollection("shared", "books")]
-    public class Book
+    public class Book : ISharedCosmosEntity
     {
         [CosmosPartitionKey]
         [JsonProperty("namess")]
@@ -15,5 +15,7 @@ namespace Cosmonaut.Console
         public string AnotherRandomProp { get; set; }
         
         public string Id { get; set; }
+
+        public string CosmosEntityName { get; set; }
     }
 }

@@ -24,6 +24,15 @@ namespace Cosmonaut.Extensions
             return !string.IsNullOrEmpty(collectionName) ? collectionName : entityType.Name.ToLower().Pluralize();
         }
 
+        internal static string GetSharedCollectionEntityName(this Type entityType)
+        {
+            var collectionNameAttribute = entityType.GetCustomAttribute<SharedCosmosCollectionAttribute>();
+
+            var collectionName = collectionNameAttribute?.EntityPrefix;
+
+            return !string.IsNullOrEmpty(collectionName) ? collectionName : entityType.Name.ToLower().Pluralize();
+        }
+
         internal static string GetSharedCollectionName(this Type entityType)
         {
             var collectionNameAttribute = entityType.GetCustomAttribute<SharedCosmosCollectionAttribute>();
@@ -38,8 +47,16 @@ namespace Cosmonaut.Extensions
 
         internal static bool UsesSharedCollection(this Type entityType)
         {
-            var collectionNameAttribute = entityType.GetCustomAttribute<SharedCosmosCollectionAttribute>();
-            return collectionNameAttribute != null;
+            var hasSharedCosmosCollectionAttribute = entityType.GetCustomAttribute<SharedCosmosCollectionAttribute>() != null;
+            var implementsSharedCosmosEntity = entityType.GetInterfaces().Contains(typeof(ISharedCosmosEntity));
+
+            if (hasSharedCosmosCollectionAttribute && !implementsSharedCosmosEntity)
+                throw new SharedEntityDoesNotImplementExcepction(entityType);
+
+            if (!hasSharedCosmosCollectionAttribute && implementsSharedCosmosEntity)
+                throw new SharedEntityDoesNotHaveAttribute(entityType);
+
+            return hasSharedCosmosCollectionAttribute;
         }
 
         internal static int GetCollectionThroughputForEntity(this Type entityType, 

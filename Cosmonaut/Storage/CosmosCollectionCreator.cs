@@ -45,7 +45,7 @@ namespace Cosmonaut.Storage
             if (indexingPolicy != null)
                 collection.IndexingPolicy = indexingPolicy;
 
-            SetDefaultIndexingPolicyForSharedCollection(isSharedCollection, collection);
+            //SetDefaultIndexingPolicyForSharedCollection(isSharedCollection, collection);
 
             collection = await _documentClient.CreateDocumentCollectionAsync(database.SelfLink, collection, new RequestOptions
             {
@@ -61,7 +61,7 @@ namespace Cosmonaut.Storage
             {
                 collection.IndexingPolicy.IncludedPaths.Add(new IncludedPath
                 {
-                    Path = "/id/?",
+                    Path = "/id",
                     Indexes = new Collection<Index>
                     {
                         new RangeIndex(DataType.String, -1)
