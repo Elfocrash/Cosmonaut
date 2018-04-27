@@ -77,7 +77,7 @@ namespace Cosmonaut.Tests
 
         public static void SetResourceTimestamp<T>(this T resource, DateTime dateTime) where T : Resource
         {
-            resource.SetPropertyValue("_ts", (object)(ulong)(DateTime.UtcNow - UnixStartTime).TotalSeconds);
+            resource?.SetPropertyValue("_ts", (object)(ulong)(DateTime.UtcNow - UnixStartTime).TotalSeconds);
         }
 
         private static DateTime UnixStartTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);

@@ -4,17 +4,11 @@ using System.Reflection;
 using Cosmonaut.Attributes;
 using Cosmonaut.Exceptions;
 using Humanizer;
-using Microsoft.Azure.Documents;
 
 namespace Cosmonaut.Extensions
 {
     internal static class CollectionExtensions
     {
-        internal static string GetCollectionPartitionKeyName(this DocumentCollection collection)
-        {
-            return collection?.PartitionKey?.Paths?.FirstOrDefault()?.Trim('/') ?? string.Empty;
-        }
-
         internal static string GetCollectionName(this Type entityType)
         {
             var collectionNameAttribute = entityType.GetCustomAttribute<CosmosCollectionAttribute>();

@@ -16,14 +16,14 @@ namespace Cosmonaut.Storage
             _documentClient = documentClient;
         }
 
-        public async Task<bool> EnsureCreatedAsync(Type entityType, 
+        public async Task<bool> EnsureCreatedAsync<TEntity>( 
             Database database, 
             int collectionThroughput,
-            IndexingPolicy indexingPolicy = null)
+            IndexingPolicy indexingPolicy = null) where TEntity : class
         {
-            var isSharedCollection = entityType.UsesSharedCollection();
+            var isSharedCollection = typeof(TEntity).UsesSharedCollection();
 
-            var collectionName = isSharedCollection ? entityType.GetSharedCollectionName() : entityType.GetCollectionName();
+            var collectionName = isSharedCollection ? typeof(TEntity).GetSharedCollectionName() : typeof(TEntity).GetCollectionName();
 
             var collection = _documentClient
                 .CreateDocumentCollectionQuery(database.SelfLink)
@@ -38,7 +38,7 @@ namespace Cosmonaut.Storage
                 Id = collectionName
             };
 
-            SetPartitionKeyIsCollectionIsNotShared(entityType, isSharedCollection, collection);
+            SetPartitionKeyIsCollectionIsNotShared(typeof(TEntity), isSharedCollection, collection);
             SetPartitionKeyAsIdIfCollectionIsShared(isSharedCollection, collection);
 
             if (indexingPolicy != null)

@@ -292,12 +292,13 @@ namespace Cosmonaut
 
             AddSharedCollectionFilterIfShared(ref predicate);
 
-            var count = await DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink, new FeedOptions
-            {
-                EnableCrossPartitionQuery = typeof(TEntity).HasPartitionKey() || _isShared
-            })
-                .Where(predicate)
-                .CountAsync(cancellationToken);
+            var queryable = DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink,
+                new FeedOptions
+                {
+                    EnableCrossPartitionQuery = typeof(TEntity).HasPartitionKey() || _isShared
+                });
+            var filter = queryable.Where(predicate);
+            var count = await filter.CountAsync(cancellationToken);
 
             return count;
         }
@@ -315,10 +316,8 @@ namespace Cosmonaut
             {
                 EnableCrossPartitionQuery = typeof(TEntity).HasPartitionKey() || _isShared
             });
-
-            var query = queryable
-                .Where(predicate)
-                .AsDocumentQuery();
+            var filter = queryable.Where(predicate);
+            var query = filter.AsDocumentQuery();
 
             var result = new List<TEntity>();
             while (query.HasMoreResults)
@@ -401,7 +400,7 @@ namespace Cosmonaut
         internal async Task<DocumentCollection> GetCollectionAsync()
         {
             var database = await _database;
-            await _collectionCreator.EnsureCreatedAsync(typeof(TEntity), database, CollectionThrouput, Settings.IndexingPolicy);
+            await _collectionCreator.EnsureCreatedAsync<TEntity>(database, CollectionThrouput, Settings.IndexingPolicy);
 
             var collection = DocumentClient
                 .CreateDocumentCollectionQuery(database.SelfLink)

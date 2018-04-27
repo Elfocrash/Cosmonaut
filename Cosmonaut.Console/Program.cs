@@ -72,6 +72,8 @@ namespace Cosmonaut.Console
             System.Console.WriteLine($"Added 100 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
 
+            booksStore.CountAsync();
+
             var addedRetrieved = booksStore.ToListAsync().Result;
             System.Console.WriteLine($"Retrieved 50 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();

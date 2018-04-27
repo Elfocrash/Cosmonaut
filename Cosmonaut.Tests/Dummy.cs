@@ -68,4 +68,27 @@ namespace Cosmonaut.Tests
     {
         public string Name { get; set; }
     }
+
+    [SharedCosmosCollection("shared")]
+    public class DummySharedCollection
+    {
+
+    }
+
+    [SharedCosmosCollection("")]
+    public class DummySharedCollectionEmpty
+    {
+
+    }
+
+    public class DummyImplNoAttribute : ISharedCosmosEntity
+    {
+        public string CosmosEntityName { get; set; }
+    }
+
+    [SharedCosmosCollection("shared")]
+    public class DummyWithAttributeNoImpl
+    {
+
+    }
 }
