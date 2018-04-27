@@ -12,7 +12,7 @@ namespace Cosmonaut.Tests
         {
             // Arrange
             var serviceCollection = new ServiceCollection();
-            var documentClient = MockHelpers.GetFakeDocumentClient();
+            var documentClient = MockHelpers.GetMockDocumentClient();
 
             // Act
             serviceCollection.AddCosmosStore<Dummy>(documentClient.Object, "databaseName", new CosmosDatabaseCreator(documentClient.Object), new CosmosCollectionCreator(documentClient.Object));

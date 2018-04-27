@@ -18,7 +18,7 @@ namespace Cosmonaut.Tests
 
         public CosmosRemoveTests()
         {
-            _mockDocumentClient = MockHelpers.GetFakeDocumentClient();
+            _mockDocumentClient = MockHelpers.GetMockDocumentClient();
             _dummyStore = new InMemoryCosmosStore<Dummy>();
         }
 

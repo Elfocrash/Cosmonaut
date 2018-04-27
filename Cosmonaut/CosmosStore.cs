@@ -17,7 +17,7 @@ namespace Cosmonaut
 {
     public sealed class CosmosStore<TEntity> : ICosmosStore<TEntity> where TEntity : class
     {
-        private int _collectionThrouput = CosmosStoreSettings.DefaultCollectionThroughput;
+        public int CollectionThrouput { get; private set; } = CosmosStoreSettings.DefaultCollectionThroughput;
         private AsyncLazy<Database> _database;
         private AsyncLazy<DocumentCollection> _collection;
         public readonly CosmosStoreSettings Settings;
@@ -44,10 +44,16 @@ namespace Cosmonaut
         internal CosmosStore(IDocumentClient documentClient,
             string databaseName,
             IDatabaseCreator databaseCreator,
-            ICollectionCreator collectionCreator)
+            ICollectionCreator collectionCreator,
+            bool scaleable = false,
+            bool allowAttributesToSetThrouput = false,
+            bool adjustThroughputOnStartup = false)
         {
             DocumentClient = documentClient ?? throw new ArgumentNullException(nameof(documentClient));
-            Settings = new CosmosStoreSettings(databaseName, documentClient.ServiceEndpoint, documentClient.AuthKey.ToString(), documentClient.ConnectionPolicy);
+            Settings = new CosmosStoreSettings(databaseName, documentClient.ServiceEndpoint, documentClient.AuthKey.ToString(), documentClient.ConnectionPolicy, 
+                scaleCollectionRUsAutomatically: scaleable, 
+                allowAttributesToConfigureThroughput: allowAttributesToSetThrouput,
+                adjustCollectionThroughputOnStartup: adjustThroughputOnStartup);
             if (string.IsNullOrEmpty(Settings.DatabaseName)) throw new ArgumentNullException(nameof(Settings.DatabaseName));
             _databaseCreator = databaseCreator ?? throw new ArgumentNullException(nameof(databaseCreator));
             _collectionCreator = collectionCreator ?? throw new ArgumentNullException(nameof(collectionCreator));
@@ -395,7 +401,7 @@ namespace Cosmonaut
         internal async Task<DocumentCollection> GetCollectionAsync()
         {
             var database = await _database;
-            await _collectionCreator.EnsureCreatedAsync(typeof(TEntity), database, _collectionThrouput, Settings.IndexingPolicy);
+            await _collectionCreator.EnsureCreatedAsync(typeof(TEntity), database, CollectionThrouput, Settings.IndexingPolicy);
 
             var collection = DocumentClient
                 .CreateDocumentCollectionQuery(database.SelfLink)
@@ -407,7 +413,7 @@ namespace Cosmonaut
             return collection;
         }
 
-        internal async Task AdjustCollectionThroughput(DocumentCollection collection)
+        internal async Task<bool> AdjustCollectionThroughput(DocumentCollection collection)
         {
             var collectionOffer = (OfferV2)DocumentClient.CreateOfferQuery()
                 .Where(x => x.ResourceLink == collection.SelfLink).AsEnumerable().Single();
@@ -415,15 +421,18 @@ namespace Cosmonaut
 
             if (Settings.AdjustCollectionThroughputOnStartup)
             {
-                if (_collectionThrouput != currentOfferThroughput)
+                if (CollectionThrouput != currentOfferThroughput)
                 {
                     var updated =
-                        await DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, _collectionThrouput));
+                        await DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, CollectionThrouput));
                     if (updated.StatusCode != HttpStatusCode.OK)
                         throw new CosmosCollectionThroughputUpdateException(collection);
+
+                    return true;
                 }
             }
-            _collectionThrouput = currentOfferThroughput;
+            CollectionThrouput = currentOfferThroughput;
+            return false;
         }
 
         internal void PingCosmosInOrderToOpenTheClientAndPreventInitialDelay()
@@ -437,15 +446,15 @@ namespace Cosmonaut
             if (!Settings.ScaleCollectionRUsAutomatically)
                 return;
 
-            if (_collectionThrouput >= documentCount * operationCost)
+            if (CollectionThrouput >= documentCount * operationCost)
                 return;
 
             var upscaleRequestUnits = (int)(Math.Round(documentCount * operationCost / 100d, 0) * 100);
 
             var collectionOffer = (OfferV2)DocumentClient.CreateOfferQuery()
                 .Where(x => x.ResourceLink == collection.SelfLink).AsEnumerable().Single();
-            _collectionThrouput = upscaleRequestUnits >= Settings.MaximumUpscaleRequestUnits ? Settings.MaximumUpscaleRequestUnits : upscaleRequestUnits;
-            var replaced = await DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, _collectionThrouput));
+            CollectionThrouput = upscaleRequestUnits >= Settings.MaximumUpscaleRequestUnits ? Settings.MaximumUpscaleRequestUnits : upscaleRequestUnits;
+            var replaced = await DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, CollectionThrouput));
             _isUpscaled = replaced.StatusCode == HttpStatusCode.OK;
         }
 
@@ -459,8 +468,8 @@ namespace Cosmonaut
 
             var collectionOffer = (OfferV2)DocumentClient.CreateOfferQuery()
                 .Where(x => x.ResourceLink == collection.SelfLink).AsEnumerable().Single();
-            _collectionThrouput = typeof(TEntity).GetCollectionThroughputForEntity(Settings.AllowAttributesToConfigureThroughput, Settings.CollectionThroughput);
-            var replaced = await DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, _collectionThrouput));
+            CollectionThrouput = typeof(TEntity).GetCollectionThroughputForEntity(Settings.AllowAttributesToConfigureThroughput, Settings.CollectionThroughput);
+            var replaced = await DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, CollectionThrouput));
             _isUpscaled = replaced.StatusCode != HttpStatusCode.OK;
         }
 
@@ -468,7 +477,7 @@ namespace Cosmonaut
         {
             _isShared = typeof(TEntity).UsesSharedCollection();
             _collectionName = _isShared ? typeof(TEntity).GetSharedCollectionName() : typeof(TEntity).GetCollectionName();
-            _collectionThrouput = typeof(TEntity).GetCollectionThroughputForEntity(Settings.AllowAttributesToConfigureThroughput, Settings.CollectionThroughput);
+            CollectionThrouput = typeof(TEntity).GetCollectionThroughputForEntity(Settings.AllowAttributesToConfigureThroughput, Settings.CollectionThroughput);
 
             _database = new AsyncLazy<Database>(async () => await GetDatabaseAsync());
             _collection = new AsyncLazy<DocumentCollection>(async () => await GetCollectionAsync());

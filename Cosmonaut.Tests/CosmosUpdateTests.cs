@@ -17,7 +17,7 @@ namespace Cosmonaut.Tests
 
         public CosmosUpdateTests()
         {
-            _mockDocumentClient = MockHelpers.GetFakeDocumentClient();
+            _mockDocumentClient = MockHelpers.GetMockDocumentClient();
         }
 
         [Fact]
