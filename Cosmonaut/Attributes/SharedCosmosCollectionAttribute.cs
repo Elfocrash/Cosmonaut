@@ -7,16 +7,16 @@ namespace Cosmonaut.Attributes
     {
         public string SharedCollectionName { get; set; }
 
-        public string EntityPrefix { get; set; }
+        public string EntityName { get; set; }
 
         public SharedCosmosCollectionAttribute(string sharedCollectionName)
         {
             SharedCollectionName = sharedCollectionName;
         }
 
-        public SharedCosmosCollectionAttribute(string sharedCollectionName, string entityPrefix) : this(sharedCollectionName)
+        public SharedCosmosCollectionAttribute(string sharedCollectionName, string entityName) : this(sharedCollectionName)
         {
-            EntityPrefix = entityPrefix;
+            EntityName = entityName;
         }
     }
 }

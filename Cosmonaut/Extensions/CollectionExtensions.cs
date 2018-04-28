@@ -22,7 +22,7 @@ namespace Cosmonaut.Extensions
         {
             var collectionNameAttribute = entityType.GetCustomAttribute<SharedCosmosCollectionAttribute>();
 
-            var collectionName = collectionNameAttribute?.EntityPrefix;
+            var collectionName = collectionNameAttribute?.EntityName;
 
             return !string.IsNullOrEmpty(collectionName) ? collectionName : entityType.Name.ToLower().Pluralize();
         }

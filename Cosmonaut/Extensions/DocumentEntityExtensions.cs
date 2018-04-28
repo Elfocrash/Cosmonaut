@@ -19,7 +19,7 @@ namespace Cosmonaut.Extensions
 
             SetTheCosmosDbIdBasedOnTheObjectIndex(validatedEntity, mapped);
 
-            RemovePotentialDuplicateIdProperties(mapped);
+            RemovePotentialDuplicateIdProperties(ref mapped);
 
             if (typeof(TEntity).UsesSharedCollection())
                 mapped.CosmosEntityName = $"{typeof(TEntity).GetSharedCollectionEntityName()}";
@@ -176,7 +176,7 @@ namespace Cosmonaut.Extensions
             throw new CosmosEntityWithoutIdException<TEntity>(entity);
         }
 
-        internal static void RemovePotentialDuplicateIdProperties(dynamic mapped)
+        internal static void RemovePotentialDuplicateIdProperties(ref dynamic mapped)
         {
             if (mapped.Id != null)
             {
