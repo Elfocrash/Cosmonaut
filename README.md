@@ -13,7 +13,7 @@ This entity will be used to create a collection in the cosmosdb and it will offe
 Registering the CosmosStores in ServiceCollection for DI support
 ```csharp
  var cosmosSettings = new CosmosStoreSettings("<<databaseName>>", 
-    new Uri("<<cosmosUri>>"), 
+    "<<cosmosUri>>"), 
     "<<authkey>>");
                 
 serviceCollection.AddCosmosStore<Book>(cosmosSettings);
