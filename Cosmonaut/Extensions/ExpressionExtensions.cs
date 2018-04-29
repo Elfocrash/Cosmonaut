@@ -18,7 +18,7 @@ namespace Cosmonaut.Extensions
             var right = rightVisitor.Visit(expr2.Body);
 
             return Expression.Lambda<Func<T, bool>>(
-                Expression.AndAlso(left, right), parameter);
+                Expression.AndAlso(left ?? throw new InvalidOperationException(), right ?? throw new InvalidOperationException()), parameter);
         }
 
         private class ReplaceExpressionVisitor

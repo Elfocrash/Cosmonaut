@@ -94,6 +94,7 @@ namespace Cosmonaut
             var entitiesList = entities.ToList();
             if (!entitiesList.Any())
                 return new CosmosMultipleResponse<TEntity>();
+
             var collection = await _collection;
             try
             {
@@ -436,8 +437,8 @@ namespace Cosmonaut
 
         internal void PingCosmosInOrderToOpenTheClientAndPreventInitialDelay()
         {
-            DocumentClient.ReadDatabaseAsync(_database.GetAwaiter().GetResult().SelfLink).Wait();
-            DocumentClient.ReadDocumentCollectionAsync(_collection.GetAwaiter().GetResult().SelfLink).Wait();
+            DocumentClient.ReadDatabaseAsync(_database.GetAwaiter().GetResult().SelfLink).GetAwaiter().GetResult();
+            DocumentClient.ReadDocumentCollectionAsync(_collection.GetAwaiter().GetResult().SelfLink).GetAwaiter().GetResult();
         }
 
         internal async Task UpscaleCollectionRequestUnitsForRequest(DocumentCollection collection, int documentCount, double operationCost)

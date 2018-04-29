@@ -74,5 +74,32 @@ namespace Cosmonaut.Tests
             result.CosmosOperationStatus.Should().Be(CosmosOperationStatus.Success);
             result.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         }
+
+        [Fact]
+        public async Task RemoveEntitiesRemoves()
+        {
+            // Arrange
+            var id = Guid.NewGuid().ToString();
+            var dummy = new Dummy
+            {
+                Id = id,
+                Name = "Test"
+            };
+
+            var dummies = new List<Dummy> {dummy};
+
+            var document = dummy.GetCosmosDbFriendlyEntity() as Document;
+            var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
+            _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<string>(), It.IsAny<RequestOptions>()))
+                .ReturnsAsync(resourceResponse);
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
+
+            // Act
+            var result = await entityStore.RemoveRangeAsync(dummies);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            result.FailedEntities.Should().BeEmpty();
+        }
     }
 }
