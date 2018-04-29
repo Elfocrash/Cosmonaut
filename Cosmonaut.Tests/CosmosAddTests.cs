@@ -80,6 +80,7 @@ namespace Cosmonaut.Tests
             //Assert
             result.IsSuccess.Should().BeTrue();
             result.FailedEntities.Should().BeEmpty();
+            result.SuccessfulEntities.Should().HaveCount(5);
         }
 
         [Fact]
@@ -107,11 +108,12 @@ namespace Cosmonaut.Tests
             var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
 
             // Act
-            var result = await entityStore.AddRangeAsync(dummies[0], dummies[1]);
+            var result = await entityStore.AddRangeAsync(dummies[0], dummies[1], dummies[2], dummies[3], dummies[4]);
 
             //Assert
             result.IsSuccess.Should().BeTrue();
             result.FailedEntities.Should().BeEmpty();
+            result.SuccessfulEntities.Should().HaveCount(5);
         }
 
         [Fact]

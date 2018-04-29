@@ -59,10 +59,9 @@ namespace Cosmonaut.Tests
             var documentServiceResponseType = Type.GetType("Microsoft.Azure.Documents.DocumentServiceResponse, Microsoft.Azure.DocumentDB.Core, Version=1.10.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
 
             var flags = BindingFlags.NonPublic | BindingFlags.Instance;
-            
-            var headers = new NameValueCollection();
-            
-            headers.Add("x-ms-request-charge", "0");
+
+            var headers = new NameValueCollection {{"x-ms-request-charge", "0"}};
+
 
             var arguments = new object[] { Stream.Null, headers, statusCode, null };
             
@@ -80,6 +79,6 @@ namespace Cosmonaut.Tests
             resource?.SetPropertyValue("_ts", (object)(ulong)(DateTime.UtcNow - UnixStartTime).TotalSeconds);
         }
 
-        private static DateTime UnixStartTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+        private static readonly DateTime UnixStartTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
     }
 }

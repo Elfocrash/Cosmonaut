@@ -100,6 +100,7 @@ namespace Cosmonaut.Tests
             // Assert
             result.IsSuccess.Should().BeTrue();
             result.FailedEntities.Should().BeEmpty();
+            result.SuccessfulEntities.Should().HaveCount(1);
         }
     }
 }

@@ -9,6 +9,8 @@ namespace Cosmonaut.Response
 
         public List<CosmosResponse<TEntity>> FailedEntities { get; } = new List<CosmosResponse<TEntity>>();
 
+        public List<CosmosResponse<TEntity>> SuccessfulEntities { get; } = new List<CosmosResponse<TEntity>>();
+
         private readonly CosmosOperationStatus _operationStatus = CosmosOperationStatus.Success;
 
         public CosmosMultipleResponse()
@@ -21,5 +23,15 @@ namespace Cosmonaut.Response
             _operationStatus = operationStatus;
         }
 
+        internal void AddResponse(CosmosResponse<TEntity> response)
+        {
+            if (response == null)
+                return;
+
+            if(response.IsSuccess)
+                SuccessfulEntities.Add(response);
+            else
+                FailedEntities.Add(response);
+        }
     }
 }
