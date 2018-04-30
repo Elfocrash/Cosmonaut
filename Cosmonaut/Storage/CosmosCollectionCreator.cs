@@ -16,12 +16,15 @@ namespace Cosmonaut.Storage
             _documentClient = documentClient;
         }
 
-        public async Task<bool> EnsureCreatedAsync(Type entityType, 
+        public async Task<bool> EnsureCreatedAsync<TEntity>( 
             Database database, 
             int collectionThroughput,
-            IndexingPolicy indexingPolicy = null)
+            IndexingPolicy indexingPolicy = null) where TEntity : class
         {
-            var collectionName = entityType.GetCollectionName();
+            var isSharedCollection = typeof(TEntity).UsesSharedCollection();
+
+            var collectionName = isSharedCollection ? typeof(TEntity).GetSharedCollectionName() : typeof(TEntity).GetCollectionName();
+
             var collection = _documentClient
                 .CreateDocumentCollectionQuery(database.SelfLink)
                 .ToArray()
@@ -34,20 +37,36 @@ namespace Cosmonaut.Storage
             {
                 Id = collectionName
             };
-            var partitionKey = entityType.GetPartitionKeyForEntity();
 
-            if (partitionKey != null)
-                collection.PartitionKey = partitionKey;
+            SetPartitionKeyIsCollectionIsNotShared(typeof(TEntity), isSharedCollection, collection);
+            SetPartitionKeyAsIdIfCollectionIsShared(isSharedCollection, collection);
 
             if (indexingPolicy != null)
                 collection.IndexingPolicy = indexingPolicy;
-
+            
             collection = await _documentClient.CreateDocumentCollectionAsync(database.SelfLink, collection, new RequestOptions
             {
                 OfferThroughput = collectionThroughput
             });
 
             return collection != null;
+        }
+
+        private static void SetPartitionKeyAsIdIfCollectionIsShared(bool isSharedCollection, DocumentCollection collection)
+        {
+            if (isSharedCollection)
+            {
+                collection.PartitionKey = DocumentHelpers.GetPartitionKeyDefinition(CosmosConstants.CosmosId);
+            }
+        }
+
+        private static void SetPartitionKeyIsCollectionIsNotShared(Type entityType, bool isSharedCollection, DocumentCollection collection)
+        {
+            if (isSharedCollection) return;
+            var partitionKey = entityType.GetPartitionKeyForEntity();
+
+            if (partitionKey != null)
+                collection.PartitionKey = partitionKey;
         }
     }
 }

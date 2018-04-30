@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Cosmonaut.Response;
 using Cosmonaut.Storage;
+using Cosmonaut.Extensions;
+using FluentAssertions;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Moq;
@@ -14,12 +17,10 @@ namespace Cosmonaut.Tests
     public class CosmosRemoveTests
     {
         private readonly Mock<IDocumentClient> _mockDocumentClient;
-        private readonly ICosmosStore<Dummy> _dummyStore;
 
         public CosmosRemoveTests()
         {
-            _mockDocumentClient = MockHelpers.GetFakeDocumentClient();
-            _dummyStore = new InMemoryCosmosStore<Dummy>();
+            _mockDocumentClient = MockHelpers.GetMockDocumentClient();
         }
 
         [Fact]
@@ -27,21 +28,26 @@ namespace Cosmonaut.Tests
         {
             // Arrange
             var id = Guid.NewGuid().ToString();
-            var addedDummy = new Dummy
+            var dummy = new Dummy
             {
                 Id = id,
                 Name = "Test"
             };
 
-            _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<string>(), null))
-                .ReturnsAsync(new ResourceResponse<Document>(new Document { Id = id }));
+            var document = dummy.GetCosmosDbFriendlyEntity() as Document;
+            var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
+            _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<string>(), It.IsAny<RequestOptions>()))
+                .ReturnsAsync(resourceResponse);
             var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
 
             // Act
-            var result = await entityStore.RemoveAsync(addedDummy);
+            var result = await entityStore.RemoveAsync(dummy);
 
             // Assert
-            Assert.Equal(CosmosOperationStatus.Success, result.CosmosOperationStatus);
+            result.IsSuccess.Should().BeTrue();
+            result.Entity.Should().BeEquivalentTo(dummy);
+            result.CosmosOperationStatus.Should().Be(CosmosOperationStatus.Success);
+            result.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         }
 
         [Fact]
@@ -49,69 +55,52 @@ namespace Cosmonaut.Tests
         {
             // Arrange
             var id = Guid.NewGuid().ToString();
-            var addedDummy = new Dummy
+            var toRemove = new Dummy
             {
                 Id = id,
                 Name = "Test"
             };
-            var response = new ResourceResponse<Document>(new Document { Id = addedDummy.Id });
-            _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<string>(), null))
-                .ReturnsAsync(response);
+            var document = toRemove.GetCosmosDbFriendlyEntity() as Document;
+            var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
+            _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<string>(), It.IsAny<RequestOptions>()))
+                .ReturnsAsync(resourceResponse);
             var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
 
             // Act
             var result = await entityStore.RemoveByIdAsync(id);
 
             // Assert
-            Assert.Equal(CosmosOperationStatus.Success, result.CosmosOperationStatus);
+            result.IsSuccess.Should().BeTrue();
+            result.CosmosOperationStatus.Should().Be(CosmosOperationStatus.Success);
+            result.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         }
 
         [Fact]
-        public async Task RemoveByExpressionRemoves()
+        public async Task RemoveEntitiesRemoves()
         {
             // Arrange
-            foreach (var i in Enumerable.Range(0, 10))
+            var id = Guid.NewGuid().ToString();
+            var dummy = new Dummy
             {
-                var id = Guid.NewGuid().ToString();
-                var addedDummy = new Dummy
-                {
-                    Id = id,
-                    Name = "Test " + i
-                };
-                await _dummyStore.AddAsync(addedDummy);
-            }
+                Id = id,
+                Name = "Test"
+            };
+
+            var dummies = new List<Dummy> {dummy};
+
+            var document = dummy.GetCosmosDbFriendlyEntity() as Document;
+            var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
+            _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<string>(), It.IsAny<RequestOptions>()))
+                .ReturnsAsync(resourceResponse);
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
 
             // Act
-            var result = await _dummyStore.RemoveAsync(x => x.Name.Contains("Test"));
+            var result = await entityStore.RemoveRangeAsync(dummies);
 
             // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Empty(result.FailedEntities);
-        }
-
-        [Fact]
-        public async Task RemoveRangeRemoves()
-        {
-            // Arrange
-            var addedList = new List<Dummy>();
-            foreach (var i in Enumerable.Range(0, 10))
-            {
-                var id = Guid.NewGuid().ToString();
-                var addedDummy = new Dummy
-                {
-                    Id = id,
-                    Name = "Test " + i
-                };
-                await _dummyStore.AddAsync(addedDummy);
-                addedList.Add(addedDummy);
-            }
-
-            // Act
-            var result = await _dummyStore.RemoveRangeAsync(addedList);
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Empty(result.FailedEntities);
+            result.IsSuccess.Should().BeTrue();
+            result.FailedEntities.Should().BeEmpty();
+            result.SuccessfulEntities.Should().HaveCount(1);
         }
     }
 }

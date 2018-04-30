@@ -1,8 +1,17 @@
-﻿using Newtonsoft.Json;
+﻿using Cosmonaut.Attributes;
+using Newtonsoft.Json;
 
 namespace Cosmonaut.Tests
 {
     public class Dummy
+    {
+        public string Id { get; set; }
+
+        public string Name { get; set; }
+    }
+
+    [CosmosCollection("dummies",Throughput = 500)]
+    public class DummyWithThroughput
     {
         public string Id { get; set; }
 
@@ -58,5 +67,28 @@ namespace Cosmonaut.Tests
     public class DummyNoId
     {
         public string Name { get; set; }
+    }
+
+    [SharedCosmosCollection("shared")]
+    public class DummySharedCollection
+    {
+
+    }
+
+    [SharedCosmosCollection("")]
+    public class DummySharedCollectionEmpty
+    {
+
+    }
+
+    public class DummyImplNoAttribute : ISharedCosmosEntity
+    {
+        public string CosmosEntityName { get; set; }
+    }
+
+    [SharedCosmosCollection("shared")]
+    public class DummyWithAttributeNoImpl
+    {
+
     }
 }
