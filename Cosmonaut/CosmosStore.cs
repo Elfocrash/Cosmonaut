@@ -127,7 +127,7 @@ namespace Cosmonaut
             if (IsShared)
                 ExpressionExtensions.AddSharedCollectionFilter(ref predicate);
 
-            return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink, GetFeedOptionsForQuery(feedOptions))
+            return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).SelfLink, GetFeedOptionsForQuery(feedOptions))
                 .Where(predicate);
         }
         
@@ -315,7 +315,7 @@ namespace Cosmonaut
             if (IsShared)
                 ExpressionExtensions.AddSharedCollectionFilter(ref predicate);
 
-            var queryable = DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink, GetFeedOptionsForQuery(feedOptions));
+            var queryable = DocumentClient.CreateDocumentQuery<TEntity>((await _collection).SelfLink, GetFeedOptionsForQuery(feedOptions));
             var filter = queryable.Where(predicate);
             var count = await filter.CountAsync(cancellationToken);
 
@@ -332,7 +332,7 @@ namespace Cosmonaut
             if (IsShared)
                 ExpressionExtensions.AddSharedCollectionFilter(ref predicate);
 
-            var queryable = DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink, GetFeedOptionsForQuery(feedOptions));
+            var queryable = DocumentClient.CreateDocumentQuery<TEntity>((await _collection).SelfLink, GetFeedOptionsForQuery(feedOptions));
             var filter = queryable.Where(predicate);
             var query = filter.AsDocumentQuery();
 
@@ -350,13 +350,17 @@ namespace Cosmonaut
             if (IsShared)
                 ExpressionExtensions.AddSharedCollectionFilter(ref predicate);
 
-            var query = DocumentClient.CreateDocumentQuery<TEntity>((await _collection).DocumentsLink, GetFeedOptionsForQuery(feedOptions))
-            .Where(predicate)
-            .AsDocumentQuery();
+            var queryable = DocumentClient.CreateDocumentQuery<TEntity>((await _collection).SelfLink,
+                GetFeedOptionsForQuery(feedOptions));
+            var filter = queryable.Where(predicate);
+            var query = filter.AsDocumentQuery();
 
-            if (!query.HasMoreResults) return null;
-            var item = await query.ExecuteNextAsync<TEntity>(cancellationToken);
-            return item.FirstOrDefault();
+            while (query.HasMoreResults)
+            {
+                var item = await query.ExecuteNextAsync<TEntity>(cancellationToken);
+                return item.FirstOrDefault();
+            }
+            return null;
         }
 
         private async Task<CosmosMultipleResponse<TEntity>> HandleOperationWithRateLimitRetry(IEnumerable<Task<CosmosResponse<TEntity>>> entitiesTasks,
@@ -458,7 +462,6 @@ namespace Cosmonaut
             }
 
             feedOptions.EnableCrossPartitionQuery = shouldEnablePartitionQuery;
-
             return feedOptions;
         }
     }
