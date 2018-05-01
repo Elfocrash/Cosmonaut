@@ -21,6 +21,16 @@ namespace Cosmonaut.Extensions
                 Expression.AndAlso(left ?? throw new InvalidOperationException(), right ?? throw new InvalidOperationException()), parameter);
         }
 
+        internal static void AddSharedCollectionFilter<TEntity>(ref Expression<Func<TEntity, bool>> predicate) where TEntity : class
+        {
+            var parameter = Expression.Parameter(typeof(ISharedCosmosEntity));
+            var member = Expression.Property(parameter, nameof(ISharedCosmosEntity.CosmosEntityName));
+            var contant = Expression.Constant(typeof(TEntity).GetSharedCollectionEntityName());
+            var body = Expression.Equal(member, contant);
+            var extra = Expression.Lambda<Func<TEntity, bool>>(body, parameter);
+            predicate = predicate.AndAlso(extra);
+        }
+
         private class ReplaceExpressionVisitor
             : ExpressionVisitor
         {

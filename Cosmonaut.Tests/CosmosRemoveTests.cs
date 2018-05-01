@@ -36,7 +36,7 @@ namespace Cosmonaut.Tests
 
             var document = dummy.GetCosmosDbFriendlyEntity() as Document;
             var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
-            _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<string>(), It.IsAny<RequestOptions>()))
+            _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
             var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
 
@@ -62,7 +62,7 @@ namespace Cosmonaut.Tests
             };
             var document = toRemove.GetCosmosDbFriendlyEntity() as Document;
             var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
-            _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<string>(), It.IsAny<RequestOptions>()))
+            _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
             var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
 

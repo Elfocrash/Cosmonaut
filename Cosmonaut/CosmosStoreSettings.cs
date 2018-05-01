@@ -6,8 +6,6 @@ namespace Cosmonaut
 {
     public class CosmosStoreSettings
     {
-        public const int DefaultCollectionThroughput = 400;
-
         public readonly string DatabaseName;
 
         public readonly string AuthKey;
@@ -67,7 +65,7 @@ namespace Cosmonaut
             AuthKey = authKey;
             EndpointUrl = endpointUrl;
             ConnectionPolicy = connectionPolicy;
-            CollectionThroughput = collectionThroughput ?? DefaultCollectionThroughput;
+            CollectionThroughput = collectionThroughput ?? CosmosConstants.MinimumCosmosThroughput;
             AllowAttributesToConfigureThroughput = allowAttributesToConfigureThroughput;
             AdjustCollectionThroughputOnStartup = adjustCollectionThroughputOnStartup;
             ScaleCollectionRUsAutomatically = scaleCollectionRUsAutomatically;
