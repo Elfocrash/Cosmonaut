@@ -122,6 +122,7 @@ namespace Cosmonaut
             }
         }
 
+        [Obsolete("Use ToListAsync() instead. This will be dropped in a future release.")]
         public async Task<IQueryable<TEntity>> WhereAsync(Expression<Func<TEntity, bool>> predicate, FeedOptions feedOptions = null)
         {
             if (IsShared)
@@ -130,7 +131,37 @@ namespace Cosmonaut
             return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).SelfLink, GetFeedOptionsForQuery(feedOptions))
                 .Where(predicate);
         }
-        
+
+        public async Task<List<TResult>> SelectToListAsync<TResult>(
+            Expression<Func<TEntity, TResult>> selector,
+            Expression<Func<TEntity, bool>> predicate = null,
+            FeedOptions feedOptions = null, 
+            CancellationToken cancellationToken = default)
+        {
+            if (predicate == null)
+            {
+                predicate = entity => true;
+            }
+
+            if (IsShared)
+                ExpressionExtensions.AddSharedCollectionFilter(ref predicate);
+
+            var queryable = DocumentClient
+                .CreateDocumentQuery<TEntity>((await _collection).SelfLink, GetFeedOptionsForQuery(feedOptions));
+
+            var filter = queryable.Where(predicate)
+                .Select(selector);
+            var query = filter.AsDocumentQuery();
+
+            var result = new List<TResult>();
+            while (query.HasMoreResults)
+            {
+                var item = await query.ExecuteNextAsync<TResult>(cancellationToken);
+                result.AddRange(item);
+            }
+            return result;
+        }
+
         public async Task<IDocumentQuery<TEntity>> AsDocumentQueryAsync(Expression<Func<TEntity, bool>> predicate = null, FeedOptions feedOptions = null)
         {
             if (predicate == null)
@@ -138,7 +169,11 @@ namespace Cosmonaut
                 predicate = entity => true;
             }
 
-            return (await WhereAsync(predicate, feedOptions)).AsDocumentQuery();
+            if (IsShared)
+                ExpressionExtensions.AddSharedCollectionFilter(ref predicate);
+
+            return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).SelfLink, GetFeedOptionsForQuery(feedOptions))
+                .Where(predicate).AsDocumentQuery();
         }
 
         public async Task<CosmosMultipleResponse<TEntity>> RemoveAsync(

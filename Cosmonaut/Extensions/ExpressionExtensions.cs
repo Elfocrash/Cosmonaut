@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace Cosmonaut.Extensions
 {
-    public static class ExpressionExtensions
+    internal static class ExpressionExtensions
     {
-        public static Expression<Func<T, bool>> AndAlso<T>(this 
+        internal static Expression<Func<T, bool>> AndAlso<T>(this 
             Expression<Func<T, bool>> expr1,
             Expression<Func<T, bool>> expr2)
         {
@@ -22,13 +23,18 @@ namespace Cosmonaut.Extensions
         }
 
         internal static void AddSharedCollectionFilter<TEntity>(ref Expression<Func<TEntity, bool>> predicate) where TEntity : class
+        {           
+            predicate = predicate.AndAlso(SharedCollectionExpression<TEntity>());
+        }
+
+        internal static Expression<Func<TEntity, bool>> SharedCollectionExpression<TEntity>() where TEntity : class
         {
             var parameter = Expression.Parameter(typeof(ISharedCosmosEntity));
             var member = Expression.Property(parameter, nameof(ISharedCosmosEntity.CosmosEntityName));
             var contant = Expression.Constant(typeof(TEntity).GetSharedCollectionEntityName());
             var body = Expression.Equal(member, contant);
             var extra = Expression.Lambda<Func<TEntity, bool>>(body, parameter);
-            predicate = predicate.AndAlso(extra);
+            return extra;
         }
 
         private class ReplaceExpressionVisitor

@@ -334,6 +334,20 @@ namespace Cosmonaut
 
         Task<List<TEntity>> ToListAsync(Expression<Func<TEntity, bool>> predicate = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
 
+        /// <summary>
+        ///     Returns only specific columns of documents based on a query.
+        ///     In order to add the Id column in whatever you are selecting you MUST meet one of the following:
+        ///     Either decorate your id property with the [JsonProperty("id")] attribute or extend the CosmosEntity class.
+        /// </summary>
+        /// <typeparam name="TResult">The type of object that will be returned from this operation.</typeparam>
+        /// <param name="selector">The selector expression for the fields to be returned.</param>
+        /// <param name="predicate">The filter expression in order to filter down the results.</param>
+        /// <param name="feedOptions">The feed options for the operation.</param>
+        /// <param name="cancellationToken">The cancellation token for the operation.</param>
+        /// <returns></returns>
+        Task<List<TResult>> SelectToListAsync<TResult>(Expression<Func<TEntity, TResult>> selector, Expression<Func<TEntity, bool>> predicate = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
+
+        [Obsolete("Use ToListAsync() instead. This will be dropped.")]
         Task<IQueryable<TEntity>> WhereAsync(Expression<Func<TEntity, bool>> predicate, FeedOptions feedOptions = null);
 
         Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate, FeedOptions feedOptions = null , CancellationToken cancellationToken = default);
