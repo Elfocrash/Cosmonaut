@@ -76,6 +76,11 @@ namespace Cosmonaut
         {
         }
 
+        public IOrderedQueryable<TEntity> Query(FeedOptions feedOptions = null)
+        {
+            return DocumentClient.CreateDocumentQuery<TEntity>(_collection.GetAwaiter().GetResult().SelfLink, GetFeedOptionsForQuery(feedOptions));
+        }
+        
         public async Task<CosmosResponse<TEntity>> AddAsync(TEntity entity, RequestOptions requestOptions = null)
         {
             var collection = await _collection;

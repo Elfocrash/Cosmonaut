@@ -15,6 +15,15 @@ namespace Cosmonaut
     public interface ICosmosStore<TEntity> where TEntity : class
     {
         /// <summary>
+        ///     Entry point to the usage of LINQ in order to query the collection. This method is ONLY suggested if it is expected to return just a few results. 
+        ///     For big operations use other methods like ToListAsync. If the collection is shared it is HIGHLY recommended that a .Where(x => x.CosmosEntityName == "yourEntityName")
+        ///     is added to prevent unwanted results.
+        /// </summary>
+        /// <param name="feedOptions">The feed options for this operation.</param>
+        /// <returns>An IOrderedQueryable that when populated with more expressions an casted .ToList() will return results based on the expression.</returns>
+        IOrderedQueryable<TEntity> Query(FeedOptions feedOptions = null);
+
+        /// <summary>
         ///     Adds the given entity in the cosmos db store.
         /// </summary>
         /// <typeparam name="TEntity">The type of the entity.</typeparam>
