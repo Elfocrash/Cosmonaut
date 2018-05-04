@@ -8,20 +8,17 @@ using Cosmonaut.Exceptions;
 using Cosmonaut.Response;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
-using Microsoft.Azure.Documents.Linq;
 
 namespace Cosmonaut
 {
     public interface ICosmosStore<TEntity> where TEntity : class
     {
         /// <summary>
-        ///     Entry point to the usage of LINQ in order to query the collection. This method is ONLY suggested if it is expected to return just a few results. 
-        ///     For big operations use other methods like ToListAsync. If the collection is shared it is HIGHLY recommended that a .Where(x => x.CosmosEntityName == "yourEntityName")
-        ///     is added to prevent unwanted results.
+        ///     Entry point to the usage of LINQ in order to query the collection. It is highly recommended to get the results with the .ToListAsync method
+        ///     because it is using the internal paginated retrieval to prevent locking.
         /// </summary>
         /// <param name="feedOptions">The feed options for this operation.</param>
-        /// <returns>An IOrderedQueryable that when populated with more expressions an casted .ToList() will return results based on the expression.</returns>
-        IOrderedQueryable<TEntity> Query(FeedOptions feedOptions = null);
+        IQueryable<TEntity> Query(FeedOptions feedOptions = null);
 
         /// <summary>
         ///     Adds the given entity in the cosmos db store.
@@ -323,42 +320,8 @@ namespace Cosmonaut
         Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id, RequestOptions requestOptions = null);
 
         /// <summary>
-        ///     Returns the count of documents that much the query in the cosmos db store.
-        /// </summary>
-        /// <param name="predicate">The expression that the query is based on. </param>
-        /// <param name="feedOptions">The feed options for this operation.</param>
-        /// <param name="cancellationToken">The cancellation token for this operation.</param>
-        /// <returns> 
-        ///     A task that represents the asynchronous Count operation. The task result contains the
-        ///     count of the collection.
-        /// </returns>
-        Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
-
-        /// <summary>
         ///     Exposes the lower level DocumentClient to the consumer.
         /// </summary>
         IDocumentClient DocumentClient { get; }
-
-        Task<IDocumentQuery<TEntity>> AsDocumentQueryAsync(Expression<Func<TEntity, bool>> predicate = null, FeedOptions feedOptions = null);
-
-        Task<List<TEntity>> ToListAsync(Expression<Func<TEntity, bool>> predicate = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
-
-        /// <summary>
-        ///     Returns only specific columns of documents based on a query.
-        ///     In order to add the Id column in whatever you are selecting you MUST meet one of the following:
-        ///     Either decorate your id property with the [JsonProperty("id")] attribute or extend the CosmosEntity class.
-        /// </summary>
-        /// <typeparam name="TResult">The type of object that will be returned from this operation.</typeparam>
-        /// <param name="selector">The selector expression for the fields to be returned.</param>
-        /// <param name="predicate">The filter expression in order to filter down the results.</param>
-        /// <param name="feedOptions">The feed options for the operation.</param>
-        /// <param name="cancellationToken">The cancellation token for the operation.</param>
-        /// <returns></returns>
-        Task<List<TResult>> SelectToListAsync<TResult>(Expression<Func<TEntity, TResult>> selector, Expression<Func<TEntity, bool>> predicate = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
-
-        [Obsolete("Use ToListAsync() instead. This will be dropped.")]
-        Task<IQueryable<TEntity>> WhereAsync(Expression<Func<TEntity, bool>> predicate, FeedOptions feedOptions = null);
-
-        Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate, FeedOptions feedOptions = null , CancellationToken cancellationToken = default);
     }
 }

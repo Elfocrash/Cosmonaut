@@ -76,9 +76,11 @@ namespace Cosmonaut
         {
         }
 
-        public IOrderedQueryable<TEntity> Query(FeedOptions feedOptions = null)
+        public IQueryable<TEntity> Query(FeedOptions feedOptions = null)
         {
-            return DocumentClient.CreateDocumentQuery<TEntity>(_collection.GetAwaiter().GetResult().SelfLink, GetFeedOptionsForQuery(feedOptions));
+            var queryable = DocumentClient.CreateDocumentQuery<TEntity>(_collection.GetAwaiter().GetResult().SelfLink, GetFeedOptionsForQuery(feedOptions));
+
+            return IsShared ? queryable.Where(ExpressionExtensions.SharedCollectionExpression<TEntity>()) : queryable;
         }
         
         public async Task<CosmosResponse<TEntity>> AddAsync(TEntity entity, RequestOptions requestOptions = null)
@@ -126,68 +128,14 @@ namespace Cosmonaut
                 return new CosmosMultipleResponse<TEntity>(exception);
             }
         }
-
-        [Obsolete("Use ToListAsync() instead. This will be dropped in a future release.")]
-        public async Task<IQueryable<TEntity>> WhereAsync(Expression<Func<TEntity, bool>> predicate, FeedOptions feedOptions = null)
-        {
-            if (IsShared)
-                ExpressionExtensions.AddSharedCollectionFilter(ref predicate);
-
-            return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).SelfLink, GetFeedOptionsForQuery(feedOptions))
-                .Where(predicate);
-        }
-
-        public async Task<List<TResult>> SelectToListAsync<TResult>(
-            Expression<Func<TEntity, TResult>> selector,
-            Expression<Func<TEntity, bool>> predicate = null,
-            FeedOptions feedOptions = null, 
-            CancellationToken cancellationToken = default)
-        {
-            if (predicate == null)
-            {
-                predicate = entity => true;
-            }
-
-            if (IsShared)
-                ExpressionExtensions.AddSharedCollectionFilter(ref predicate);
-
-            var queryable = DocumentClient
-                .CreateDocumentQuery<TEntity>((await _collection).SelfLink, GetFeedOptionsForQuery(feedOptions));
-
-            var filter = queryable.Where(predicate)
-                .Select(selector);
-            var query = filter.AsDocumentQuery();
-
-            var result = new List<TResult>();
-            while (query.HasMoreResults)
-            {
-                var item = await query.ExecuteNextAsync<TResult>(cancellationToken);
-                result.AddRange(item);
-            }
-            return result;
-        }
-
-        public async Task<IDocumentQuery<TEntity>> AsDocumentQueryAsync(Expression<Func<TEntity, bool>> predicate = null, FeedOptions feedOptions = null)
-        {
-            if (predicate == null)
-            {
-                predicate = entity => true;
-            }
-
-            if (IsShared)
-                ExpressionExtensions.AddSharedCollectionFilter(ref predicate);
-
-            return DocumentClient.CreateDocumentQuery<TEntity>((await _collection).SelfLink, GetFeedOptionsForQuery(feedOptions))
-                .Where(predicate).AsDocumentQuery();
-        }
-
+        
         public async Task<CosmosMultipleResponse<TEntity>> RemoveAsync(
             Expression<Func<TEntity, bool>> predicate, 
             FeedOptions feedOptions = null, 
             RequestOptions requestOptions = null,
             CancellationToken cancellationToken = default)
         {
-            var entitiesToRemove = await ToListAsync(predicate, feedOptions, cancellationToken);
+            var entitiesToRemove = await Query(feedOptions).Where(predicate).ToListAsync(cancellationToken);
             return await RemoveRangeAsync(entitiesToRemove, requestOptions);
         }
 
@@ -340,67 +288,6 @@ namespace Cosmonaut
             {
                 return exception.HandleOperationException<TEntity>();
             }
-        }
-
-        public async Task<int> CountAsync(
-            Expression<Func<TEntity, bool>> predicate = null, 
-            FeedOptions feedOptions = null, 
-            CancellationToken cancellationToken = default)
-        {
-            if (predicate == null)
-            {
-                predicate = entity => true;
-            }
-
-            if (IsShared)
-                ExpressionExtensions.AddSharedCollectionFilter(ref predicate);
-
-            var queryable = DocumentClient.CreateDocumentQuery<TEntity>((await _collection).SelfLink, GetFeedOptionsForQuery(feedOptions));
-            var filter = queryable.Where(predicate);
-            var count = await filter.CountAsync(cancellationToken);
-
-            return count;
-        }
-
-        public async Task<List<TEntity>> ToListAsync(Expression<Func<TEntity, bool>> predicate = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
-        {
-            if (predicate == null)
-            {
-                predicate = entity => true;
-            }
-
-            if (IsShared)
-                ExpressionExtensions.AddSharedCollectionFilter(ref predicate);
-
-            var queryable = DocumentClient.CreateDocumentQuery<TEntity>((await _collection).SelfLink, GetFeedOptionsForQuery(feedOptions));
-            var filter = queryable.Where(predicate);
-            var query = filter.AsDocumentQuery();
-
-            var result = new List<TEntity>();
-            while (query.HasMoreResults)
-            {
-                var item = await query.ExecuteNextAsync<TEntity>(cancellationToken);
-                result.AddRange(item);
-            }
-            return result;
-        }
-        
-        public async Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
-        {
-            if (IsShared)
-                ExpressionExtensions.AddSharedCollectionFilter(ref predicate);
-
-            var queryable = DocumentClient.CreateDocumentQuery<TEntity>((await _collection).SelfLink,
-                GetFeedOptionsForQuery(feedOptions));
-            var filter = queryable.Where(predicate);
-            var query = filter.AsDocumentQuery();
-
-            while (query.HasMoreResults)
-            {
-                var item = await query.ExecuteNextAsync<TEntity>(cancellationToken);
-                return item.FirstOrDefault();
-            }
-            return null;
         }
 
         private async Task<CosmosMultipleResponse<TEntity>> HandleOperationWithRateLimitRetry(IEnumerable<Task<CosmosResponse<TEntity>>> entitiesTasks,

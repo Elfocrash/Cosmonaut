@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Cosmonaut.Extensions;
 using Cosmonaut.Storage;
 using FluentAssertions;
 using Microsoft.Azure.Documents;
@@ -67,7 +68,7 @@ namespace Cosmonaut.Tests
             var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
 
             // Act
-            var result = await entityStore.ToListAsync(predicate);
+            var result = await entityStore.Query().Where(predicate).ToListAsync();
 
             //Assert
             result.Count.Should().Be(1);
@@ -119,7 +120,7 @@ namespace Cosmonaut.Tests
             var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
 
             // Act
-            var result = await entityStore.FirstOrDefaultAsync(predicate);
+            var result = await entityStore.Query().FirstOrDefaultAsync(predicate);
 
             //Assert
             result.Should().BeEquivalentTo(dummy);

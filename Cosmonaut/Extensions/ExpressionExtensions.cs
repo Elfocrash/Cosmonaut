@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace Cosmonaut.Extensions
@@ -20,11 +19,6 @@ namespace Cosmonaut.Extensions
 
             return Expression.Lambda<Func<T, bool>>(
                 Expression.AndAlso(left ?? throw new InvalidOperationException(), right ?? throw new InvalidOperationException()), parameter);
-        }
-
-        internal static void AddSharedCollectionFilter<TEntity>(ref Expression<Func<TEntity, bool>> predicate) where TEntity : class
-        {           
-            predicate = predicate.AndAlso(SharedCollectionExpression<TEntity>());
         }
 
         internal static Expression<Func<TEntity, bool>> SharedCollectionExpression<TEntity>() where TEntity : class
