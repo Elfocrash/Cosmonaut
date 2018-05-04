@@ -10,7 +10,7 @@ namespace Cosmonaut.Tests
         public string Name { get; set; }
     }
 
-    [CosmosCollection("dummies",Throughput = 500)]
+    [CosmosCollection("dummies")]
     public class DummyWithThroughput
     {
         public string Id { get; set; }

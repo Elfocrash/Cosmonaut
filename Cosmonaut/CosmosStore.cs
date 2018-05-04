@@ -10,7 +10,6 @@ using Cosmonaut.Response;
 using Cosmonaut.Storage;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
-using Microsoft.Azure.Documents.Linq;
 
 namespace Cosmonaut
 {
@@ -53,15 +52,11 @@ namespace Cosmonaut
             string databaseName,
             IDatabaseCreator databaseCreator,
             ICollectionCreator collectionCreator,
-            bool scaleable = false,
-            bool allowAttributesToSetThrouput = false,
-            bool adjustThroughputOnStartup = false)
+            bool scaleable = false)
         {
             DocumentClient = documentClient ?? throw new ArgumentNullException(nameof(documentClient));
             Settings = new CosmosStoreSettings(databaseName, documentClient.ServiceEndpoint, documentClient.AuthKey.ToString(), documentClient.ConnectionPolicy, 
-                scaleCollectionRUsAutomatically: scaleable, 
-                allowAttributesToConfigureThroughput: allowAttributesToSetThrouput,
-                adjustCollectionThroughputOnStartup: adjustThroughputOnStartup);
+                scaleCollectionRUsAutomatically: scaleable);
             if (string.IsNullOrEmpty(Settings.DatabaseName)) throw new ArgumentNullException(nameof(Settings.DatabaseName));
             _databaseCreator = databaseCreator ?? throw new ArgumentNullException(nameof(databaseCreator));
             _collectionCreator = collectionCreator ?? throw new ArgumentNullException(nameof(collectionCreator));
@@ -337,8 +332,6 @@ namespace Cosmonaut
                 .ToArray()
                 .FirstOrDefault(c => c.Id == CollectionName);
 
-            await _cosmosScaler.AdjustCollectionThroughput(collection);
-
             return collection;
         }
 
@@ -352,7 +345,7 @@ namespace Cosmonaut
         {
             IsShared = typeof(TEntity).UsesSharedCollection();
             CollectionName = IsShared ? typeof(TEntity).GetSharedCollectionName() : typeof(TEntity).GetCollectionName();
-            CollectionThrouput = typeof(TEntity).GetCollectionThroughputForEntity(Settings.AllowAttributesToConfigureThroughput, Settings.CollectionThroughput);
+            CollectionThrouput = typeof(TEntity).GetCollectionThroughputForEntity(Settings.DefaultCollectionThroughput);
 
             _database = new AsyncLazy<Database>(async () => await GetDatabaseAsync());
             _collection = new AsyncLazy<DocumentCollection>(async () => await GetCollectionAsync());

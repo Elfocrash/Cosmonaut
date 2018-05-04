@@ -75,21 +75,6 @@ namespace Cosmonaut.Tests
         }
 
         [Fact]
-        public void ThroughputLessThanAllowedThrowsException()
-        {
-            // Arrange
-            var dummy = new Dummy();
-
-            // Act
-            var actionWithout = new Action(()=> dummy.GetType().GetCollectionThroughputForEntity(false, 300));
-            var actionWith = new Action(() => dummy.GetType().GetCollectionThroughputForEntity(true, 300));
-
-            // Assert
-            actionWith.Should().Throw<IllegalCosmosThroughputException>();
-            actionWithout.Should().Throw<IllegalCosmosThroughputException>();
-        }
-
-        [Fact]
         public void UsesSharedCollectionWithAttributeNoImpl()
         {
             // Arrange
