@@ -276,7 +276,7 @@ namespace Cosmonaut
             try
             {
                 var documentUri = UriFactory.CreateDocumentUri(Settings.DatabaseName, CollectionName, id);
-                var result = await DocumentClient.DeleteDocumentAsync(documentUri, GetRequestOptions(id, requestOptions));
+                var result = await DocumentClient.DeleteDocumentAsync(documentUri, GetRequestOptions(id, requestOptions, typeof(TEntity)));
                 return new CosmosResponse<TEntity>(result);
             }
             catch (Exception exception)
@@ -369,11 +369,14 @@ namespace Cosmonaut
             return requestOptions;
         }
 
-        private RequestOptions GetRequestOptions(string id, RequestOptions requestOptions)
+        private RequestOptions GetRequestOptions(string id, RequestOptions requestOptions, Type typeOfEntity)
         {
             if (requestOptions == null)
             {
-                return IsShared ? new RequestOptions
+                var partitionKeyDefinition = typeOfEntity.GetPartitionKeyForEntity();
+                var partitionKeyIsId = partitionKeyDefinition.Paths.FirstOrDefault()?.Equals($"/{CosmosConstants.CosmosId}") ?? false;
+
+                return IsShared || partitionKeyIsId ? new RequestOptions
                 {
                     PartitionKey = new PartitionKey(id)
                 } : null;
