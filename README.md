@@ -143,9 +143,7 @@ Partitions are great but you should these 3 very important things about them and
 
 * Once a collection is created with a partition key, it cannot be removed or changed.
 * You cannot add a partition key later to a single partition collection.
-* If you use the Update or the Upsert methods to update an entity that had the value of the property that is the partition key changed, then CosmosDB won't update the document but instead it will create a whole different document with the same id but the changed partition key value.
-
-There is a plan however to deal with this on the Update method eventually.
+* If you use the the Upsert method to update an entity that had the value of the property that is the partition key changed, then CosmosDB won't update the document but instead it will create a whole different document with the same id but the changed partition key value.
 
 More on the third issue here [Unique keys in Azure Cosmos DB](https://docs.microsoft.com/en-us/azure/cosmos-db/unique-keys)
 
