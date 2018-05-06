@@ -77,7 +77,7 @@ namespace Cosmonaut
 
             return IsShared ? queryable.Where(ExpressionExtensions.SharedCollectionExpression<TEntity>()) : queryable;
         }
-        
+
         public async Task<CosmosResponse<TEntity>> AddAsync(TEntity entity, RequestOptions requestOptions = null)
         {
             var collection = await _collection;
@@ -386,7 +386,7 @@ namespace Cosmonaut
 
         private FeedOptions GetFeedOptionsForQuery(FeedOptions feedOptions)
         {
-            var shouldEnablePartitionQuery = typeof(TEntity).HasPartitionKey() || IsShared;
+            var shouldEnablePartitionQuery = (typeof(TEntity).HasPartitionKey() || IsShared) && feedOptions?.PartitionKey == null;
 
             if (feedOptions == null)
             {
