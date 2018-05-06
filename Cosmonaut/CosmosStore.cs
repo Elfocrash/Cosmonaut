@@ -374,7 +374,7 @@ namespace Cosmonaut
             if (requestOptions == null)
             {
                 var partitionKeyDefinition = typeOfEntity.GetPartitionKeyForEntity();
-                var partitionKeyIsId = partitionKeyDefinition.Paths.FirstOrDefault()?.Equals($"/{CosmosConstants.CosmosId}") ?? false;
+                var partitionKeyIsId = partitionKeyDefinition?.Paths?.FirstOrDefault()?.Equals($"/{CosmosConstants.CosmosId}") ?? false;
 
                 return IsShared || partitionKeyIsId ? new RequestOptions
                 {
