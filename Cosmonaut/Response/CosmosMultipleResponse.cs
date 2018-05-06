@@ -35,10 +35,13 @@ namespace Cosmonaut.Response
             if (response == null)
                 return;
 
-            if(response.IsSuccess)
+            if (response.IsSuccess)
+            {
                 SuccessfulEntities.Add(response);
-            else
-                FailedEntities.Add(response);
+                return;
+            }
+
+            FailedEntities.Add(response);
         }
     }
 }
