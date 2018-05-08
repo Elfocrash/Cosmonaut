@@ -125,7 +125,7 @@ will return the item if it exists in CosmosDB but
 `cosmoStore.Query().FirstOrDefaultAsync(x => x.SomeProperty.StartsWith($"Nick Ch")`
 will throw an error. Changing the Hash to Range will work.
 
-However you can get around that by setting the FeedOptions.EnableScanInQuery to `true` for this `Query()`
+However you can get around that by setting the `FeedOptions.EnableScanInQuery` to `true` for this `Query()`
 
 More about CosmosDB Indexing [here](https://docs.microsoft.com/en-us/azure/cosmos-db/indexing-policies)
 
