@@ -17,6 +17,8 @@ Registering the CosmosStores in ServiceCollection for DI support
     "<<authkey>>");
                 
 serviceCollection.AddCosmosStore<Book>(cosmosSettings);
+//or just initialise it
+ICosmosStore<Book> bookStore = new CosmosStore<Book>(cosmosSettings)
 ```
 
 ##### Quering for entities
