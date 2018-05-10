@@ -3,9 +3,9 @@ using System.Linq.Expressions;
 
 namespace Cosmonaut.Extensions
 {
-    public static class ExpressionExtensions
+    internal static class ExpressionExtensions
     {
-        public static Expression<Func<T, bool>> AndAlso<T>(this 
+        internal static Expression<Func<T, bool>> AndAlso<T>(this 
             Expression<Func<T, bool>> expr1,
             Expression<Func<T, bool>> expr2)
         {
@@ -19,6 +19,16 @@ namespace Cosmonaut.Extensions
 
             return Expression.Lambda<Func<T, bool>>(
                 Expression.AndAlso(left ?? throw new InvalidOperationException(), right ?? throw new InvalidOperationException()), parameter);
+        }
+
+        internal static Expression<Func<TEntity, bool>> SharedCollectionExpression<TEntity>() where TEntity : class
+        {
+            var parameter = Expression.Parameter(typeof(ISharedCosmosEntity));
+            var member = Expression.Property(parameter, nameof(ISharedCosmosEntity.CosmosEntityName));
+            var contant = Expression.Constant(typeof(TEntity).GetSharedCollectionEntityName());
+            var body = Expression.Equal(member, contant);
+            var extra = Expression.Lambda<Func<TEntity, bool>>(body, parameter);
+            return extra;
         }
 
         private class ReplaceExpressionVisitor

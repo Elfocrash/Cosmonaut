@@ -53,21 +53,11 @@ namespace Cosmonaut.Extensions
             return hasSharedCosmosCollectionAttribute;
         }
 
-        internal static int GetCollectionThroughputForEntity(this Type entityType, 
-            bool allowAttributesToConfigureThroughput,
+        internal static int GetCollectionThroughputForEntity(this Type entityType,
             int collectionThroughput)
         {
-            if (!allowAttributesToConfigureThroughput)
-            {
-                if (collectionThroughput < CosmosConstants.MinimumCosmosThroughput) throw new IllegalCosmosThroughputException();
-                return collectionThroughput;
-            }
-
-            var collectionAttribute = entityType.GetCustomAttribute<CosmosCollectionAttribute>();
-            var throughput = collectionAttribute != null && collectionAttribute.Throughput != -1 ? collectionAttribute.Throughput : collectionThroughput;
-
             if (collectionThroughput < CosmosConstants.MinimumCosmosThroughput) throw new IllegalCosmosThroughputException();
-            return throughput;
+            return collectionThroughput;
         }
     }
 }

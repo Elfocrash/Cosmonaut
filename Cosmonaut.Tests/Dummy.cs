@@ -10,7 +10,7 @@ namespace Cosmonaut.Tests
         public string Name { get; set; }
     }
 
-    [CosmosCollection("dummies",Throughput = 500)]
+    [CosmosCollection("dummies")]
     public class DummyWithThroughput
     {
         public string Id { get; set; }
@@ -69,10 +69,10 @@ namespace Cosmonaut.Tests
         public string Name { get; set; }
     }
 
-    [SharedCosmosCollection("shared")]
-    public class DummySharedCollection
+    [SharedCosmosCollection("shared", "dummies")]
+    public class DummySharedCollection : ISharedCosmosEntity
     {
-
+        public string CosmosEntityName { get; set; }
     }
 
     [SharedCosmosCollection("")]

@@ -6,6 +6,6 @@
         ResourceNotFound,
         ResourceWithIdAlreadyExists,
         RequestRateIsLarge,
-        GeneralFailure
+        Exception
     }
 }

@@ -41,7 +41,7 @@ namespace Cosmonaut.Tests
             var actualDocument = new Document();
             actualDocument.LoadFrom(reader);
             JToken jtoken = JToken.FromObject(document);
-            _mockDocumentClient.Setup(x => x.ReplaceDocumentAsync(DocumentHelpers.GetDocumentSelfLink("databaseName", It.IsAny<string>(), documentId), jtoken, It.IsAny<RequestOptions>())).ReturnsAsync(new ResourceResponse<Document>(actualDocument));
+            _mockDocumentClient.Setup(x => x.ReplaceDocumentAsync(It.IsAny<Uri>(), jtoken, It.IsAny<RequestOptions>())).ReturnsAsync(new ResourceResponse<Document>(actualDocument));
 
             var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
 
@@ -68,7 +68,7 @@ namespace Cosmonaut.Tests
             var document = addedDummy.GetCosmosDbFriendlyEntity() as Document;
             var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
 
-            _mockDocumentClient.Setup(x => x.ReplaceDocumentAsync(DocumentHelpers.GetDocumentSelfLink("databaseName", It.IsAny<string>(), documentId), It.IsAny<object>(), It.IsAny<RequestOptions>()))
+            _mockDocumentClient.Setup(x => x.ReplaceDocumentAsync(It.IsAny<Uri>(), It.IsAny<object>(), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
             
             var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));

@@ -1,4 +1,5 @@
-﻿using Microsoft.Azure.Documents;
+﻿using System;
+using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 
 namespace Cosmonaut.Response
@@ -11,11 +12,13 @@ namespace Cosmonaut.Response
             CosmosOperationStatus == CosmosOperationStatus.Success) || 
             (ResourceResponse == null && CosmosOperationStatus == CosmosOperationStatus.Success);
 
-        public CosmosOperationStatus CosmosOperationStatus { get; set; } = CosmosOperationStatus.Success;
+        public CosmosOperationStatus CosmosOperationStatus { get; } = CosmosOperationStatus.Success;
 
         public ResourceResponse<Document> ResourceResponse { get; }
 
         public TEntity Entity { get; set; }
+
+        public Exception Exception { get; }
 
         public CosmosResponse(ResourceResponse<Document> resourceResponse)
         {
@@ -25,6 +28,16 @@ namespace Cosmonaut.Response
         public CosmosResponse(CosmosOperationStatus statusType)
         {
             CosmosOperationStatus = statusType;
+        }
+
+        public CosmosResponse(TEntity entity, Exception exception)
+        {
+            if (exception == null)
+                return;
+
+            Entity = entity;
+            Exception = exception;
+            CosmosOperationStatus = CosmosOperationStatus.Exception;
         }
 
         public CosmosResponse(TEntity entity, ResourceResponse<Document> resourceResponse)

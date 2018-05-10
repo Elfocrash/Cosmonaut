@@ -19,6 +19,17 @@ Registering the CosmosStores in ServiceCollection for DI support
 serviceCollection.AddCosmosStore<Book>(cosmosSettings);
 ```
 
+##### Quering for entities
+
+In order to query for entities all you have to do is call the `.Query()` method and then use LINQ to create the query you want.
+It is HIGHLY recommended that you use one of the `Async` methods to get the results back, such as `ToListAsync` or `FirstOrDefaultAsync` , when available.
+
+```csharp
+var user = await cosmoStore.Query().FirstOrDefaultAsync(x => x.Username == "elfocrash");
+var users = await cosmoStore.Query().ToListAsync(x => x.HairColor == HairColor.Black);
+var otherUsers = await cosmosStore.Query().Where(x => x.Name.StartsWith("Smit")).ToListAsync(cancellationToken)
+```
+
 ##### Adding an entity in the entity store
 ```csharp
 var newUser = new User
@@ -28,12 +39,6 @@ var newUser = new User
 var added = await cosmoStore.AddAsync(newUser);
 
 var multiple = await cosmoStore.AddRangeAsync(manyManyUsers);
-```
-
-##### Quering for entities
-```csharp
-var user = await cosmoStore.FirstOrDefaultAsync(x => x.Username == "elfocrash");
-var users = await cosmoStore.ToListAsync(x => x.HairColor == HairColor.Black);
 ```
 
 ##### Updating entities
@@ -76,7 +81,7 @@ Well it's actually pretty simple. Just implement the `ISharedCosmosEntity` inter
 The attribute accepts two properties, `SharedCollectionName` which is mandatory and `EntityPrefix` which is optional.
 The `SharedCollectionName` property will be used to name the collection that the entity will share with other entities. 
 
-The `EntityPrefix` will be used to make the object identifiable for Cosmosnaut. Be default it will pluralize the name of the class, but you can specify it to override this behavior.
+The `CosmosEntityName` will be used to make the object identifiable for Cosmosnaut. Be default it will pluralize the name of the class, but you can specify it to override this behavior.
 
 Once you set this up you can add individual CosmosStores with shared collections.
 
@@ -115,10 +120,12 @@ Indexing in necessary for things like querying the collections.
 Keep in mind that when you manage indexing policy, you can make fine-grained trade-offs between index storage overhead, write and query throughput, and query consistency.
 
 For example if the String datatype is Hash then exact matches like the following,
-`cosmoStore.FirstOrDefaultAsync(x => x.SomeProperty.Equals($"Nick Chapsas")`
+`cosmoStore.Query().FirstOrDefaultAsync(x => x.SomeProperty.Equals($"Nick Chapsas")`
 will return the item if it exists in CosmosDB but 
-`cosmoStore.FirstOrDefaultAsync(x => x.SomeProperty.StartsWith($"Nick Ch")`
+`cosmoStore.Query().FirstOrDefaultAsync(x => x.SomeProperty.StartsWith($"Nick Ch")`
 will throw an error. Changing the Hash to Range will work.
+
+However you can get around that by setting the `FeedOptions.EnableScanInQuery` to `true` for this `Query()`
 
 More about CosmosDB Indexing [here](https://docs.microsoft.com/en-us/azure/cosmos-db/indexing-policies)
 
@@ -136,9 +143,7 @@ Partitions are great but you should these 3 very important things about them and
 
 * Once a collection is created with a partition key, it cannot be removed or changed.
 * You cannot add a partition key later to a single partition collection.
-* If you use the Update or the Upsert methods to update an entity that had the value of the property that is the partition key changed, then CosmosDB won't update the document but instead it will create a whole different document with the same id but the changed partition key value.
-
-There is a plan however to deal with this on the Update method eventually.
+* If you use the the Upsert method to update an entity that had the value of the property that is the partition key changed, then CosmosDB won't update the document but instead it will create a whole different document with the same id but the changed partition key value.
 
 More on the third issue here [Unique keys in Azure Cosmos DB](https://docs.microsoft.com/en-us/azure/cosmos-db/unique-keys)
 
@@ -150,18 +155,6 @@ Example:
 ```csharp
 [CosmosCollection("somename")]
 ```
-
-#### Performance
-Performance can vary dramatically based on the throughput (RU/s*) you are using.
-By default Cosmonaut will set the throughput to the lowest value of `400` mainly because I don't want to affect how much you pay accidentaly.
-You can set the default throughput for all the collections when you set up your `CosmosStore` by setting the `CollectionThroughput` option to whatever you see fit or by simply setting it in Azure.
-You can also set the throughput at the collection level by using the `CosmosCollection` attribute at the entity's class.
-
-Example:
-```csharp
-[CosmosCollection(Throughput = 1000)]
-```
-Note here that this functionality is disabled by default. Usage of Azure to adjust is recommended.
 
 #### Benchmarks
 
@@ -187,4 +180,4 @@ Note here that this functionality is disabled by default. Usage of Azure to adju
 ### Restrictions
 Because of the way the internal `id` property of Cosmosdb works, there is a mandatory restriction made.
 You cannot have a property named Id or a property with the attribute `[JsonProperty("id")]` without it being a string.
-A cosmos id need to exist somehow on your entity model. For that reason if it isn't part of your entity you can just implement the `ICosmosEntity` interface.
+A cosmos id need to exist somehow on your entity model. For that reason if it isn't part of your entity you can just implement the `ICosmosEntity` interface or extend the `CosmosEntity` class.

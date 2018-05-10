@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Cosmonaut.Response
@@ -13,14 +14,20 @@ namespace Cosmonaut.Response
 
         private readonly CosmosOperationStatus _operationStatus = CosmosOperationStatus.Success;
 
+        public Exception Exception { get; }
+
         public CosmosMultipleResponse()
         {
             
         }
-
-        public CosmosMultipleResponse(CosmosOperationStatus operationStatus)
+        
+        public CosmosMultipleResponse(Exception exception)
         {
-            _operationStatus = operationStatus;
+            if (exception == null)
+                return;
+
+            Exception = exception;
+            _operationStatus = CosmosOperationStatus.Exception;
         }
 
         internal void AddResponse(CosmosResponse<TEntity> response)
@@ -28,10 +35,13 @@ namespace Cosmonaut.Response
             if (response == null)
                 return;
 
-            if(response.IsSuccess)
+            if (response.IsSuccess)
+            {
                 SuccessfulEntities.Add(response);
-            else
-                FailedEntities.Add(response);
+                return;
+            }
+
+            FailedEntities.Add(response);
         }
     }
 }

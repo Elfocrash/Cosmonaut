@@ -14,8 +14,5 @@ namespace Cosmonaut.Extensions
                 }
             };
         }
-
-        internal static string GetDocumentSelfLink(string databaseName, string collectionName, string documentId) =>
-            $"dbs/{databaseName}/colls/{collectionName}/docs/{documentId}/";
     }
 }

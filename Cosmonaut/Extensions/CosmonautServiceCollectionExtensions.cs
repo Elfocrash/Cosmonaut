@@ -1,4 +1,5 @@
-﻿using Cosmonaut.Storage;
+﻿using System;
+using Cosmonaut.Storage;
 using Microsoft.Azure.Documents;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,6 +14,13 @@ namespace Cosmonaut.Extensions
                 new CosmosDatabaseCreator(documentClient), 
                 new CosmosCollectionCreator(documentClient)));
             return services;
+        }
+
+        public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services, Action<CosmosStoreSettings> settingsAction) where TEntity : class
+        {
+            var settings = new CosmosStoreSettings();
+            settingsAction?.Invoke(settings);
+            return services.AddCosmosStore<TEntity>(settings);
         }
 
         public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services,

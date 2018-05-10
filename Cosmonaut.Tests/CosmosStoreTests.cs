@@ -28,13 +28,13 @@ namespace Cosmonaut.Tests
             var databaseName = "dbName";
             var collectionName = "collName";
             var documentId = "documentId";
-            var expectedSelfLink = $"dbs/{databaseName}/colls/{collectionName}/docs/{documentId}/";
+            var expectedLink = $"dbs/{databaseName}/colls/{collectionName}/docs/{documentId}";
 
             // Act
-            var selfLink = DocumentHelpers.GetDocumentSelfLink(databaseName,collectionName,documentId);
+            var selfLink = UriFactory.CreateDocumentUri(databaseName,collectionName,documentId);
 
             // Assert
-            Assert.Equal(expectedSelfLink, selfLink);
+            selfLink.ToString().Should().Be(expectedLink);
         }
 
         [Fact]

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
@@ -10,7 +12,7 @@ namespace Cosmonaut.Console
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             var connectionPolicy = new ConnectionPolicy
             {
@@ -27,8 +29,7 @@ namespace Cosmonaut.Console
                 "https://localhost:8081", 
                 "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
                 , connectionPolicy
-                , collectionThroughput: 5000
-                , scaleCollectionRUsAutomatically: false);
+                , defaultCollectionThroughput: 5000);
            
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddCosmosStore<Book>(cosmosSettings);
@@ -71,10 +72,11 @@ namespace Cosmonaut.Console
             var addedCars = carStore.AddRangeAsync(cars).Result;
             System.Console.WriteLine($"Added 100 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
+            //await Task.Delay(3000);
 
-            booksStore.CountAsync();
+            var testResult = await carStore.Query(new FeedOptions{EnableScanInQuery = true}).SingleOrDefaultAsync(x => x.ModelName.StartsWith("Car 1"));
 
-            var addedRetrieved = booksStore.ToListAsync().Result;
+            var addedRetrieved = booksStore.Query().ToListAsync().Result;
             System.Console.WriteLine($"Retrieved 50 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
             foreach (var addedre in addedRetrieved)

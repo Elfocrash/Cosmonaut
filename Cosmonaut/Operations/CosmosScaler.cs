@@ -47,7 +47,7 @@ namespace Cosmonaut.Operations
 
             var collectionOffer = (OfferV2)_cosmosStore.DocumentClient.CreateOfferQuery()
                 .Where(x => x.ResourceLink == collection.SelfLink).AsEnumerable().Single();
-            _cosmosStore.CollectionThrouput = typeof(TEntity).GetCollectionThroughputForEntity(_cosmosStore.Settings.AllowAttributesToConfigureThroughput, _cosmosStore.Settings.CollectionThroughput);
+            _cosmosStore.CollectionThrouput = typeof(TEntity).GetCollectionThroughputForEntity(_cosmosStore.Settings.DefaultCollectionThroughput);
             var replaced = await _cosmosStore.DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, _cosmosStore.CollectionThrouput));
             _cosmosStore.IsUpscaled = replaced.StatusCode != HttpStatusCode.OK;
         }
@@ -69,28 +69,6 @@ namespace Cosmonaut.Operations
             return sampleResponse;
         }
         
-        internal async Task<bool> AdjustCollectionThroughput(DocumentCollection collection)
-        {
-            var collectionOffer = (OfferV2)_cosmosStore.DocumentClient.CreateOfferQuery()
-                .Where(x => x.ResourceLink == collection.SelfLink).AsEnumerable().Single();
-            var currentOfferThroughput = collectionOffer.Content.OfferThroughput;
-
-            if (_cosmosStore.Settings.AdjustCollectionThroughputOnStartup)
-            {
-                if (_cosmosStore.CollectionThrouput != currentOfferThroughput)
-                {
-                    var updated =
-                        await _cosmosStore.DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, _cosmosStore.CollectionThrouput));
-                    if (updated.StatusCode != HttpStatusCode.OK)
-                        throw new CosmosCollectionThroughputUpdateException(collection);
-
-                    return true;
-                }
-            }
-            _cosmosStore.CollectionThrouput = currentOfferThroughput;
-            return false;
-        }
-
         internal async Task<CosmosMultipleResponse<TEntity>> UpscaleCollectionIfConfiguredAsSuch(List<TEntity> entitiesList, DocumentCollection collection,
             Func<TEntity, Task<CosmosResponse<TEntity>>> operationAsync)
         {
