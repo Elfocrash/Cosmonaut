@@ -9,10 +9,7 @@ namespace Cosmonaut.Extensions
     {
         public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services, CosmosStoreSettings settings) where TEntity : class
         {
-            var documentClient = DocumentClientFactory.CreateDocumentClient(settings);
-            services.AddSingleton<ICosmosStore<TEntity>>(x=> new CosmosStore<TEntity>(settings, 
-                new CosmosDatabaseCreator(documentClient), 
-                new CosmosCollectionCreator(documentClient)));
+            services.AddSingleton<ICosmosStore<TEntity>>(x=> new CosmosStore<TEntity>(settings));
             return services;
         }
 
@@ -26,8 +23,8 @@ namespace Cosmonaut.Extensions
         public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services,
             IDocumentClient documentClient, 
             string databaseName,
-            IDatabaseCreator databaseCreator,
-            ICollectionCreator collectionCreator) where TEntity : class
+            IDatabaseCreator databaseCreator = null,
+            ICollectionCreator collectionCreator = null) where TEntity : class
         {
             services.AddSingleton<ICosmosStore<TEntity>>(x => new CosmosStore<TEntity>(documentClient, databaseName, databaseCreator, collectionCreator));
             return services;
