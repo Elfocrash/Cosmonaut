@@ -21,6 +21,38 @@ namespace Cosmonaut
         IQueryable<TEntity> Query(FeedOptions feedOptions = null);
 
         /// <summary>
+        ///     Returns a single item that matches the expression provided.
+        /// </summary>
+        /// <param name="sql">The sql query for this operation.</param>
+        /// <param name="feedOptions">The feed options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
+        Task<TEntity> QuerySingleAsync(string sql, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        ///     Returns a single item of any type that matches the expression provided.
+        /// </summary>
+        /// <param name="sql">The sql query for this operation.</param>
+        /// <param name="feedOptions">The feed options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
+        Task<T> QuerySingleAsync<T>(string sql, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        ///     Returns a collection of items that match the expression provided.
+        /// </summary>
+        /// <param name="sql">The sql query for this operation.</param>
+        /// <param name="feedOptions">The feed options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
+        Task<IEnumerable<TEntity>> QueryMultipleAsync(string sql, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        ///     Returns a collection of items of any type that match the expression provided.
+        /// </summary>
+        /// <param name="sql">The sql query for this operation.</param>
+        /// <param name="feedOptions">The feed options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
+        Task<IEnumerable<T>> QueryMultipleAsync<T>(string sql, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
         ///     Adds the given entity in the cosmos db store.
         /// </summary>
         /// <typeparam name="TEntity">The type of the entity.</typeparam>

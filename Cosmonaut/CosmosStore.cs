@@ -78,6 +78,42 @@ namespace Cosmonaut
             return IsShared ? queryable.Where(ExpressionExtensions.SharedCollectionExpression<TEntity>()) : queryable;
         }
 
+        public async Task<TEntity> QuerySingleAsync(string sql, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
+        {
+            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
+
+            var queryable = DocumentClient.CreateDocumentQuery<TEntity>(_collection.SelfLink, collectionSharingFriendlySql, GetFeedOptionsForQuery(feedOptions));
+
+            return await queryable.SingleOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<T> QuerySingleAsync<T>(string sql, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
+        {
+            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
+
+            var queryable = DocumentClient.CreateDocumentQuery<T>(_collection.SelfLink, collectionSharingFriendlySql, GetFeedOptionsForQuery(feedOptions));
+
+            return await queryable.SingleOrDefaultGenericAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<TEntity>> QueryMultipleAsync(string sql, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
+        {
+            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
+
+            var queryable = DocumentClient.CreateDocumentQuery<TEntity>(_collection.SelfLink, collectionSharingFriendlySql, GetFeedOptionsForQuery(feedOptions));
+
+            return await queryable.ToListAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<T>> QueryMultipleAsync<T>(string sql, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
+        {
+            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
+
+            var queryable = DocumentClient.CreateDocumentQuery<T>(_collection.SelfLink, collectionSharingFriendlySql, GetFeedOptionsForQuery(feedOptions));
+
+            return await queryable.ToGenericListAsync(cancellationToken);
+        }
+
         public async Task<CosmosResponse<TEntity>> AddAsync(TEntity entity, RequestOptions requestOptions = null)
         {
             var safeDocument = entity.GetCosmosDbFriendlyEntity();

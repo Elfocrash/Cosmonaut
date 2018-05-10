@@ -121,13 +121,36 @@ namespace Cosmonaut.Extensions
             return await DocumentQueryable.MinAsync(queryable, cancellationToken);
         }
 
+        internal static async Task<T> SingleOrDefaultGenericAsync<T>(
+            this IQueryable<T> queryable,
+            CancellationToken cancellationToken = default)
+        {
+            var query = queryable.AsDocumentQuery();
+            var results = await GetGenericResultsFromQueryToList(query, cancellationToken);
+            return results.SingleOrDefault();
+        }
+
+        internal static async Task<List<T>> ToGenericListAsync<T>(
+            this IQueryable<T> queryable,
+            CancellationToken cancellationToken = default)
+        {
+            var query = queryable.AsDocumentQuery();
+            var results = await GetGenericResultsFromQueryToList(query, cancellationToken);
+            return results;
+        }
+
         private static async Task<List<TEntity>> GetResultsFromQueryToList<TEntity>(IDocumentQuery<TEntity> query, CancellationToken cancellationToken)
             where TEntity : class
         {
-            var results = new List<TEntity>();
+            return await GetGenericResultsFromQueryToList(query, cancellationToken);
+        }
+
+        private static async Task<List<T>> GetGenericResultsFromQueryToList<T>(IDocumentQuery<T> query, CancellationToken cancellationToken)
+        {
+            var results = new List<T>();
             while (query.HasMoreResults)
             {
-                var items = await query.ExecuteNextAsync<TEntity>(cancellationToken);
+                var items = await query.ExecuteNextAsync<T>(cancellationToken);
                 results.AddRange(items);
             }
             return results;

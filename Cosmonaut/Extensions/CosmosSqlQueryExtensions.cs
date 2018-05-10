@@ -29,7 +29,7 @@ namespace Cosmonaut.Extensions
 
             if (hasExistingWhereClause)
             {
-                var splitQuery = sql.Split(new[] { " where " }, StringSplitOptions.None);
+                var splitQuery = Regex.Split(sql, " where ", RegexOptions.IgnoreCase);
                 var firstPartQuery = splitQuery[0];
                 var secondPartQuery = splitQuery[1];
                 var sharedCollectionExpressionQuery = $"{identifier}.{nameof(ISharedCosmosEntity.CosmosEntityName)} = '{cosmosEntityNameValue}'";
