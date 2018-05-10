@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
 using System.Reflection;
 using System.Security;
+using System.Threading;
+using Cosmonaut.Storage;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Moq;
@@ -80,5 +83,102 @@ namespace Cosmonaut.Tests
         }
 
         private static readonly DateTime UnixStartTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+
+        public static CosmosStore<Dummy> ResponseSetup(IQueryable<Dummy> expected, IQueryable<Dummy> dataSource, ref Mock<IDocumentClient> mockDocumentClient)
+        {
+            FeedResponse<Dummy> response = new FeedResponse<Dummy>(expected);
+
+            var mockDocumentQuery = new Mock<IFakeDocumentQuery<Dummy>>();
+            mockDocumentQuery
+                .SetupSequence(_ => _.HasMoreResults)
+                .Returns(true)
+                .Returns(false);
+
+            mockDocumentQuery
+                .Setup(_ => _.ExecuteNextAsync<Dummy>(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(response);
+
+            var provider = new Mock<IQueryProvider>();
+            provider
+                .Setup(_ => _.CreateQuery<Dummy>(It.IsAny<Expression>()))
+                .Returns(mockDocumentQuery.Object);
+            mockDocumentQuery.As<IQueryable<Dummy>>().Setup(x => x.Provider).Returns(provider.Object);
+            mockDocumentQuery.As<IQueryable<Dummy>>().Setup(x => x.Expression).Returns(dataSource.Expression);
+            mockDocumentQuery.As<IQueryable<Dummy>>().Setup(x => x.ElementType).Returns(dataSource.ElementType);
+            mockDocumentQuery.As<IQueryable<Dummy>>().Setup(x => x.GetEnumerator()).Returns(dataSource.GetEnumerator);
+
+
+            mockDocumentClient.Setup(x => x.CreateDocumentQuery<Dummy>(It.IsAny<string>(),
+                    It.IsAny<FeedOptions>()))
+                .Returns(mockDocumentQuery.Object);
+
+            var entityStore = new CosmosStore<Dummy>(mockDocumentClient.Object, "databaseName",
+                new CosmosDatabaseCreator(mockDocumentClient.Object),
+                new CosmosCollectionCreator(mockDocumentClient.Object));
+            return entityStore;
+        }
+
+        public static CosmosStore<Dummy> ResponseSetupForQuery<T>(string sql, IQueryable<T> expected, IQueryable<Dummy> dataSource, ref Mock<IDocumentClient> mockDocumentClient)
+        {
+            FeedResponse<T> response = new FeedResponse<T>(expected);
+
+            var mockDocumentQuery = new Mock<IFakeDocumentQuery<T>>();
+            mockDocumentQuery
+                .SetupSequence(_ => _.HasMoreResults)
+                .Returns(true)
+                .Returns(false);
+
+            mockDocumentQuery
+                .Setup(_ => _.ExecuteNextAsync<T>(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(response);
+
+            var provider = new Mock<IQueryProvider>();
+            provider
+                .Setup(_ => _.CreateQuery<T>(It.IsAny<Expression>()))
+                .Returns(mockDocumentQuery.Object);
+
+            mockDocumentClient.Setup(x => x.CreateDocumentQuery<T>(It.IsAny<string>(), sql,
+                    It.IsAny<FeedOptions>()))
+                .Returns(mockDocumentQuery.Object);
+
+            var entityStore = new CosmosStore<Dummy>(mockDocumentClient.Object, "databaseName",
+                new CosmosDatabaseCreator(mockDocumentClient.Object),
+                new CosmosCollectionCreator(mockDocumentClient.Object));
+            return entityStore;
+        }
+
+        public static CosmosStore<Dummy> ResponseSetupForQuery(string sql, IQueryable<Dummy> expected, IQueryable<Dummy> dataSource, ref Mock<IDocumentClient> mockDocumentClient)
+        {
+            FeedResponse<Dummy> response = new FeedResponse<Dummy>(expected);
+
+            var mockDocumentQuery = new Mock<IFakeDocumentQuery<Dummy>>();
+            mockDocumentQuery
+                .SetupSequence(_ => _.HasMoreResults)
+                .Returns(true)
+                .Returns(false);
+
+            mockDocumentQuery
+                .Setup(_ => _.ExecuteNextAsync<Dummy>(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(response);
+
+            var provider = new Mock<IQueryProvider>();
+            provider
+                .Setup(_ => _.CreateQuery<Dummy>(It.IsAny<Expression>()))
+                .Returns(mockDocumentQuery.Object);
+            mockDocumentQuery.As<IQueryable<Dummy>>().Setup(x => x.Provider).Returns(provider.Object);
+            mockDocumentQuery.As<IQueryable<Dummy>>().Setup(x => x.Expression).Returns(dataSource.Expression);
+            mockDocumentQuery.As<IQueryable<Dummy>>().Setup(x => x.ElementType).Returns(dataSource.ElementType);
+            mockDocumentQuery.As<IQueryable<Dummy>>().Setup(x => x.GetEnumerator()).Returns(dataSource.GetEnumerator);
+
+
+            mockDocumentClient.Setup(x => x.CreateDocumentQuery<Dummy>(It.IsAny<string>(), sql,
+                    It.IsAny<FeedOptions>()))
+                .Returns(mockDocumentQuery.Object);
+
+            var entityStore = new CosmosStore<Dummy>(mockDocumentClient.Object, "databaseName",
+                new CosmosDatabaseCreator(mockDocumentClient.Object),
+                new CosmosCollectionCreator(mockDocumentClient.Object));
+            return entityStore;
+        }
     }
 }

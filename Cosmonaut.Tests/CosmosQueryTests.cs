@@ -16,7 +16,7 @@ namespace Cosmonaut.Tests
 {
     public class CosmosQueryTests
     {
-        private readonly Mock<IDocumentClient> _mockDocumentClient;
+        private Mock<IDocumentClient> _mockDocumentClient;
 
         public CosmosQueryTests()
         {
@@ -46,7 +46,7 @@ namespace Cosmonaut.Tests
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Where(predicate);
 
-            var entityStore = ResponseSetup(expected, dataSource);
+            var entityStore = MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
 
             // Act
             var result = await entityStore.Query().Where(predicate).ToListAsync();
@@ -54,6 +54,131 @@ namespace Cosmonaut.Tests
             //Assert
             result.Count.Should().Be(2);
             result.Should().BeEquivalentTo(dummies);
+        }
+
+        [Fact]
+        public async Task QueryMultipleAsyncReturnsCorrectItems()
+        {
+            // Arrange
+            var dummies = new List<Dummy>
+            {
+                new Dummy
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = "Nick"
+                },
+                new Dummy
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = "John"
+                }
+            };
+
+            var dataSource = dummies.AsQueryable();
+
+            var entityStore = MockHelpers.ResponseSetupForQuery("select * from c", dataSource, dataSource, ref _mockDocumentClient);
+
+            // Act
+            var result = (await entityStore.QueryMultipleAsync("select * from c")).ToList();
+
+            //Assert
+            result.Count.Should().Be(2);
+            result.Should().BeEquivalentTo(dummies);
+        }
+
+        [Fact]
+        public async Task QuerySingleAsyncReturnsSingleIdCorrectly()
+        {
+            // Arrange
+            var id = Guid.NewGuid().ToString();
+            var dummies = new List<Dummy>
+            {
+                new Dummy
+                {
+                    Id = id,
+                    Name = "Nick"
+                },
+                new Dummy
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = "John"
+                }
+            };
+
+            var dataSource = dummies.AsQueryable();
+            var expected = dataSource.Where(x => x.Name == "Nick").Select(x => x.Id);
+
+            var entityStore = MockHelpers.ResponseSetupForQuery("select value c.id from c where c.Name = 'Nick'", expected, dataSource, ref _mockDocumentClient);
+
+            // Act
+            var result = await entityStore.QuerySingleAsync<string>("select value c.id from c where c.Name = 'Nick'");
+
+            //Assert
+            result.Should().Be(id);
+        }
+
+        [Fact]
+        public async Task QuerySingleAsyncReturnsCorrectItem()
+        {
+            // Arrange
+            var nickDummy = new Dummy
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "Nick"
+            };
+
+            var dummies = new List<Dummy>
+            {
+                nickDummy,
+                new Dummy
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = "John"
+                }
+            };
+
+            var dataSource = dummies.AsQueryable();
+            var expected = dataSource.Where(x => x.Name == "Nick");
+
+            var entityStore = MockHelpers.ResponseSetupForQuery("select top 1 * from c where c.Name = 'Nick'", expected, dataSource, ref _mockDocumentClient);
+
+            // Act
+            var result = await entityStore.QuerySingleAsync("select top 1 * from c where c.Name = 'Nick'");
+
+            //Assert
+            result.Should().BeEquivalentTo(nickDummy);
+        }
+
+        [Fact]
+        public async Task QueryMultipleAsyncReturnsIdAsStringCorrectly()
+        {
+            // Arrange
+            var ids = new[] { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() };
+
+            var dummies = new List<Dummy>
+            {
+                new Dummy
+                {
+                    Id = ids[0],
+                    Name = "Nick"
+                },
+                new Dummy
+                {
+                    Id = ids[1],
+                    Name = "John"
+                }
+            };
+
+            var dataSource = dummies.AsQueryable();
+            var expected = dataSource.Select(x => x.Id);
+
+            var entityStore = MockHelpers.ResponseSetupForQuery("select value c.id from c", expected, dataSource, ref _mockDocumentClient);
+
+            // Act
+            var result = await entityStore.QueryMultipleAsync<string>("select value c.id from c");
+
+            //Assert
+            result.Should().BeEquivalentTo(ids);
         }
 
         [Fact]
@@ -80,7 +205,7 @@ namespace Cosmonaut.Tests
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Where(predicate);
 
-            var entityStore = ResponseSetup(expected, dataSource);
+            var entityStore = MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
 
             // Act
             var result = await entityStore.Query().FirstOrDefaultAsync(predicate);
@@ -113,7 +238,7 @@ namespace Cosmonaut.Tests
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Where(predicate);
 
-            var entityStore = ResponseSetup(expected, dataSource);
+            var entityStore = MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
 
             // Act
             var result = await entityStore.Query().FirstAsync(predicate);
@@ -146,7 +271,7 @@ namespace Cosmonaut.Tests
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Where(predicate);
 
-            var entityStore = ResponseSetup(expected, dataSource);
+            var entityStore = MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
 
             // Act
             var result = await entityStore.Query().SingleOrDefaultAsync(predicate);
@@ -179,7 +304,7 @@ namespace Cosmonaut.Tests
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Where(predicate);
 
-            var entityStore = ResponseSetup(expected, dataSource);
+            var entityStore = MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
 
             // Act
             var result = await entityStore.Query().SingleAsync(predicate);
@@ -212,7 +337,7 @@ namespace Cosmonaut.Tests
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Where(predicate);
 
-            var entityStore = ResponseSetup(expected, dataSource);
+            var entityStore = MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
 
             // Act
             var result = new Action(() => entityStore.Query().SingleAsync(predicate).GetAwaiter().GetResult());
@@ -231,7 +356,7 @@ namespace Cosmonaut.Tests
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Where(predicate);
 
-            var entityStore = ResponseSetup(expected, dataSource);
+            var entityStore = MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
 
             // Act
             var result = new Action(() => entityStore.Query().SingleAsync(predicate).GetAwaiter().GetResult());
@@ -250,7 +375,7 @@ namespace Cosmonaut.Tests
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Where(predicate);
 
-            var entityStore = ResponseSetup(expected, dataSource);
+            var entityStore = MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
 
             // Act
             var result = new Action(() => entityStore.Query().FirstAsync(predicate).GetAwaiter().GetResult());
@@ -269,7 +394,7 @@ namespace Cosmonaut.Tests
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Where(predicate);
 
-            var entityStore = ResponseSetup(expected, dataSource);
+            var entityStore = MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
 
             // Act
             var result = await entityStore.Query().FirstOrDefaultAsync(predicate);
@@ -277,40 +402,5 @@ namespace Cosmonaut.Tests
             //Assert
             result.Should().BeNull();
         }
-
-        private CosmosStore<Dummy> ResponseSetup(IQueryable<Dummy> expected, IQueryable<Dummy> dataSource)
-        {
-            FeedResponse<Dummy> response = new FeedResponse<Dummy>(expected);
-
-            var mockDocumentQuery = new Mock<IFakeDocumentQuery<Dummy>>();
-            mockDocumentQuery
-                .SetupSequence(_ => _.HasMoreResults)
-                .Returns(true)
-                .Returns(false);
-
-            mockDocumentQuery
-                .Setup(_ => _.ExecuteNextAsync<Dummy>(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(response);
-
-            var provider = new Mock<IQueryProvider>();
-            provider
-                .Setup(_ => _.CreateQuery<Dummy>(It.IsAny<Expression>()))
-                .Returns(mockDocumentQuery.Object);
-            mockDocumentQuery.As<IQueryable<Dummy>>().Setup(x => x.Provider).Returns(provider.Object);
-            mockDocumentQuery.As<IQueryable<Dummy>>().Setup(x => x.Expression).Returns(dataSource.Expression);
-            mockDocumentQuery.As<IQueryable<Dummy>>().Setup(x => x.ElementType).Returns(dataSource.ElementType);
-            mockDocumentQuery.As<IQueryable<Dummy>>().Setup(x => x.GetEnumerator()).Returns(dataSource.GetEnumerator);
-
-
-            _mockDocumentClient.Setup(x => x.CreateDocumentQuery<Dummy>(It.IsAny<string>(),
-                    It.IsAny<FeedOptions>()))
-                .Returns(mockDocumentQuery.Object);
-
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName",
-                new CosmosDatabaseCreator(_mockDocumentClient.Object),
-                new CosmosCollectionCreator(_mockDocumentClient.Object));
-            return entityStore;
-        }
-
     }
 }
