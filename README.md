@@ -17,7 +17,18 @@ Registering the CosmosStores in ServiceCollection for DI support
     "<<authkey>>");
                 
 serviceCollection.AddCosmosStore<Book>(cosmosSettings);
-//or just initialise it
+
+//or just by using the Action extension
+
+serviceCollection.AddCosmosStore<Book>(options =>
+            {
+                options.DatabaseName = "<<databaseName>>";
+                options.AuthKey = "<<authkey>>";
+                options.EndpointUrl = new Uri("<<cosmosUri>>");
+            });
+
+//or just initialise the object
+
 ICosmosStore<Book> bookStore = new CosmosStore<Book>(cosmosSettings)
 ```
 
