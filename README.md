@@ -17,6 +17,19 @@ Registering the CosmosStores in ServiceCollection for DI support
     "<<authkey>>");
                 
 serviceCollection.AddCosmosStore<Book>(cosmosSettings);
+
+//or just by using the Action extension
+
+serviceCollection.AddCosmosStore<Book>(options =>
+            {
+                options.DatabaseName = "<<databaseName>>";
+                options.AuthKey = "<<authkey>>";
+                options.EndpointUrl = new Uri("<<cosmosUri>>");
+            });
+
+//or just initialise the object
+
+ICosmosStore<Book> bookStore = new CosmosStore<Book>(cosmosSettings)
 ```
 
 ##### Quering for entities
@@ -28,6 +41,10 @@ It is HIGHLY recommended that you use one of the `Async` methods to get the resu
 var user = await cosmoStore.Query().FirstOrDefaultAsync(x => x.Username == "elfocrash");
 var users = await cosmoStore.Query().ToListAsync(x => x.HairColor == HairColor.Black);
 var otherUsers = await cosmosStore.Query().Where(x => x.Name.StartsWith("Smit")).ToListAsync(cancellationToken)
+
+// or you can use SQL
+
+var user = await cosmoStore.QueryMultipleAsync("select * from c w.Firstname = 'Smith'");
 ```
 
 ##### Adding an entity in the entity store
