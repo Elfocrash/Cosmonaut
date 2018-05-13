@@ -59,7 +59,7 @@ namespace Cosmonaut.Tests
         {
             resource.SetResourceTimestamp(DateTime.UtcNow);
             var resourceResponse = new ResourceResponse<T>(resource);
-            var documentServiceResponseType = Type.GetType("Microsoft.Azure.Documents.DocumentServiceResponse, Microsoft.Azure.DocumentDB.Core, Version=1.10.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
+            var documentServiceResponseType = Type.GetType("Microsoft.Azure.Documents.DocumentServiceResponse, Microsoft.Azure.DocumentDB.Core, Version=1.9.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
 
             var flags = BindingFlags.NonPublic | BindingFlags.Instance;
 
