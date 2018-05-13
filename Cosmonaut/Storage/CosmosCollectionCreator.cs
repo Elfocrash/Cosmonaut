@@ -52,6 +52,33 @@ namespace Cosmonaut.Storage
             return collection != null;
         }
 
+        public async Task<bool> EnsureCreatedAsync(Database database, string collectionName, int collectionThroughput,
+            IndexingPolicy indexingPolicy = null)
+        {
+            var collection = _documentClient
+                .CreateDocumentCollectionQuery(database.SelfLink)
+                .ToArray()
+                .FirstOrDefault(c => c.Id == collectionName);
+
+            if (collection != null)
+                return true;
+
+            collection = new DocumentCollection
+            {
+                Id = collectionName
+            };
+
+            if (indexingPolicy != null)
+                collection.IndexingPolicy = indexingPolicy;
+
+            collection = await _documentClient.CreateDocumentCollectionAsync(database.SelfLink, collection, new RequestOptions
+            {
+                OfferThroughput = collectionThroughput
+            });
+
+            return collection != null;
+        }
+
         private static void SetPartitionKeyAsIdIfCollectionIsShared(bool isSharedCollection, DocumentCollection collection)
         {
             if (isSharedCollection)
