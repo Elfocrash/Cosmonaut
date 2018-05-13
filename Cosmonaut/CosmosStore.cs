@@ -34,32 +34,32 @@ namespace Cosmonaut
         private readonly CosmosScaler<TEntity> _cosmosScaler;
 
         public CosmosStore(CosmosStoreSettings settings,
-            IDatabaseCreator databaseCreator,
-            ICollectionCreator collectionCreator)
+            IDatabaseCreator databaseCreator = null,
+            ICollectionCreator collectionCreator = null)
         {
             Settings = settings ?? throw new ArgumentNullException(nameof(settings));
             var endpointUrl = Settings.EndpointUrl ?? throw new ArgumentNullException(nameof(Settings.EndpointUrl));
             var authKey = Settings.AuthKey ?? throw new ArgumentNullException(nameof(Settings.AuthKey));
             DocumentClient = DocumentClientFactory.CreateDocumentClient(endpointUrl, authKey);
             if (string.IsNullOrEmpty(Settings.DatabaseName)) throw new ArgumentNullException(nameof(Settings.DatabaseName));
-            _collectionCreator = collectionCreator ?? throw new ArgumentNullException(nameof(collectionCreator));
-            _databaseCreator = databaseCreator ?? throw new ArgumentNullException(nameof(databaseCreator));
+            _collectionCreator = collectionCreator ?? new CosmosCollectionCreator(DocumentClient);
+            _databaseCreator = databaseCreator ?? new CosmosDatabaseCreator(DocumentClient);
             _cosmosScaler = new CosmosScaler<TEntity>(this);
             InitialiseCosmosStore();
         }
 
         internal CosmosStore(IDocumentClient documentClient,
             string databaseName,
-            IDatabaseCreator databaseCreator,
-            ICollectionCreator collectionCreator,
+            IDatabaseCreator databaseCreator = null,
+            ICollectionCreator collectionCreator = null,
             bool scaleable = false)
         {
             DocumentClient = documentClient ?? throw new ArgumentNullException(nameof(documentClient));
             Settings = new CosmosStoreSettings(databaseName, documentClient.ServiceEndpoint, documentClient.AuthKey.ToString(), documentClient.ConnectionPolicy, 
                 scaleCollectionRUsAutomatically: scaleable);
             if (string.IsNullOrEmpty(Settings.DatabaseName)) throw new ArgumentNullException(nameof(Settings.DatabaseName));
-            _databaseCreator = databaseCreator ?? throw new ArgumentNullException(nameof(databaseCreator));
-            _collectionCreator = collectionCreator ?? throw new ArgumentNullException(nameof(collectionCreator));
+            _collectionCreator = collectionCreator ?? new CosmosCollectionCreator(DocumentClient);
+            _databaseCreator = databaseCreator ?? new CosmosDatabaseCreator(DocumentClient);
             _cosmosScaler = new CosmosScaler<TEntity>(this);
             InitialiseCosmosStore();
         }
