@@ -33,17 +33,15 @@ namespace Cosmonaut
         private readonly ICollectionCreator _collectionCreator;
         private readonly CosmosScaler<TEntity> _cosmosScaler;
 
-        public CosmosStore(CosmosStoreSettings settings,
-            IDatabaseCreator databaseCreator = null,
-            ICollectionCreator collectionCreator = null)
+        public CosmosStore(CosmosStoreSettings settings)
         {
             Settings = settings ?? throw new ArgumentNullException(nameof(settings));
             var endpointUrl = Settings.EndpointUrl ?? throw new ArgumentNullException(nameof(Settings.EndpointUrl));
             var authKey = Settings.AuthKey ?? throw new ArgumentNullException(nameof(Settings.AuthKey));
             DocumentClient = DocumentClientFactory.CreateDocumentClient(endpointUrl, authKey);
             if (string.IsNullOrEmpty(Settings.DatabaseName)) throw new ArgumentNullException(nameof(Settings.DatabaseName));
-            _collectionCreator = collectionCreator ?? new CosmosCollectionCreator(DocumentClient);
-            _databaseCreator = databaseCreator ?? new CosmosDatabaseCreator(DocumentClient);
+            _collectionCreator = new CosmosCollectionCreator(DocumentClient);
+            _databaseCreator = new CosmosDatabaseCreator(DocumentClient);
             _cosmosScaler = new CosmosScaler<TEntity>(this);
             InitialiseCosmosStore();
         }

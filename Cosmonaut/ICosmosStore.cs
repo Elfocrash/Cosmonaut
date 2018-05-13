@@ -352,7 +352,7 @@ namespace Cosmonaut
         Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id, RequestOptions requestOptions = null);
 
         /// <summary>
-        ///     Exposes the lower level DocumentClient to the consumer.
+        ///     Exposes the lower level DocumentClient
         /// </summary>
         IDocumentClient DocumentClient { get; }
     }
