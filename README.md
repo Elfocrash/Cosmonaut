@@ -39,8 +39,7 @@ It is HIGHLY recommended that you use one of the `Async` methods to get the resu
 
 ```csharp
 var user = await cosmoStore.Query().FirstOrDefaultAsync(x => x.Username == "elfocrash");
-var users = await cosmoStore.Query().ToListAsync(x => x.HairColor == HairColor.Black);
-var otherUsers = await cosmosStore.Query().Where(x => x.Name.StartsWith("Smit")).ToListAsync(cancellationToken)
+var users = await cosmoStore.Query().Where(x => x.HairColor == HairColor.Black).ToListAsync(cancellationToken);
 
 // or you can use SQL
 
