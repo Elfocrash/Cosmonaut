@@ -6,6 +6,12 @@
 
 Cosmonaut is an object mapper that enables .NET developers to work with a CosmosDB using .NET objects. It eliminates the need for most of the data-access code that developers usually need to write.
 
+### Getting started
+
+- [How to easily start using CosmosDB in your C# application in no time with Cosmonaut](http://chapsas.com/how-to-easily-start-using-cosmosdb-in-your-c-application-in-no-time-with-cosmonaut/)
+- [(Video) Getting started with .NET Core and CosmosDB using Cosmonaut](http://chapsas.com/video-getting-started-with-net-core-and-cosmosdb-using-cosmonaut/)
+- [(Video) How to save money in CosmosDB with Cosmonaut's Collection Sharing](http://chapsas.com/video-how-to-save-money-in-cosmosdb-with-cosmonauts-collection-sharing/)
+
 ### Usage 
 The idea is pretty simple. You can have one CosmoStore per entity (POCO/dtos etc)
 This entity will be used to create a collection in the cosmosdb and it will offer all the data access for this object
@@ -172,7 +178,7 @@ Example:
 [CosmosCollection("somename")]
 ```
 
-#### Benchmarks
+#### Benchmarks (Outdated. To be recalculated)
 
 ##### Averages of 1000 iterations for 500 documents per operation on collection with default indexing and 5000 RU/s (POCO serialization)
 
