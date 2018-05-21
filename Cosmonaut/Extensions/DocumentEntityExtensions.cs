@@ -45,9 +45,7 @@ namespace Cosmonaut.Extensions
 
             var partitionKeyProperty = partitionKeyProperties.Single();
             var porentialJsonPropertyAttribute = partitionKeyProperty.GetCustomAttribute<JsonPropertyAttribute>();
-            if (porentialJsonPropertyAttribute.HasJsonPropertyAttributeId()
-                || partitionKeyProperty.Name.Equals(nameof(ICosmosEntity.CosmosId))
-                || partitionKeyProperty.Name.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase))
+            if (IsCosmosIdThePartitionKey(porentialJsonPropertyAttribute, partitionKeyProperty))
             {
                 return DocumentHelpers.GetPartitionKeyDefinition(CosmosConstants.CosmosId);
             }
@@ -59,12 +57,18 @@ namespace Cosmonaut.Extensions
             return DocumentHelpers.GetPartitionKeyDefinition(partitionKeyProperty.Name);
         }
 
+        private static bool IsCosmosIdThePartitionKey(JsonPropertyAttribute porentialJsonPropertyAttribute, PropertyInfo partitionKeyProperty)
+        {
+            return porentialJsonPropertyAttribute.HasJsonPropertyAttributeId()
+                   || partitionKeyProperty.Name.Equals(nameof(ICosmosEntity.CosmosId))
+                   || partitionKeyProperty.Name.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase);
+        }
+
         internal static PartitionKey GetPartitionKeyValueForEntity<TEntity>(this TEntity entity, bool isShared) where TEntity : class
         {
             var partitionKeyValue = entity.GetPartitionKeyValueAsStringForEntity(isShared);
             return !string.IsNullOrEmpty(partitionKeyValue) ? new PartitionKey(entity.GetPartitionKeyValueAsStringForEntity(isShared)) : null;
         }
-
 
         internal static string GetPartitionKeyValueAsStringForEntity<TEntity>(this TEntity entity, bool isShared) where TEntity : class
         {
@@ -73,15 +77,13 @@ namespace Cosmonaut.Extensions
 
             var type = entity.GetType();
             var partitionKeyProperty = type.GetProperties()
-                .Where(x => x.GetCustomAttribute<CosmosPartitionKeyAttribute>() != null).ToList();
+                .Where(x => x.GetCustomAttribute<CosmosPartitionKeyAttribute>() != null)
+                .ToList();
 
             if (partitionKeyProperty.Count > 1)
                 throw new MultiplePartitionKeysException(type);
 
-            if (partitionKeyProperty.Count == 0)
-                return null;
-
-            return partitionKeyProperty.Single().GetValue(entity).ToString();
+            return partitionKeyProperty.Count == 0 ? null : partitionKeyProperty.Single().GetValue(entity).ToString();
         }
 
         internal static bool HasPartitionKey(this Type type)
@@ -99,12 +101,7 @@ namespace Cosmonaut.Extensions
         {
             var propertyInfos = entity.GetType().GetProperties();
 
-            var containsJsonAttributeIdCount =
-                propertyInfos.Count(x => x.GetCustomAttributes<JsonPropertyAttribute>()
-                    .Any(attr => attr.PropertyName.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase)))
-                + entity.GetType().GetInterfaces().Count(x => x.GetProperties()
-                    .Any(prop => prop.GetCustomAttributes<JsonPropertyAttribute>()
-                        .Any(attr => attr.PropertyName.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase))));
+            var containsJsonAttributeIdCount = GetCountOfJsonPropertiesWithNameIdForObject(entity, propertyInfos);
 
             if (containsJsonAttributeIdCount > 1)
                 throw new MultipleCosmosIdsException(
@@ -115,11 +112,7 @@ namespace Cosmonaut.Extensions
 
             if (idProperty != null && containsJsonAttributeIdCount == 1)
             {
-                if (!idProperty.GetCustomAttributes<JsonPropertyAttribute>().Any(x =>
-                    x.PropertyName.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase)))
-                    throw new MultipleCosmosIdsException(
-                        "An entity can only have one cosmos db id. Either rename the Id property or remove the [JsonAttribute(\"id\")].");
-                return entity;
+                return HandleEntityWithMultipleIds(entity, idProperty);
             }
 
             if (idProperty != null && idProperty.GetValue(entity) == null)
@@ -128,6 +121,34 @@ namespace Cosmonaut.Extensions
             }
 
             return entity;
+        }
+
+        private static TEntity HandleEntityWithMultipleIds<TEntity>(TEntity entity, PropertyInfo idProperty)
+            where TEntity : class
+        {
+            if (!idProperty.GetCustomAttributes<JsonPropertyAttribute>().Any(x =>
+                x.PropertyName.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase)))
+                throw new MultipleCosmosIdsException(
+                    "An entity can only have one cosmos db id. Either rename the Id property or remove the [JsonAttribute(\"id\")].");
+            return entity;
+        }
+
+        private static int GetCountOfJsonPropertiesWithNameIdForObject<TEntity>(TEntity entity, PropertyInfo[] propertyInfos) where TEntity : class
+        {
+            return GetCountOfJsonPropertiesWithNameId(propertyInfos) + GetCountOfJsonPropertyWithNameIdInInterfaces(entity);
+        }
+
+        private static int GetCountOfJsonPropertyWithNameIdInInterfaces<TEntity>(TEntity entity) where TEntity : class
+        {
+            return entity.GetType().GetInterfaces().Count(x => x.GetProperties()
+                .Any(prop => prop.GetCustomAttributes<JsonPropertyAttribute>()
+                    .Any(attr => attr.PropertyName.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase))));
+        }
+
+        private static int GetCountOfJsonPropertiesWithNameId(PropertyInfo[] propertyInfos)
+        {
+            return propertyInfos.Count(x => x.GetCustomAttributes<JsonPropertyAttribute>()
+                .Any(attr => attr.PropertyName.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase)));
         }
 
         internal static bool HasJsonPropertyAttributeId(this JsonPropertyAttribute porentialJsonPropertyAttribute)
@@ -154,26 +175,32 @@ namespace Cosmonaut.Extensions
 
             if (propertyNamedId != null)
             {
-                if (!String.IsNullOrEmpty(propertyNamedId.GetValue(entity)?.ToString()))
-                {
-                    return propertyNamedId.GetValue(entity).ToString();
-                }
-
-                propertyNamedId.SetValue(entity, Guid.NewGuid().ToString());
-                return propertyNamedId.GetValue(entity).ToString();
+                return HandlePropertyNamedId(entity, propertyNamedId);
             }
 
-            var potentialCosmosEntityId = entity.GetType().GetInterface(nameof(ICosmosEntity))?
-                .GetProperties()?.SingleOrDefault(x =>
-                    x.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName == CosmosConstants.CosmosId);
+            var potentialCosmosEntityId = entity.GetType()
+                .GetInterface(nameof(ICosmosEntity))
+                ?.GetProperties()
+                .SingleOrDefault(x => x.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName == CosmosConstants.CosmosId);
 
             if (potentialCosmosEntityId != null &&
-                !String.IsNullOrEmpty(potentialCosmosEntityId.GetValue(entity)?.ToString()))
+                !string.IsNullOrEmpty(potentialCosmosEntityId.GetValue(entity)?.ToString()))
             {
                 return potentialCosmosEntityId.GetValue(entity).ToString();
             }
 
             throw new CosmosEntityWithoutIdException<TEntity>(entity);
+        }
+
+        private static string HandlePropertyNamedId<TEntity>(TEntity entity, PropertyInfo propertyNamedId) where TEntity : class
+        {
+            if (!string.IsNullOrEmpty(propertyNamedId.GetValue(entity)?.ToString()))
+            {
+                return propertyNamedId.GetValue(entity).ToString();
+            }
+
+            propertyNamedId.SetValue(entity, Guid.NewGuid().ToString());
+            return propertyNamedId.GetValue(entity).ToString();
         }
 
         internal static void RemovePotentialDuplicateIdProperties(ref dynamic mapped)

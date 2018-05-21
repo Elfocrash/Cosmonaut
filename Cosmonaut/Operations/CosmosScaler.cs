@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using Cosmonaut.Exceptions;
 using Cosmonaut.Extensions;
 using Cosmonaut.Response;
 using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Client;
 
 namespace Cosmonaut.Operations
 {
@@ -30,11 +28,9 @@ namespace Cosmonaut.Operations
 
             var upscaleRequestUnits = (int)(Math.Round(documentCount * operationCost / 100d, 0) * 100);
 
-            var collectionOffer = (OfferV2)_cosmosStore.DocumentClient.CreateOfferQuery()
-                .Where(x => x.ResourceLink == collection.SelfLink).AsEnumerable().Single();
-            _cosmosStore.CollectionThrouput = upscaleRequestUnits >= _cosmosStore.Settings.MaximumUpscaleRequestUnits ? _cosmosStore.Settings.MaximumUpscaleRequestUnits : upscaleRequestUnits;
-            var replaced = await _cosmosStore.DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, _cosmosStore.CollectionThrouput));
-            _cosmosStore.IsUpscaled = replaced.StatusCode == HttpStatusCode.OK;
+            await ChangeCollectionThroughput(collection, upscaleRequestUnits >= _cosmosStore.Settings.MaximumUpscaleRequestUnits
+                ? _cosmosStore.Settings.MaximumUpscaleRequestUnits
+                : upscaleRequestUnits);
         }
 
         internal async Task DownscaleCollectionRequestUnitsToDefault(DocumentCollection collection)
@@ -45,11 +41,8 @@ namespace Cosmonaut.Operations
             if (!_cosmosStore.IsUpscaled)
                 return;
 
-            var collectionOffer = (OfferV2)_cosmosStore.DocumentClient.CreateOfferQuery()
-                .Where(x => x.ResourceLink == collection.SelfLink).AsEnumerable().Single();
-            _cosmosStore.CollectionThrouput = typeof(TEntity).GetCollectionThroughputForEntity(_cosmosStore.Settings.DefaultCollectionThroughput);
-            var replaced = await _cosmosStore.DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, _cosmosStore.CollectionThrouput));
-            _cosmosStore.IsUpscaled = replaced.StatusCode != HttpStatusCode.OK;
+            var throughput = typeof(TEntity).GetCollectionThroughputForEntity(_cosmosStore.Settings.DefaultCollectionThroughput);
+            await ChangeCollectionThroughput(collection, throughput);
         }
 
         internal async Task<CosmosResponse<TEntity>> HandleUpscalingForRangeOperation(
@@ -80,6 +73,15 @@ namespace Cosmonaut.Operations
             var sampleResponse = await HandleUpscalingForRangeOperation(entitiesList, collection, operationAsync);
             multipleResponse.AddResponse(sampleResponse);
             return multipleResponse;
+        }
+
+        private async Task ChangeCollectionThroughput(DocumentCollection collection, int requestUnits)
+        {
+            var collectionOffer = (OfferV2)_cosmosStore.DocumentClient.CreateOfferQuery()
+                .Where(x => x.ResourceLink == collection.SelfLink).AsEnumerable().Single();
+            _cosmosStore.CollectionThrouput = requestUnits;
+            var replaced = await _cosmosStore.DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, _cosmosStore.CollectionThrouput));
+            _cosmosStore.IsUpscaled = replaced.StatusCode == HttpStatusCode.OK;
         }
     }
 }

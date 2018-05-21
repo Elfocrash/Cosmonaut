@@ -38,7 +38,7 @@ namespace Cosmonaut.Storage
                 Id = collectionName
             };
 
-            SetPartitionKeyIsCollectionIsNotShared(typeof(TEntity), isSharedCollection, collection);
+            SetPartitionKeyIfCollectionIsNotShared(typeof(TEntity), isSharedCollection, collection);
             SetPartitionKeyAsIdIfCollectionIsShared(isSharedCollection, collection);
 
             if (indexingPolicy != null)
@@ -60,7 +60,7 @@ namespace Cosmonaut.Storage
             }
         }
 
-        private static void SetPartitionKeyIsCollectionIsNotShared(Type entityType, bool isSharedCollection, DocumentCollection collection)
+        private static void SetPartitionKeyIfCollectionIsNotShared(Type entityType, bool isSharedCollection, DocumentCollection collection)
         {
             if (isSharedCollection) return;
             var partitionKey = entityType.GetPartitionKeyForEntity();
