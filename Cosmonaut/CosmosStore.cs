@@ -70,7 +70,7 @@ namespace Cosmonaut
             new CosmosCollectionCreator(documentClient))
         {
         }
-
+        
         public IQueryable<TEntity> Query(FeedOptions feedOptions = null)
         {
             var queryable = DocumentClient.CreateDocumentQuery<TEntity>(_collection.SelfLink, GetFeedOptionsForQuery(feedOptions));
@@ -80,36 +80,28 @@ namespace Cosmonaut
 
         public async Task<TEntity> QuerySingleAsync(string sql, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
-            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-
-            var queryable = DocumentClient.CreateDocumentQuery<TEntity>(_collection.SelfLink, collectionSharingFriendlySql, GetFeedOptionsForQuery(feedOptions));
+            var queryable = GetSqlBasedQueryableForType<TEntity>(sql, feedOptions);
 
             return await queryable.SingleOrDefaultAsync(cancellationToken);
         }
 
         public async Task<T> QuerySingleAsync<T>(string sql, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
-            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-
-            var queryable = DocumentClient.CreateDocumentQuery<T>(_collection.SelfLink, collectionSharingFriendlySql, GetFeedOptionsForQuery(feedOptions));
+            var queryable = GetSqlBasedQueryableForType<T>(sql, feedOptions);
 
             return await queryable.SingleOrDefaultGenericAsync(cancellationToken);
         }
-
+        
         public async Task<IEnumerable<TEntity>> QueryMultipleAsync(string sql, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
-            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-
-            var queryable = DocumentClient.CreateDocumentQuery<TEntity>(_collection.SelfLink, collectionSharingFriendlySql, GetFeedOptionsForQuery(feedOptions));
+            var queryable = GetSqlBasedQueryableForType<TEntity>(sql, feedOptions);
 
             return await queryable.ToListAsync(cancellationToken);
         }
 
         public async Task<IEnumerable<T>> QueryMultipleAsync<T>(string sql, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
-            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-
-            var queryable = DocumentClient.CreateDocumentQuery<T>(_collection.SelfLink, collectionSharingFriendlySql, GetFeedOptionsForQuery(feedOptions));
+            var queryable = GetSqlBasedQueryableForType<T>(sql, feedOptions);
 
             return await queryable.ToGenericListAsync(cancellationToken);
         }
@@ -372,6 +364,15 @@ namespace Cosmonaut
 
             feedOptions.EnableCrossPartitionQuery = shouldEnablePartitionQuery;
             return feedOptions;
+        }
+        
+        private IQueryable<T> GetSqlBasedQueryableForType<T>(string sql, FeedOptions feedOptions)
+        {
+            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
+
+            var queryable = DocumentClient.CreateDocumentQuery<T>(_collection.SelfLink, collectionSharingFriendlySql,
+                GetFeedOptionsForQuery(feedOptions));
+            return queryable;
         }
     }
 }
