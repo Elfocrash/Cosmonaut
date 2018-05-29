@@ -43,7 +43,7 @@ namespace Cosmonaut.Tests
             JToken jtoken = JToken.FromObject(document);
             _mockDocumentClient.Setup(x => x.ReplaceDocumentAsync(It.IsAny<Uri>(), jtoken, It.IsAny<RequestOptions>())).ReturnsAsync(new ResourceResponse<Document>(actualDocument));
 
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
 
             // Act
             addedDummy.Name = expectedName;
@@ -71,7 +71,7 @@ namespace Cosmonaut.Tests
             _mockDocumentClient.Setup(x => x.ReplaceDocumentAsync(It.IsAny<Uri>(), It.IsAny<object>(), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
             
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
             addedDummy.Name = "newTest";
             // Act
             var result = await entityStore.UpdateRangeAsync(addedDummy);
@@ -99,7 +99,7 @@ namespace Cosmonaut.Tests
             _mockDocumentClient.Setup(x => x.UpsertDocumentAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<RequestOptions>(), false))
                 .ReturnsAsync(resourceResponse);
 
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
 
             // Act
             var result = await entityStore.UpsertAsync(addedDummy);
@@ -124,7 +124,7 @@ namespace Cosmonaut.Tests
             _mockDocumentClient.Setup(x => x.UpsertDocumentAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<RequestOptions>(), false))
                 .ReturnsAsync(resourceResponse);
 
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
             addedDummy.Name = "newTest";
             // Act
             var result = await entityStore.UpsertRangeAsync(addedDummy);

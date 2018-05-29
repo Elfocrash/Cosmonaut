@@ -38,7 +38,7 @@ namespace Cosmonaut.Tests
                     It.IsAny<object>(), It.IsAny<RequestOptions>(), false))
                 .ReturnsAsync(resourceResponse);
                 
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
 
             // Act
             var result = await entityStore.AddAsync(dummy);
@@ -72,7 +72,7 @@ namespace Cosmonaut.Tests
                     .ReturnsAsync(resourceResponse);
             }
 
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
 
             // Act
             var result = await entityStore.AddRangeAsync(dummies);
@@ -105,7 +105,7 @@ namespace Cosmonaut.Tests
                     .ReturnsAsync(resourceResponse);
             }
 
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
 
             // Act
             var result = await entityStore.AddRangeAsync(dummies[0], dummies[1], dummies[2], dummies[3], dummies[4]);
@@ -130,7 +130,7 @@ namespace Cosmonaut.Tests
                     It.IsAny<object>(), It.IsAny<RequestOptions>(), false))
                 .ReturnsAsync(resourceResponse);
 
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
 
             // Act
             var result = await entityStore.AddAsync(dummy);

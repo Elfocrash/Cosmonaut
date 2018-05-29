@@ -51,14 +51,41 @@ namespace Cosmonaut
             InitialiseCosmosStore();
         }
 
+        public CosmosStore(IDocumentClient documentClient,
+            string databaseName,
+            string authKey, 
+            string endpoint) : this(documentClient, databaseName, authKey, endpoint, string.Empty,
+            new CosmosDatabaseCreator(documentClient),
+            new CosmosCollectionCreator(documentClient))
+        {
+        }
+
+        public CosmosStore(IDocumentClient documentClient,
+            string databaseName,
+            string authKey,
+            string endpoint,
+            string overriddenCollectionName) : this(documentClient, 
+            databaseName, 
+            authKey,
+            endpoint,
+            overriddenCollectionName,
+            new CosmosDatabaseCreator(documentClient),
+            new CosmosCollectionCreator(documentClient))
+        {
+        }
+
         internal CosmosStore(IDocumentClient documentClient,
             string databaseName,
+            string authKey,
+            string endpoint,
+            string overriddenCollectionName,
             IDatabaseCreator databaseCreator = null,
             ICollectionCreator collectionCreator = null,
             bool scaleable = false)
         {
+            CollectionName = overriddenCollectionName;
             DocumentClient = documentClient ?? throw new ArgumentNullException(nameof(documentClient));
-            Settings = new CosmosStoreSettings(databaseName, documentClient.ServiceEndpoint, documentClient.AuthKey.ToString(), documentClient.ConnectionPolicy, 
+            Settings = new CosmosStoreSettings(databaseName, endpoint, authKey, documentClient.ConnectionPolicy, 
                 scaleCollectionRUsAutomatically: scaleable);
             if (string.IsNullOrEmpty(Settings.DatabaseName)) throw new ArgumentNullException(nameof(Settings.DatabaseName));
             _collectionCreator = collectionCreator ?? new CosmosCollectionCreator(DocumentClient);
@@ -67,13 +94,6 @@ namespace Cosmonaut
             InitialiseCosmosStore();
         }
 
-        internal CosmosStore(IDocumentClient documentClient,
-            string databaseName) : this(documentClient, databaseName,
-            new CosmosDatabaseCreator(documentClient),
-            new CosmosCollectionCreator(documentClient))
-        {
-        }
-        
         public IQueryable<TEntity> Query(FeedOptions feedOptions = null)
         {
             var queryable = DocumentClient.CreateDocumentQuery<TEntity>(_collection.SelfLink, GetFeedOptionsForQuery(feedOptions));

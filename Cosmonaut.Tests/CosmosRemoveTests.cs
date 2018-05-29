@@ -38,7 +38,7 @@ namespace Cosmonaut.Tests
             var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
 
             // Act
             var result = await entityStore.RemoveAsync(dummy);
@@ -64,7 +64,7 @@ namespace Cosmonaut.Tests
             var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
 
             // Act
             var result = await entityStore.RemoveByIdAsync(id);
@@ -92,7 +92,7 @@ namespace Cosmonaut.Tests
             var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<string>(), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
 
             // Act
             var result = await entityStore.RemoveRangeAsync(dummies);
