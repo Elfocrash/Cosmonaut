@@ -33,17 +33,20 @@ namespace Cosmonaut
         private readonly ICollectionCreator _collectionCreator;
         private readonly CosmosScaler<TEntity> _cosmosScaler;
 
-        public CosmosStore(CosmosStoreSettings settings,
-            IDatabaseCreator databaseCreator = null,
-            ICollectionCreator collectionCreator = null)
+        public CosmosStore(CosmosStoreSettings settings) : this(settings, string.Empty)
         {
+        }
+
+        public CosmosStore(CosmosStoreSettings settings, string overriddenCollectionName)
+        {
+            CollectionName = overriddenCollectionName;
             Settings = settings ?? throw new ArgumentNullException(nameof(settings));
             var endpointUrl = Settings.EndpointUrl ?? throw new ArgumentNullException(nameof(Settings.EndpointUrl));
             var authKey = Settings.AuthKey ?? throw new ArgumentNullException(nameof(Settings.AuthKey));
             DocumentClient = DocumentClientFactory.CreateDocumentClient(endpointUrl, authKey);
             if (string.IsNullOrEmpty(Settings.DatabaseName)) throw new ArgumentNullException(nameof(Settings.DatabaseName));
-            _collectionCreator = collectionCreator ?? new CosmosCollectionCreator(DocumentClient);
-            _databaseCreator = databaseCreator ?? new CosmosDatabaseCreator(DocumentClient);
+            _collectionCreator = new CosmosCollectionCreator(DocumentClient);
+            _databaseCreator = new CosmosDatabaseCreator(DocumentClient);
             _cosmosScaler = new CosmosScaler<TEntity>(this);
             InitialiseCosmosStore();
         }
@@ -273,7 +276,7 @@ namespace Cosmonaut
 
         private async Task<DocumentCollection> GetCollectionAsync()
         {
-            await _collectionCreator.EnsureCreatedAsync<TEntity>(_database, CollectionThrouput, Settings.IndexingPolicy);
+            await _collectionCreator.EnsureCreatedAsync<TEntity>(_database, CollectionName, CollectionThrouput, Settings.IndexingPolicy);
 
             var collection = DocumentClient
                 .CreateDocumentCollectionQuery(_database.SelfLink)
@@ -286,7 +289,10 @@ namespace Cosmonaut
         private void InitialiseCosmosStore()
         {
             IsShared = typeof(TEntity).UsesSharedCollection();
-            CollectionName = IsShared ? typeof(TEntity).GetSharedCollectionName() : typeof(TEntity).GetCollectionName();
+
+            if(string.IsNullOrEmpty(CollectionName))
+                CollectionName = IsShared ? typeof(TEntity).GetSharedCollectionName() : typeof(TEntity).GetCollectionName();
+
             CollectionThrouput = typeof(TEntity).GetCollectionThroughputForEntity(Settings.DefaultCollectionThroughput);
 
             _database = GetDatabaseAsync().ConfigureAwait(false).GetAwaiter().GetResult();

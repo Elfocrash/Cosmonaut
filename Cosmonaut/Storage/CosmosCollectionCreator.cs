@@ -17,14 +17,13 @@ namespace Cosmonaut.Storage
         }
 
         public async Task<bool> EnsureCreatedAsync<TEntity>( 
-            Database database, 
+            Database database,
+            string collectionName,
             int collectionThroughput,
             IndexingPolicy indexingPolicy = null) where TEntity : class
         {
             var isSharedCollection = typeof(TEntity).UsesSharedCollection();
-
-            var collectionName = isSharedCollection ? typeof(TEntity).GetSharedCollectionName() : typeof(TEntity).GetCollectionName();
-
+            
             var collection = _documentClient
                 .CreateDocumentCollectionQuery(database.SelfLink)
                 .ToArray()
