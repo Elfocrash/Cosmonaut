@@ -108,7 +108,7 @@ namespace Cosmonaut.Tests
             mockDocumentQuery.As<IQueryable<Dummy>>().Setup(x => x.GetEnumerator()).Returns(dataSource.GetEnumerator);
 
 
-            mockDocumentClient.Setup(x => x.CreateDocumentQuery<Dummy>(It.IsAny<string>(),
+            mockDocumentClient.Setup(x => x.CreateDocumentQuery<Dummy>(It.IsAny<Uri>(),
                     It.IsAny<FeedOptions>()))
                 .Returns(mockDocumentQuery.Object);
 
@@ -135,7 +135,7 @@ namespace Cosmonaut.Tests
                 .Setup(_ => _.CreateQuery<T>(It.IsAny<Expression>()))
                 .Returns(mockDocumentQuery.Object);
 
-            mockDocumentClient.Setup(x => x.CreateDocumentQuery<T>(It.IsAny<string>(), sql,
+            mockDocumentClient.Setup(x => x.CreateDocumentQuery<T>(It.IsAny<Uri>(), sql,
                     It.IsAny<FeedOptions>()))
                 .Returns(mockDocumentQuery.Object);
 
@@ -167,7 +167,7 @@ namespace Cosmonaut.Tests
             mockDocumentQuery.As<IQueryable<Dummy>>().Setup(x => x.GetEnumerator()).Returns(dataSource.GetEnumerator);
 
 
-            mockDocumentClient.Setup(x => x.CreateDocumentQuery<Dummy>(It.IsAny<string>(), sql,
+            mockDocumentClient.Setup(x => x.CreateDocumentQuery<Dummy>(It.IsAny<Uri>(), sql,
                     It.IsAny<FeedOptions>()))
                 .Returns(mockDocumentQuery.Object);
 

@@ -16,8 +16,8 @@ namespace Cosmonaut.Storage
             _documentClient = documentClient;
         }
 
-        public async Task<bool> EnsureCreatedAsync<TEntity>( 
-            Database database,
+        public async Task<bool> EnsureCreatedAsync<TEntity>(
+            string databaseLink,
             string collectionName,
             int collectionThroughput,
             IndexingPolicy indexingPolicy = null) where TEntity : class
@@ -25,7 +25,7 @@ namespace Cosmonaut.Storage
             var isSharedCollection = typeof(TEntity).UsesSharedCollection();
             
             var collection = _documentClient
-                .CreateDocumentCollectionQuery(database.SelfLink)
+                .CreateDocumentCollectionQuery(databaseLink)
                 .ToArray()
                 .FirstOrDefault(c => c.Id == collectionName);
 
@@ -43,7 +43,7 @@ namespace Cosmonaut.Storage
             if (indexingPolicy != null)
                 collection.IndexingPolicy = indexingPolicy;
             
-            collection = await _documentClient.CreateDocumentCollectionAsync(database.SelfLink, collection, new RequestOptions
+            collection = await _documentClient.CreateDocumentCollectionAsync(databaseLink, collection, new RequestOptions
             {
                 OfferThroughput = collectionThroughput
             });

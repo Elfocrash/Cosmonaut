@@ -18,7 +18,7 @@ namespace Cosmonaut.Operations
             _cosmosStore = cosmosStore;
         }
 
-        internal async Task UpscaleCollectionRequestUnitsForRequest(DocumentCollection collection, int documentCount, double operationCost)
+        internal async Task UpscaleCollectionRequestUnitsForRequest(string collectionLink, int documentCount, double operationCost)
         {
             if (!_cosmosStore.Settings.ScaleCollectionRUsAutomatically)
                 return;
@@ -28,12 +28,12 @@ namespace Cosmonaut.Operations
 
             var upscaleRequestUnits = (int)(Math.Round(documentCount * operationCost / 100d, 0) * 100);
 
-            await ChangeCollectionThroughput(collection, upscaleRequestUnits >= _cosmosStore.Settings.MaximumUpscaleRequestUnits
+            await ChangeCollectionThroughput(collectionLink, upscaleRequestUnits >= _cosmosStore.Settings.MaximumUpscaleRequestUnits
                 ? _cosmosStore.Settings.MaximumUpscaleRequestUnits
                 : upscaleRequestUnits);
         }
 
-        internal async Task DownscaleCollectionRequestUnitsToDefault(DocumentCollection collection)
+        internal async Task DownscaleCollectionRequestUnitsToDefault(string collectionLink)
         {
             if (!_cosmosStore.Settings.ScaleCollectionRUsAutomatically)
                 return;
@@ -42,12 +42,12 @@ namespace Cosmonaut.Operations
                 return;
 
             var throughput = typeof(TEntity).GetCollectionThroughputForEntity(_cosmosStore.Settings.DefaultCollectionThroughput);
-            await ChangeCollectionThroughput(collection, throughput);
+            await ChangeCollectionThroughput(collectionLink, throughput);
         }
 
         internal async Task<CosmosResponse<TEntity>> HandleUpscalingForRangeOperation(
             List<TEntity> entitiesList,
-            DocumentCollection collection, 
+            string collectionLink, 
             Func<TEntity, Task<CosmosResponse<TEntity>>> operationAsync)
         {
             var sampleEntity = entitiesList.First();
@@ -58,11 +58,12 @@ namespace Cosmonaut.Operations
 
             entitiesList.Remove(sampleEntity);
             var requestCharge = sampleResponse.ResourceResponse.RequestCharge;
-            await UpscaleCollectionRequestUnitsForRequest(collection, entitiesList.Count, requestCharge);
+            await UpscaleCollectionRequestUnitsForRequest(collectionLink, entitiesList.Count, requestCharge);
             return sampleResponse;
         }
         
-        internal async Task<CosmosMultipleResponse<TEntity>> UpscaleCollectionIfConfiguredAsSuch(List<TEntity> entitiesList, DocumentCollection collection,
+        internal async Task<CosmosMultipleResponse<TEntity>> UpscaleCollectionIfConfiguredAsSuch(List<TEntity> entitiesList,
+            string collectionLink,
             Func<TEntity, Task<CosmosResponse<TEntity>>> operationAsync)
         {
             var multipleResponse = new CosmosMultipleResponse<TEntity>();
@@ -70,15 +71,15 @@ namespace Cosmonaut.Operations
             if (!_cosmosStore.Settings.ScaleCollectionRUsAutomatically)
                 return multipleResponse;
 
-            var sampleResponse = await HandleUpscalingForRangeOperation(entitiesList, collection, operationAsync);
+            var sampleResponse = await HandleUpscalingForRangeOperation(entitiesList, collectionLink, operationAsync);
             multipleResponse.AddResponse(sampleResponse);
             return multipleResponse;
         }
 
-        private async Task ChangeCollectionThroughput(DocumentCollection collection, int requestUnits)
+        private async Task ChangeCollectionThroughput(string collectionLink, int requestUnits)
         {
             var collectionOffer = (OfferV2)_cosmosStore.DocumentClient.CreateOfferQuery()
-                .Where(x => x.ResourceLink == collection.SelfLink).AsEnumerable().Single();
+                .Where(x => x.ResourceLink == collectionLink).AsEnumerable().Single();
             _cosmosStore.CollectionThrouput = requestUnits;
             var replaced = await _cosmosStore.DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, _cosmosStore.CollectionThrouput));
             _cosmosStore.IsUpscaled = replaced.StatusCode == HttpStatusCode.OK;

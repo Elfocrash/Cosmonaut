@@ -96,7 +96,7 @@ namespace Cosmonaut.Tests
             var document = addedDummy.GetCosmosDbFriendlyEntity() as Document;
             var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
 
-            _mockDocumentClient.Setup(x => x.UpsertDocumentAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<RequestOptions>(), false))
+            _mockDocumentClient.Setup(x => x.UpsertDocumentAsync(It.IsAny<Uri>(), It.IsAny<object>(), It.IsAny<RequestOptions>(), false))
                 .ReturnsAsync(resourceResponse);
 
             var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
@@ -121,7 +121,7 @@ namespace Cosmonaut.Tests
             var document = addedDummy.GetCosmosDbFriendlyEntity() as Document;
             var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
 
-            _mockDocumentClient.Setup(x => x.UpsertDocumentAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<RequestOptions>(), false))
+            _mockDocumentClient.Setup(x => x.UpsertDocumentAsync(It.IsAny<Uri>(), It.IsAny<object>(), It.IsAny<RequestOptions>(), false))
                 .ReturnsAsync(resourceResponse);
 
             var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
