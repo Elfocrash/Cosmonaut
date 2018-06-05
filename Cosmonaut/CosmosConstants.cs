@@ -1,6 +1,4 @@
-﻿using System.Net;
-
-namespace Cosmonaut
+﻿namespace Cosmonaut
 {
     public class CosmosConstants
     {
