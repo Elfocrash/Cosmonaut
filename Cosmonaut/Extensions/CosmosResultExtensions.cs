@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Cosmonaut.Diagnostics;
 using Microsoft.Azure.Documents.Linq;
 
 namespace Cosmonaut.Extensions
@@ -21,7 +22,7 @@ namespace Cosmonaut.Extensions
             this IQueryable<TEntity> queryable, 
             CancellationToken cancellationToken = default) where TEntity : class
         {
-            return await DocumentQueryable.CountAsync(queryable, cancellationToken);
+            return await queryable.InvokeCosmosCallAsync(() => DocumentQueryable.CountAsync(queryable, cancellationToken), queryable.ToString());
         }
 
         public static async Task<int> CountAsync<TEntity>(
@@ -101,14 +102,14 @@ namespace Cosmonaut.Extensions
             this IQueryable<TEntity> queryable, 
             CancellationToken cancellationToken = default) where TEntity : class
         {
-            return await DocumentQueryable.MaxAsync(queryable, cancellationToken);
+            return await queryable.InvokeCosmosCallAsync(() => DocumentQueryable.MaxAsync(queryable, cancellationToken), queryable.ToString());
         }
 
         public static async Task<TEntity> MinAsync<TEntity>(
             this IQueryable<TEntity> queryable, 
             CancellationToken cancellationToken = default) where TEntity : class
         {
-            return await DocumentQueryable.MinAsync(queryable, cancellationToken);
+            return await queryable.InvokeCosmosCallAsync(() => DocumentQueryable.MinAsync(queryable, cancellationToken), queryable.ToString());
         }
 
         internal static async Task<T> SingleOrDefaultGenericAsync<T>(
@@ -138,7 +139,7 @@ namespace Cosmonaut.Extensions
             var results = new List<T>();
             while (query.HasMoreResults)
             {
-                var items = await query.ExecuteNextAsync<T>(cancellationToken);
+                var items = await query.InvokeCosmosCallAsync(() => query.ExecuteNextAsync<T>(cancellationToken), query.ToString());
                 results.AddRange(items);
             }
             return results;

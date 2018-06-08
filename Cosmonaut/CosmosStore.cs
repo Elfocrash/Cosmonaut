@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Cosmonaut.Diagnostics;
 using Cosmonaut.Extensions;
 using Cosmonaut.Operations;
 using Cosmonaut.Response;
@@ -135,8 +136,9 @@ namespace Cosmonaut
             
             try
             {
-                ResourceResponse<Document> addedDocument =
-                    await DocumentClient.CreateDocumentAsync(CollectionLink, safeDocument, GetRequestOptions(requestOptions, entity));
+                var addedDocument =
+                    await this.InvokeCosmosCallAsync<ResourceResponse<Document>>(() => 
+                        DocumentClient.CreateDocumentAsync(CollectionLink, safeDocument, GetRequestOptions(requestOptions, entity)), entity.GetDocumentId());
                 return new CosmosResponse<TEntity>(entity, addedDocument);
             }
             catch (Exception exception)
@@ -172,7 +174,7 @@ namespace Cosmonaut
                 entity.ValidateEntityForCosmosDb();
                 var documentId = entity.GetDocumentId();
                 var documentUri = UriFactory.CreateDocumentUri(Settings.DatabaseName, CollectionName, documentId);
-                var result = await DocumentClient.DeleteDocumentAsync(documentUri, GetRequestOptions(requestOptions, entity));
+                var result = await this.InvokeCosmosCallAsync(() => DocumentClient.DeleteDocumentAsync(documentUri, GetRequestOptions(requestOptions, entity)), documentId);
                 return new CosmosResponse<TEntity>(entity, result);
             }
             catch (Exception exception)
@@ -199,7 +201,7 @@ namespace Cosmonaut
                 var documentId = entity.GetDocumentId();
                 var document = entity.GetCosmosDbFriendlyEntity();
                 var documentUri = UriFactory.CreateDocumentUri(Settings.DatabaseName, CollectionName, documentId);
-                var result = await DocumentClient.ReplaceDocumentAsync(documentUri, document, GetRequestOptions(requestOptions, entity));
+                var result = await this.InvokeCosmosCallAsync<ResourceResponse<Document>>(() => DocumentClient.ReplaceDocumentAsync(documentUri, document, GetRequestOptions(requestOptions, entity)), documentId);
                 return new CosmosResponse<TEntity>(entity, result);
             }
             catch (Exception exception)
@@ -224,7 +226,7 @@ namespace Cosmonaut
             {
                 entity.ValidateEntityForCosmosDb();
                 var document = entity.GetCosmosDbFriendlyEntity();
-                ResourceResponse<Document> result = await DocumentClient.UpsertDocumentAsync(CollectionLink, document, GetRequestOptions(requestOptions, entity));
+                var result = await this.InvokeCosmosCallAsync<ResourceResponse<Document>>(() => DocumentClient.UpsertDocumentAsync(CollectionLink, document, GetRequestOptions(requestOptions, entity)), entity.GetDocumentId());
                 return new CosmosResponse<TEntity>(entity, result);
             }
             catch (Exception exception)
@@ -248,7 +250,7 @@ namespace Cosmonaut
             try
             {
                 var documentUri = UriFactory.CreateDocumentUri(Settings.DatabaseName, CollectionName, id);
-                var result = await DocumentClient.DeleteDocumentAsync(documentUri, GetRequestOptions(id, requestOptions, typeof(TEntity)));
+                var result = await this.InvokeCosmosCallAsync(() => DocumentClient.DeleteDocumentAsync(documentUri, GetRequestOptions(id, requestOptions, typeof(TEntity))), id);
                 return new CosmosResponse<TEntity>(result);
             }
             catch (Exception exception)
@@ -257,7 +259,7 @@ namespace Cosmonaut
             }
         }
 
-        private async Task<CosmosMultipleResponse<TEntity>> HandleOperationWithRateLimitRetry(IEnumerable<Task<CosmosResponse<TEntity>>> entitiesTasks,
+        private static async Task<CosmosMultipleResponse<TEntity>> HandleOperationWithRateLimitRetry(IEnumerable<Task<CosmosResponse<TEntity>>> entitiesTasks,
             Func<TEntity, Task<CosmosResponse<TEntity>>> operationFunc)
         {
             var response = new CosmosMultipleResponse<TEntity>();
