@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Cosmonaut.Diagnostics
 {
@@ -37,7 +39,8 @@ namespace Cosmonaut.Diagnostics
                     EventMetadata.StartTime.ToUnixTimeMilliseconds(),
                     EventMetadata.Duration.TotalMilliseconds,
                     EventMetadata.ManagedThreadId,
-                    EventMetadata.Success);
+                    EventMetadata.Success,
+                    JsonConvert.SerializeObject(EventMetadata.Properties ?? new Dictionary<string, string>()));
 
                 return result;
             }
@@ -59,7 +62,9 @@ namespace Cosmonaut.Diagnostics
                     ex.GetType().FullName,
                     ex.Message,
                     ex.StackTrace,
-                    EventMetadata.ManagedThreadId);
+                    EventMetadata.ManagedThreadId,
+                    EventMetadata.Success,
+                    JsonConvert.SerializeObject(EventMetadata.Properties ?? new Dictionary<string, string>()));
 
                 throw;
             }

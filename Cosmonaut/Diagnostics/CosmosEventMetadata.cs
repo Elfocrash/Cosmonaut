@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Cosmonaut.Diagnostics
 {
@@ -23,5 +24,7 @@ namespace Cosmonaut.Diagnostics
         public bool Success { get; set; }
 
         public int ManagedThreadId { get; set; }
+
+        public Dictionary<string, string> Properties { get; set; }
     }
 }

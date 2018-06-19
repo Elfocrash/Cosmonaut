@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace Cosmonaut.Diagnostics
 {
@@ -20,7 +21,8 @@ namespace Cosmonaut.Diagnostics
             var success = TranslateSuccess(eventData);
             var errorMessage = TranslateErrorMessage(eventData);
             var stackTrace = TranslateStackTrace(eventData);
-            var dep = CreateCosmosDependencyMetadata(managedThreadId, evData, dependencyName, dependencyTypeName, target, resultCode, duration, startTime, success);
+            var properties = TranslateProperties(eventData);
+            var dep = CreateCosmosDependencyMetadata(managedThreadId, evData, dependencyName, dependencyTypeName, target, resultCode, duration, startTime, success, properties);
             SetErrorIfExists(errorMessage, dep, stackTrace);
             return dep;
         }
@@ -34,7 +36,8 @@ namespace Cosmonaut.Diagnostics
             object resultCode, 
             TimeSpan duration, 
             DateTimeOffset startTime, 
-            bool success)
+            bool success,
+            Dictionary<string, string> properties)
         {
             return new CosmosEventMetadata
             {
@@ -46,7 +49,8 @@ namespace Cosmonaut.Diagnostics
                 ResultCode = resultCode.ToString(),
                 Duration = duration,
                 StartTime = startTime,
-                Success = success
+                Success = success,
+                Properties = properties
             };
         }
 
@@ -90,6 +94,16 @@ namespace Cosmonaut.Diagnostics
         {
             if (!eventData.TryGetValue("managedThreadId", out var managedThreadId)) managedThreadId = 0;
             return managedThreadId;
+        }
+
+        private static Dictionary<string, string> TranslateProperties(IDictionary<string, object> eventData)
+        {
+            if (eventData.TryGetValue("properties", out var properties) && properties is string serialisedProperties)
+            {
+                return JsonConvert.DeserializeObject<Dictionary<string, string>>(serialisedProperties);
+            }
+
+            return new Dictionary<string, string>();
         }
 
         private static object TranslateData(IDictionary<string, object> eventData)

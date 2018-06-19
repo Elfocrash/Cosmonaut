@@ -28,11 +28,12 @@ namespace Cosmonaut.Diagnostics
             long startTime, 
             double durationMilliseconds,
             int managedThreadId, 
-            bool isSuccess = true)
+            bool isSuccess,
+            string properties)
         {
             if (IsEnabled())
                 WriteEvent(DependencyEventId, dependencyTypeName, dependencyName, target, resultCode, data, startTime,
-                    durationMilliseconds, managedThreadId, isSuccess);
+                    durationMilliseconds, managedThreadId, isSuccess, properties);
         }
 
         [Event(DependencyEventErrorId, Message = "CosmosDB invocation failure {1}", Level = EventLevel.Error)]
@@ -47,11 +48,12 @@ namespace Cosmonaut.Diagnostics
             string errorMessage, 
             string stackTrace,
             int managedThreadId, 
-            bool isSuccess = false)
+            bool isSuccess,
+            string properties)
         {
             if (IsEnabled())
                 WriteEvent(DependencyEventErrorId, dependencyTypeName, dependencyName, target, data, startTime,
-                    durationMilliseconds, errorType, errorMessage, stackTrace, managedThreadId, isSuccess);
+                    durationMilliseconds, errorType, errorMessage, stackTrace, managedThreadId, isSuccess, properties);
         }
     }
 }
