@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.Tracing;
+using System.Threading;
 
 namespace Cosmonaut.Diagnostics
 {
@@ -10,7 +11,7 @@ namespace Cosmonaut.Diagnostics
         public const int DependencyEventErrorId = 4010;
 
         private static readonly Lazy<CosmosEventSource> Instance =
-            new Lazy<CosmosEventSource>(() => new CosmosEventSource());
+            new Lazy<CosmosEventSource>(() => new CosmosEventSource(), LazyThreadSafetyMode.ExecutionAndPublication);
         
         public static CosmosEventSource EventSource => Instance.Value;
 
@@ -27,13 +28,12 @@ namespace Cosmonaut.Diagnostics
             string data, 
             long startTime, 
             double durationMilliseconds,
-            int managedThreadId, 
             bool isSuccess,
             string properties)
         {
             if (IsEnabled())
                 WriteEvent(DependencyEventId, dependencyTypeName, dependencyName, target, resultCode, data, startTime,
-                    durationMilliseconds, managedThreadId, isSuccess, properties);
+                    durationMilliseconds, isSuccess, properties);
         }
 
         [Event(DependencyEventErrorId, Message = "CosmosDB invocation failure {1}", Level = EventLevel.Error)]
@@ -47,13 +47,12 @@ namespace Cosmonaut.Diagnostics
             string errorType, 
             string errorMessage, 
             string stackTrace,
-            int managedThreadId, 
             bool isSuccess,
             string properties)
         {
             if (IsEnabled())
                 WriteEvent(DependencyEventErrorId, dependencyTypeName, dependencyName, target, data, startTime,
-                    durationMilliseconds, errorType, errorMessage, stackTrace, managedThreadId, isSuccess, properties);
+                    durationMilliseconds, errorType, errorMessage, stackTrace, isSuccess, properties);
         }
     }
 }

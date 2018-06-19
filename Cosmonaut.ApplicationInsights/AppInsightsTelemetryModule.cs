@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
+using System.Threading;
 using Cosmonaut.Diagnostics;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
@@ -11,7 +12,7 @@ namespace Cosmonaut.ApplicationInsights
     public sealed class AppInsightsTelemetryModule : EventListener, ITelemetryModule
     {
         private static readonly Lazy<ITelemetryModule> SingleInstance =
-            new Lazy<ITelemetryModule>(() => new AppInsightsTelemetryModule());
+            new Lazy<ITelemetryModule>(() => new AppInsightsTelemetryModule(), LazyThreadSafetyMode.ExecutionAndPublication);
 
         private TelemetryClient _telemetryClient;
         private bool _initialised;
@@ -28,8 +29,9 @@ namespace Cosmonaut.ApplicationInsights
             {
                 return;
             }
-            
-            _telemetryClient = new TelemetryClient(configuration);
+
+            _telemetryClient =
+                new TelemetryClient(configuration) {InstrumentationKey = configuration.InstrumentationKey};
             _initialised = true;
         }
 
@@ -68,9 +70,9 @@ namespace Cosmonaut.ApplicationInsights
                 dependency.ResultCode,
                 dependency.Success);
 
-            foreach (var propertyPair in dependency.Properties ?? new Dictionary<string, string>())
+            foreach (var propertyPair in dependency.Properties ?? new Dictionary<string, object>())
             {
-                dependencyTelemetry.Context.Properties[propertyPair.Key] = propertyPair.Value;
+                dependencyTelemetry.Context.Properties.Add(propertyPair.Key, propertyPair.Value.ToString());
             }
 
             return dependencyTelemetry;

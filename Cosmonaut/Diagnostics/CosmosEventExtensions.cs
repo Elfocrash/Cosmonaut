@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
-using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Azure.Documents.Client;
 
 namespace Cosmonaut.Diagnostics
 {
@@ -12,26 +12,22 @@ namespace Cosmonaut.Diagnostics
             this object invoker,
             Func<Task<TResult>> eventCall,
             string data,
-            Dictionary<string, string> properties = null,
+            Dictionary<string, object> properties = null,
             string target = null,
             string name = null)
         {
-            return CreateCosmosEventCall(invoker, eventCall, data, properties, target, name).InvokeAsync();
+            return CreateCosmosEventCall(invoker, data, properties, target, name).InvokeAsync(eventCall);
         }
 
-        public static Task InvokeCosmosCallAsync(
+        public static Task<FeedResponse<TEntity>> InvokeExecuteNextAsync<TEntity>(
             this object invoker,
-            Func<Task> dependencyCall,
+            Func<Task<FeedResponse<TEntity>>> eventCall,
             string data,
-            Dictionary<string, string> properties = null,
+            Dictionary<string, object> properties = null,
             string target = null,
             string name = null)
         {
-            return CreateCosmosEventCall(invoker, async () =>
-            {
-                await dependencyCall();
-                return true;
-            }, data, properties, target, name).InvokeAsync();
+            return CreateCosmosEventCall(invoker, data, properties, target, name).InvokeAsync(eventCall);
         }
 
         public static bool IsDependencyTrackingEventSource(this EventSource eventSource)
@@ -58,24 +54,23 @@ namespace Cosmonaut.Diagnostics
             return i <= -1 ? type.Name.Substring(0, i) : type.Name;
         }
 
-        internal static CosmosEventCall<TResult> CreateCosmosEventCall<TResult>(
+        internal static CosmosEventCall CreateCosmosEventCall(
             this object agent,
-            Func<Task<TResult>> dependencyCall,
             string data,
-            Dictionary<string, string> properties = null,
+            Dictionary<string, object> properties = null,
             string target = null,
             string name = null)
         {
             var dependencyData = new CosmosEventMetadata()
             {
                 DependencyTypeName = GetAgentName(agent),
-                DependencyName = name ?? dependencyCall.GetMethodInfo().Name,
                 Target = target,
+                DependencyName = name,
                 Data = data,
-                Properties = properties ?? new Dictionary<string, string>()
+                Properties = properties ?? new Dictionary<string, object>()
             };
 
-            return new CosmosEventCall<TResult>(dependencyCall, dependencyData);
+            return new CosmosEventCall(dependencyData);
         }
     }
 }

@@ -139,7 +139,7 @@ namespace Cosmonaut.Extensions
             var results = new List<T>();
             while (query.HasMoreResults)
             {
-                var items = await query.InvokeCosmosCallAsync(() => query.ExecuteNextAsync<T>(cancellationToken), query.ToString());
+                var items = await query.InvokeExecuteNextAsync(() => query.ExecuteNextAsync<T>(cancellationToken), query.ToString());
                 results.AddRange(items);
             }
             return results;

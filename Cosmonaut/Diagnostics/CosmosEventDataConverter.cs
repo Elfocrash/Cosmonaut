@@ -17,18 +17,16 @@ namespace Cosmonaut.Diagnostics
             var dependencyName = TranslateDependencyName(eventData);
             var target = Translate(eventData);
             var evData = TranslateData(eventData);
-            var managedThreadId = TranslateManagedThreadId(eventData);
             var success = TranslateSuccess(eventData);
             var errorMessage = TranslateErrorMessage(eventData);
             var stackTrace = TranslateStackTrace(eventData);
             var properties = TranslateProperties(eventData);
-            var dep = CreateCosmosDependencyMetadata(managedThreadId, evData, dependencyName, dependencyTypeName, target, resultCode, duration, startTime, success, properties);
+            var dep = CreateCosmosDependencyMetadata( evData, dependencyName, dependencyTypeName, target, resultCode, duration, startTime, success, properties);
             SetErrorIfExists(errorMessage, dep, stackTrace);
             return dep;
         }
 
         private static CosmosEventMetadata CreateCosmosDependencyMetadata(
-            object managedThreadId, 
             object evData, 
             object dependencyName, 
             object dependencyTypeName, 
@@ -37,11 +35,10 @@ namespace Cosmonaut.Diagnostics
             TimeSpan duration, 
             DateTimeOffset startTime, 
             bool success,
-            Dictionary<string, string> properties)
+            IDictionary<string, object> properties)
         {
             return new CosmosEventMetadata
             {
-                ManagedThreadId = (int) managedThreadId,
                 Data = evData.ToString(),
                 DependencyName = dependencyName.ToString(),
                 DependencyTypeName = dependencyTypeName.ToString(),
@@ -90,20 +87,14 @@ namespace Cosmonaut.Diagnostics
             return success;
         }
 
-        private static object TranslateManagedThreadId(IDictionary<string, object> eventData)
-        {
-            if (!eventData.TryGetValue("managedThreadId", out var managedThreadId)) managedThreadId = 0;
-            return managedThreadId;
-        }
-
-        private static Dictionary<string, string> TranslateProperties(IDictionary<string, object> eventData)
+        private static IDictionary<string, object> TranslateProperties(IDictionary<string, object> eventData)
         {
             if (eventData.TryGetValue("properties", out var properties) && properties is string serialisedProperties)
             {
-                return JsonConvert.DeserializeObject<Dictionary<string, string>>(serialisedProperties);
+                return JsonConvert.DeserializeObject<Dictionary<string, object>>(serialisedProperties);
             }
 
-            return new Dictionary<string, string>();
+            return new Dictionary<string, object>();
         }
 
         private static object TranslateData(IDictionary<string, object> eventData)
