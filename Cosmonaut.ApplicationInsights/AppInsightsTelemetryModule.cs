@@ -72,7 +72,7 @@ namespace Cosmonaut.ApplicationInsights
 
             foreach (var propertyPair in dependency.Properties ?? new Dictionary<string, object>())
             {
-                dependencyTelemetry.Context.Properties.Add(propertyPair.Key, propertyPair.Value.ToString());
+                dependencyTelemetry.Context.Properties[propertyPair.Key] = propertyPair.Value.ToString();
             }
 
             return dependencyTelemetry;

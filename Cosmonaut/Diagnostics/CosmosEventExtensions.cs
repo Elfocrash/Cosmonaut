@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using System.Threading.Tasks;
+using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 
 namespace Cosmonaut.Diagnostics
@@ -11,6 +12,17 @@ namespace Cosmonaut.Diagnostics
         public static Task<TResult> InvokeCosmosCallAsync<TResult>(
             this object invoker,
             Func<Task<TResult>> eventCall,
+            string data,
+            Dictionary<string, object> properties = null,
+            string target = null,
+            string name = null)
+        {
+            return CreateCosmosEventCall(invoker, data, properties, target, name).InvokeAsync(eventCall);
+        }
+
+        public static Task<ResourceResponse<Document>> InvokeCosmosOperationAsync(
+            this object invoker,
+            Func<Task<ResourceResponse<Document>>> eventCall,
             string data,
             Dictionary<string, object> properties = null,
             string target = null,

@@ -137,7 +137,7 @@ namespace Cosmonaut
             try
             {
                 var addedDocument =
-                    await this.InvokeCosmosCallAsync<ResourceResponse<Document>>(() => 
+                    await this.InvokeCosmosOperationAsync(() => 
                         DocumentClient.CreateDocumentAsync(CollectionLink, safeDocument, GetRequestOptions(requestOptions, entity)), entity.GetDocumentId());
                 return new CosmosResponse<TEntity>(entity, addedDocument);
             }
@@ -174,7 +174,7 @@ namespace Cosmonaut
                 entity.ValidateEntityForCosmosDb();
                 var documentId = entity.GetDocumentId();
                 var documentUri = UriFactory.CreateDocumentUri(Settings.DatabaseName, CollectionName, documentId);
-                var result = await this.InvokeCosmosCallAsync(() => DocumentClient.DeleteDocumentAsync(documentUri, GetRequestOptions(requestOptions, entity)), documentId);
+                var result = await this.InvokeCosmosOperationAsync(() => DocumentClient.DeleteDocumentAsync(documentUri, GetRequestOptions(requestOptions, entity)), documentId);
                 return new CosmosResponse<TEntity>(entity, result);
             }
             catch (Exception exception)
@@ -201,7 +201,7 @@ namespace Cosmonaut
                 var documentId = entity.GetDocumentId();
                 var document = entity.GetCosmosDbFriendlyEntity();
                 var documentUri = UriFactory.CreateDocumentUri(Settings.DatabaseName, CollectionName, documentId);
-                var result = await this.InvokeCosmosCallAsync<ResourceResponse<Document>>(() => DocumentClient.ReplaceDocumentAsync(documentUri, document, GetRequestOptions(requestOptions, entity)), documentId);
+                var result = await this.InvokeCosmosOperationAsync(() => DocumentClient.ReplaceDocumentAsync(documentUri, document, GetRequestOptions(requestOptions, entity)), documentId);
                 return new CosmosResponse<TEntity>(entity, result);
             }
             catch (Exception exception)
@@ -226,7 +226,7 @@ namespace Cosmonaut
             {
                 entity.ValidateEntityForCosmosDb();
                 var document = entity.GetCosmosDbFriendlyEntity();
-                var result = await this.InvokeCosmosCallAsync<ResourceResponse<Document>>(() => DocumentClient.UpsertDocumentAsync(CollectionLink, document, GetRequestOptions(requestOptions, entity)), entity.GetDocumentId());
+                var result = await this.InvokeCosmosOperationAsync(() => DocumentClient.UpsertDocumentAsync(CollectionLink, document, GetRequestOptions(requestOptions, entity)), entity.GetDocumentId());
                 return new CosmosResponse<TEntity>(entity, result);
             }
             catch (Exception exception)
@@ -250,7 +250,7 @@ namespace Cosmonaut
             try
             {
                 var documentUri = UriFactory.CreateDocumentUri(Settings.DatabaseName, CollectionName, id);
-                var result = await this.InvokeCosmosCallAsync(() => DocumentClient.DeleteDocumentAsync(documentUri, GetRequestOptions(id, requestOptions, typeof(TEntity))), id);
+                var result = await this.InvokeCosmosOperationAsync(() => DocumentClient.DeleteDocumentAsync(documentUri, GetRequestOptions(id, requestOptions, typeof(TEntity))), id);
                 return new CosmosResponse<TEntity>(result);
             }
             catch (Exception exception)
