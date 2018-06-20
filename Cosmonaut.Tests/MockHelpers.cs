@@ -86,7 +86,7 @@ namespace Cosmonaut.Tests
 
         public static CosmosStore<Dummy> ResponseSetup(IQueryable<Dummy> expected, IQueryable<Dummy> dataSource, ref Mock<IDocumentClient> mockDocumentClient)
         {
-            FeedResponse<Dummy> response = new FeedResponse<Dummy>(expected);
+            FeedResponse<Dummy> response = CreateFeedResponse(expected);
 
             var mockDocumentQuery = new Mock<IFakeDocumentQuery<Dummy>>();
             mockDocumentQuery
@@ -115,10 +115,32 @@ namespace Cosmonaut.Tests
             var entityStore = new CosmosStore<Dummy>(mockDocumentClient.Object, "databaseName", "", "http://test.com");
             return entityStore;
         }
+        
+        public static FeedResponse<T> CreateFeedResponse<T>(IQueryable<T> resource)
+        {
+            var feedResponseType = Type.GetType("Microsoft.Azure.Documents.Client.FeedResponse`1, Microsoft.Azure.DocumentDB.Core, Version=1.9.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
+
+            var flags = BindingFlags.NonPublic | BindingFlags.Instance;
+
+            var headers = new NameValueCollection
+            {
+                { "x-ms-request-charge", "0" },
+                { "x-ms-activity-id", Guid.NewGuid().ToString() }
+            };
+
+
+            var arguments = new object[] { resource, resource.Count(), headers, false, null };
+
+            var t = feedResponseType.MakeGenericType(typeof(T));
+
+            var feedResponse = Activator.CreateInstance(t, flags, null, arguments, null);
+
+            return (FeedResponse<T>) feedResponse;
+        }
 
         public static CosmosStore<Dummy> ResponseSetupForQuery<T>(string sql, IQueryable<T> expected, IQueryable<Dummy> dataSource, ref Mock<IDocumentClient> mockDocumentClient)
         {
-            FeedResponse<T> response = new FeedResponse<T>(expected);
+            FeedResponse<T> response = CreateFeedResponse(expected);
 
             var mockDocumentQuery = new Mock<IFakeDocumentQuery<T>>();
             mockDocumentQuery
@@ -145,7 +167,7 @@ namespace Cosmonaut.Tests
 
         public static CosmosStore<Dummy> ResponseSetupForQuery(string sql, IQueryable<Dummy> expected, IQueryable<Dummy> dataSource, ref Mock<IDocumentClient> mockDocumentClient)
         {
-            FeedResponse<Dummy> response = new FeedResponse<Dummy>(expected);
+            FeedResponse<Dummy> response = CreateFeedResponse(expected);
 
             var mockDocumentQuery = new Mock<IFakeDocumentQuery<Dummy>>();
             mockDocumentQuery
