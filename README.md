@@ -189,6 +189,8 @@ By default, this system is deactivated. In order to activated and actually do so
 
 By using this package you are able to log the events as dependencies in [Application Insights](https://azure.microsoft.com/en-gb/services/application-insights/) in detail. The logs are batched and send in intervals OR automatically sent when the batch buffer is filled to max.
 
+Just initialize the `AppInsightsTelemetryModule` by calling the `Initialize` method with your `TelemetryConfiguration` of choice and it should just magically work.
+
 ### Restrictions
 Because of the way the internal `id` property of Cosmosdb works, there is a mandatory restriction made.
 You cannot have a property named Id or a property with the attribute `[JsonProperty("id")]` without it being a string.
