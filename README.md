@@ -178,26 +178,16 @@ Example:
 [CosmosCollection("somename")]
 ```
 
-#### Benchmarks (Outdated. To be recalculated)
+### Logging
 
-##### Averages of 1000 iterations for 500 documents per operation on collection with default indexing and 5000 RU/s (POCO serialization)
+#### Event source
 
-| Operation used | Duration |
-| ------------- |:-------------:|
-| AddRangeAsync | 596.5ms |
-| ToListAsync |23.1ms|
-| UpdateRangeAsync |653.6ms|
-| UpsertRangeAsync |620.2ms|
-| RemoveAsync | 502.2ms |
+Cosmonaut uses the .NET Standard's `System.Diagnostics` to log it's actions as dependency events. 
+By default, this system is deactivated. In order to activated and actually do something with those events you need to create an  `EventListener` which will activate the logging and give you the option do something with the logs.
 
-##### Averages of 10000 iterations for 1 document per operation on collection with default indexing and 5000 RU/s (POCO serialization)
-| Operation used | Duration |
-| ------------- |:-------------:|
-| AddAsync | 3.9433ms |
-| FirstOrDefaultAsync | 2.7492ms |
-| UpdateAsync | 4.1562ms |
-| UpsertAsync | 4.1842ms |
-| RemoveAsync | 3.9682ms |
+#### `Cosmonaut.ApplicationInsights`
+
+By using this package you are able to log the events as dependencies in [Application Insights](https://azure.microsoft.com/en-gb/services/application-insights/) in detail. The logs are batched and send in intervals OR automatically sent when the batch buffer is filled to max.
 
 ### Restrictions
 Because of the way the internal `id` property of Cosmosdb works, there is a mandatory restriction made.
