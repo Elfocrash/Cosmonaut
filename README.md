@@ -191,6 +191,19 @@ By using this package you are able to log the events as dependencies in [Applica
 
 Just initialize the `AppInsightsTelemetryModule` by calling the `Initialize` method with your `TelemetryConfiguration` of choice and it should just magically work.
 
+#### Benchmarks
+
+##### Averages of 1000 iterations for 1000 documents (1Kb each) per operation on collection with default indexing and Unlimited RU/s (POCO serialization)
+
+| Operation used | Duration |
+| ------------- |:-------------:|
+| AddRangeAsync | 1152ms |
+| ToListAsync |51ms|
+| UpdateRangeAsync |1129ms|
+| UpsertRangeAsync |1034ms|
+| RemoveRangeAsync | 899ms |
+
+
 ### Restrictions
 Because of the way the internal `id` property of Cosmosdb works, there is a mandatory restriction made.
 You cannot have a property named Id or a property with the attribute `[JsonProperty("id")]` without it being a string.
