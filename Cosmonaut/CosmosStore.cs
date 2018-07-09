@@ -11,6 +11,7 @@ using Cosmonaut.Response;
 using Cosmonaut.Storage;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
+using Newtonsoft.Json;
 
 namespace Cosmonaut
 {
@@ -250,13 +251,47 @@ namespace Cosmonaut
             try
             {
                 var documentUri = UriFactory.CreateDocumentUri(Settings.DatabaseName, CollectionName, id);
-                var result = await this.InvokeCosmosOperationAsync(() => DocumentClient.DeleteDocumentAsync(documentUri, GetRequestOptions(id, requestOptions, typeof(TEntity))), id);
+                var result = await this.InvokeCosmosOperationAsync(() => DocumentClient.DeleteDocumentAsync(documentUri, GetRequestOptions(id, requestOptions)), id);
                 return new CosmosResponse<TEntity>(result);
             }
             catch (Exception exception)
             {
                 return exception.HandleOperationException<TEntity>();
             }
+        }
+
+        public async Task<TEntity> GetByIdAsync(string id, RequestOptions requestOptions = null)
+        {
+            try
+            {
+                var document = await this.InvokeCosmosOperationAsync(() => DocumentClient.ReadDocumentAsync(
+                    UriFactory.CreateDocumentUri(DatabaseName, CollectionName, id),
+                    GetRequestOptions(id, requestOptions)), id);
+
+                return JsonConvert.DeserializeObject<TEntity>(document.Resource.ToString());
+            }
+            catch (DocumentClientException exception)
+            {
+                var result = exception.HandleOperationException<TEntity>();
+
+                switch (result.CosmosOperationStatus)
+                {
+                    case CosmosOperationStatus.ResourceNotFound:
+                        return null;
+                    case CosmosOperationStatus.RequestRateIsLarge:
+                        await Task.Delay(exception.RetryAfter);
+                        return await GetByIdAsync(id, requestOptions);
+                }
+                throw;
+            }
+        }
+
+        public async Task<TEntity> GetByIdAsync(string id, string partitionKeyValue)
+        {
+            var requestOptions = !string.IsNullOrEmpty(partitionKeyValue)
+                ? new RequestOptions { PartitionKey = new PartitionKey(partitionKeyValue) }
+                : null;
+            return await GetByIdAsync(id, requestOptions);
         }
 
         private static async Task<CosmosMultipleResponse<TEntity>> HandleOperationWithRateLimitRetry(IEnumerable<Task<CosmosResponse<TEntity>>> entitiesTasks,
@@ -336,9 +371,9 @@ namespace Cosmonaut
             return requestOptions;
         }
 
-        private RequestOptions GetRequestOptions(string id, RequestOptions requestOptions, Type typeOfEntity)
+        private RequestOptions GetRequestOptions(string id, RequestOptions requestOptions)
         {
-            var partitionKeyDefinition = typeOfEntity.GetPartitionKeyForEntity();
+            var partitionKeyDefinition = typeof(TEntity).GetPartitionKeyForEntity();
             var partitionKeyIsId = IsShared || (partitionKeyDefinition?.Paths?.SingleOrDefault()?.Equals($"/{CosmosConstants.CosmosId}") ?? false);
             if (requestOptions == null && partitionKeyIsId)
             {
