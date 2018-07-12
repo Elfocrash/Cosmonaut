@@ -263,7 +263,7 @@ namespace Cosmonaut
             Func<TEntity, Task<CosmosResponse<TEntity>>> operationFunc)
         {
             var response = new CosmosMultipleResponse<TEntity>();
-            var results = (await Task.WhenAll(entitiesTasks)).ToList();
+            var results = (await entitiesTasks.WhenAllTasksAsync()).ToList();
 
             async Task RetryPotentialRateLimitFailures()
             {
@@ -274,7 +274,7 @@ namespace Cosmonaut
 
                 results.RemoveAll(x => x.CosmosOperationStatus == CosmosOperationStatus.RequestRateIsLarge);
                 entitiesTasks = failedBecauseOfRateLimit.Select(entity => operationFunc(entity.Entity));
-                results.AddRange(await Task.WhenAll(entitiesTasks));
+                results.AddRange(await entitiesTasks.WhenAllTasksAsync());
                 await RetryPotentialRateLimitFailures();
             }
 
