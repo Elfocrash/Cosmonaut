@@ -352,6 +352,23 @@ namespace Cosmonaut
         Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id, RequestOptions requestOptions = null);
 
         /// <summary>
+        ///     Returns an entity by document/entity id from the cosmos db store. If the collection is partitioned you will need to provide the
+        ///     partition key value in the <see cref="RequestOptions"/>.
+        /// </summary>
+        /// <param name="id">The id of the document/entity.</param>
+        /// <param name="requestOptions">The request options for this operation.</param>
+        /// <returns></returns>
+        Task<TEntity> GetByIdAsync(string id, RequestOptions requestOptions = null);
+
+        /// <summary>
+        ///     Returns an entity by document/entity id and partition key value from the cosmos db store.
+        /// </summary>
+        /// <param name="id">The id of the document/entity.</param>
+        /// <param name="partitionKeyValue">The partition key value.</param>
+        /// <returns></returns>
+        Task<TEntity> GetByIdAsync(string id, string partitionKeyValue);
+
+        /// <summary>
         ///     Exposes the lower level DocumentClient to the consumer.
         /// </summary>
         IDocumentClient DocumentClient { get; }

@@ -2,6 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>Nick Chapsas</Authors>
+    <Description>ApplicationInsights support for Cosmonaut</Description>
+    <Copyright>Copyright 2018 - Nick Chapsas</Copyright>
+    <PackageLicenseUrl>https://github.com/Elfocrash/Cosmonaut/blob/develop/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/Elfocrash/Cosmonaut</PackageProjectUrl>
+    <PackageTags>cosmosdb azure cosmos entitystore entity db orm</PackageTags>
+    <RepositoryUrl>https://github.com/Elfocrash/Cosmonaut</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
