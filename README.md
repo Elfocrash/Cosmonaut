@@ -189,7 +189,8 @@ By default, this system is deactivated. In order to activated and actually do so
 
 By using this package you are able to log the events as dependencies in [Application Insights](https://azure.microsoft.com/en-gb/services/application-insights/) in detail. The logs are batched and send in intervals OR automatically sent when the batch buffer is filled to max.
 
-Just initialize the `AppInsightsTelemetryModule` by calling the `Initialize` method with your `TelemetryConfiguration` of choice and it should just magically work.
+Just initialise the AppInsightsTelemetryModule in your Startup or setup pipeline like this.
+Example: `AppInsightsTelemetryModule.Instance.Initialize(new TelemetryConfiguration("InstrumentationKey"))`
 
 #### Benchmarks
 
