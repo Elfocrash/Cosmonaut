@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 
 namespace Cosmonaut.Diagnostics
 {
@@ -17,7 +18,7 @@ namespace Cosmonaut.Diagnostics
 
         public string Data { get; set; }
 
-        public string ResultCode { get; set; }
+        public string ResultCode { get; set; } = HttpStatusCode.OK.ToString("D");
 
         public Exception Error { get; set; }
 
