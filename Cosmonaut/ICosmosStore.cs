@@ -357,16 +357,16 @@ namespace Cosmonaut
         /// </summary>
         /// <param name="id">The id of the document/entity.</param>
         /// <param name="requestOptions">The request options for this operation.</param>
-        /// <returns></returns>
-        Task<TEntity> GetByIdAsync(string id, RequestOptions requestOptions = null);
+        /// <returns>The entity that matches the id and partition key. Returns null if the entity is not found.</returns>
+        Task<TEntity> FindAsync(string id, RequestOptions requestOptions = null);
 
         /// <summary>
         ///     Returns an entity by document/entity id and partition key value from the cosmos db store.
         /// </summary>
         /// <param name="id">The id of the document/entity.</param>
         /// <param name="partitionKeyValue">The partition key value.</param>
-        /// <returns></returns>
-        Task<TEntity> GetByIdAsync(string id, string partitionKeyValue);
+        /// <returns>The entity that matches the id and partition key. Returns null if the entity is not found.</returns>
+        Task<TEntity> FindAsync(string id, string partitionKeyValue);
 
         /// <summary>
         ///     Exposes the lower level DocumentClient to the consumer.

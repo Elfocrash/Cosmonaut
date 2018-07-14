@@ -260,7 +260,7 @@ namespace Cosmonaut
             }
         }
 
-        public async Task<TEntity> GetByIdAsync(string id, RequestOptions requestOptions = null)
+        public async Task<TEntity> FindAsync(string id, RequestOptions requestOptions = null)
         {
             try
             {
@@ -280,18 +280,18 @@ namespace Cosmonaut
                         return null;
                     case CosmosOperationStatus.RequestRateIsLarge:
                         await Task.Delay(exception.RetryAfter);
-                        return await GetByIdAsync(id, requestOptions);
+                        return await FindAsync(id, requestOptions);
                 }
                 throw;
             }
         }
 
-        public async Task<TEntity> GetByIdAsync(string id, string partitionKeyValue)
+        public async Task<TEntity> FindAsync(string id, string partitionKeyValue)
         {
             var requestOptions = !string.IsNullOrEmpty(partitionKeyValue)
                 ? new RequestOptions { PartitionKey = new PartitionKey(partitionKeyValue) }
                 : null;
-            return await GetByIdAsync(id, requestOptions);
+            return await FindAsync(id, requestOptions);
         }
 
         private static async Task<CosmosMultipleResponse<TEntity>> HandleOperationWithRateLimitRetry(IEnumerable<Task<CosmosResponse<TEntity>>> entitiesTasks,
