@@ -34,7 +34,7 @@ namespace Cosmonaut.Tests
                 Name = "Test"
             };
 
-            var document = dummy.GetCosmosDbFriendlyEntity() as Document;
+            var document = dummy.ConvertObjectToDocument();
             var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
@@ -46,6 +46,8 @@ namespace Cosmonaut.Tests
             // Assert
             result.IsSuccess.Should().BeTrue();
             result.Entity.Should().BeEquivalentTo(dummy);
+            result.ResourceResponse.Resource.Should().NotBeNull();
+            result.ResourceResponse.Resource.Should().BeEquivalentTo(document);
             result.CosmosOperationStatus.Should().Be(CosmosOperationStatus.Success);
             result.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         }
@@ -60,7 +62,7 @@ namespace Cosmonaut.Tests
                 Id = id,
                 Name = "Test"
             };
-            var document = toRemove.GetCosmosDbFriendlyEntity() as Document;
+            var document = toRemove.ConvertObjectToDocument();
             var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
@@ -71,6 +73,8 @@ namespace Cosmonaut.Tests
 
             // Assert
             result.IsSuccess.Should().BeTrue();
+            result.ResourceResponse.Resource.Should().NotBeNull();
+            result.ResourceResponse.Resource.Should().BeEquivalentTo(document);
             result.CosmosOperationStatus.Should().Be(CosmosOperationStatus.Success);
             result.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         }
@@ -88,7 +92,7 @@ namespace Cosmonaut.Tests
 
             var dummies = new List<Dummy> {dummy};
 
-            var document = dummy.GetCosmosDbFriendlyEntity() as Document;
+            var document = dummy.ConvertObjectToDocument();
             var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
@@ -101,6 +105,8 @@ namespace Cosmonaut.Tests
             result.IsSuccess.Should().BeTrue();
             result.FailedEntities.Should().BeEmpty();
             result.SuccessfulEntities.Should().HaveCount(1);
+            result.SuccessfulEntities.Single().ResourceResponse.Resource.Should().NotBeNull();
+            result.SuccessfulEntities.Single().ResourceResponse.Resource.Should().BeEquivalentTo(document);
         }
     }
 }

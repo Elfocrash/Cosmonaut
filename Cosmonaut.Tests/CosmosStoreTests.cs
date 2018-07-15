@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
+using Cosmonaut.Response;
 using Cosmonaut.Storage;
 using FluentAssertions;
 using Microsoft.Azure.Documents;
@@ -97,6 +98,31 @@ namespace Cosmonaut.Tests
             ((string)obj.iD?.ToString()).Should().BeNull();
             ((string)obj.ID?.ToString()).Should().BeNull();
             ((string)obj.Id?.ToString()).Should().BeNull();
+        }
+
+        [Fact]
+        public async Task FindAsync_ReturnsEntity_WhenFoundInCosmosDB()
+        {
+            // Arrange
+            Mock<IDocumentClient> mockDocumentClient = MockHelpers.GetMockDocumentClient();
+            var id = Guid.NewGuid().ToString();
+            var dummy = new Dummy
+            {
+                Id = id,
+                Name = "Nick"
+            };
+            var document = dummy.ConvertObjectToDocument();
+            var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
+            mockDocumentClient.Setup(x => x.ReadDocumentAsync(UriFactory.CreateDocumentUri("databaseName", "dummies", id), It.IsAny<RequestOptions>()))
+                .ReturnsAsync(resourceResponse);
+
+            var entityStore = new CosmosStore<Dummy>(mockDocumentClient.Object, "databaseName", "", "http://test.com");
+
+            // Act
+            var result = await entityStore.FindAsync(id);
+
+            //Assert
+            result.Should().BeEquivalentTo(dummy);
         }
     }
 }

@@ -8,10 +8,12 @@ using System.Net;
 using System.Reflection;
 using System.Security;
 using System.Threading;
-using Cosmonaut.Storage;
+using Cosmonaut.Extensions;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Moq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Cosmonaut.Tests
 {
@@ -195,6 +197,17 @@ namespace Cosmonaut.Tests
 
             var entityStore = new CosmosStore<Dummy>(mockDocumentClient.Object, "databaseName", "", "http://test.com");
             return entityStore;
+        }
+
+        internal static Document ConvertObjectToDocument<T>(this T obj) where T : class
+        {
+            var document = obj.GetCosmosDbFriendlyEntity();
+            using (JsonReader reader = new JTokenReader(document))
+            {
+                var actualDocument = new Document();
+                actualDocument.LoadFrom(reader);
+                return actualDocument;
+            }
         }
     }
 }

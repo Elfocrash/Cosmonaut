@@ -36,12 +36,9 @@ namespace Cosmonaut.Tests
             var expectedName = "NewTest";
             addedDummy.ValidateEntityForCosmosDb();
             var documentId = addedDummy.GetDocumentId();
-            var document = addedDummy.GetCosmosDbFriendlyEntity();
-            JsonReader reader = new JTokenReader(document);
-            var actualDocument = new Document();
-            actualDocument.LoadFrom(reader);
+            var document = addedDummy.ConvertObjectToDocument();
             JToken jtoken = JToken.FromObject(document);
-            _mockDocumentClient.Setup(x => x.ReplaceDocumentAsync(It.IsAny<Uri>(), jtoken, It.IsAny<RequestOptions>())).ReturnsAsync(new ResourceResponse<Document>(actualDocument));
+            _mockDocumentClient.Setup(x => x.ReplaceDocumentAsync(It.IsAny<Uri>(), jtoken, It.IsAny<RequestOptions>())).ReturnsAsync(new ResourceResponse<Document>(document));
 
             var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
 
@@ -64,8 +61,7 @@ namespace Cosmonaut.Tests
                 Name = "Test"
             };
             addedDummy.ValidateEntityForCosmosDb();
-            var documentId = addedDummy.GetDocumentId();
-            var document = addedDummy.GetCosmosDbFriendlyEntity() as Document;
+            var document = addedDummy.ConvertObjectToDocument();
             var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
 
             _mockDocumentClient.Setup(x => x.ReplaceDocumentAsync(It.IsAny<Uri>(), It.IsAny<object>(), It.IsAny<RequestOptions>()))
@@ -79,7 +75,8 @@ namespace Cosmonaut.Tests
             // Assert
             result.FailedEntities.Should().BeEmpty();
             result.SuccessfulEntities.Should().HaveCount(1);
-            result.SuccessfulEntities.First().ResourceResponse.Resource.Should().BeEquivalentTo(document);
+            result.SuccessfulEntities.Single().ResourceResponse.Resource.Should().NotBeNull();
+            result.SuccessfulEntities.Single().ResourceResponse.Resource.Should().BeEquivalentTo(document);
         }
         
         [Fact]
@@ -93,7 +90,7 @@ namespace Cosmonaut.Tests
                 Name = "NewTest"
             };
 
-            var document = addedDummy.GetCosmosDbFriendlyEntity() as Document;
+            var document = addedDummy.ConvertObjectToDocument();
             var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
 
             _mockDocumentClient.Setup(x => x.UpsertDocumentAsync(It.IsAny<Uri>(), It.IsAny<object>(), It.IsAny<RequestOptions>(), false))
@@ -106,6 +103,8 @@ namespace Cosmonaut.Tests
 
             // Assert
             result.ResourceResponse.Should().BeEquivalentTo(resourceResponse);
+            result.ResourceResponse.Resource.Should().NotBeNull();
+            result.ResourceResponse.Resource.Should().BeEquivalentTo(document);
         }
 
         [Fact]
@@ -118,7 +117,7 @@ namespace Cosmonaut.Tests
                 Id = id,
                 Name = "Test"
             };
-            var document = addedDummy.GetCosmosDbFriendlyEntity() as Document;
+            var document = addedDummy.ConvertObjectToDocument();
             var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
 
             _mockDocumentClient.Setup(x => x.UpsertDocumentAsync(It.IsAny<Uri>(), It.IsAny<object>(), It.IsAny<RequestOptions>(), false))
@@ -132,7 +131,9 @@ namespace Cosmonaut.Tests
             // Assert
             result.FailedEntities.Should().BeEmpty();
             result.SuccessfulEntities.Should().HaveCount(1);
-            result.SuccessfulEntities.First().ResourceResponse.Resource.Should().BeEquivalentTo(document);
+            result.SuccessfulEntities.Single().ResourceResponse.Resource.Should().BeEquivalentTo(document);
+            result.SuccessfulEntities.Single().ResourceResponse.Resource.Should().NotBeNull();
+            result.SuccessfulEntities.Single().ResourceResponse.Resource.Should().BeEquivalentTo(document);
         }
     }
 }

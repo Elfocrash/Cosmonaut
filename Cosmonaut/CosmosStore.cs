@@ -268,6 +268,9 @@ namespace Cosmonaut
                     UriFactory.CreateDocumentUri(DatabaseName, CollectionName, id),
                     GetRequestOptions(id, requestOptions)), id);
 
+                if (document?.Resource == null)
+                    return null;
+
                 return JsonConvert.DeserializeObject<TEntity>(document.Resource.ToString());
             }
             catch (DocumentClientException exception)
