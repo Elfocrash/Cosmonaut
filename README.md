@@ -1,6 +1,6 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/au32jna62iue4wut?svg=true)](https://ci.appveyor.com/project/Elfocrash/cosmonaut) [![NuGet Package](https://img.shields.io/nuget/v/Cosmonaut.svg)](https://www.nuget.org/packages/Cosmonaut)
 
-# What is Cosmonaut?
+# Cosmonaut
 
 > The word was derived from "kosmos" (Ancient Greek: κόσμος) which means world/universe and "nautes" (Ancient Greek: ναῦς) which means sailor/navigator
 
@@ -109,6 +109,11 @@ Once you set this up you can add individual CosmosStores with shared collections
 
 Something worths noting is that because you will use this to share objects partitioning will be virtually impossible. For that reason the `id` will be used as a partition key by default as it is the only property that will be definately shared between all objects.
 
+#### Transactions
+
+There is currently no way to reliably do transactions with the current CosmosDB SDK. Because Cosmonaut is a wrapper around the CosmosDB SDK it doesn't support them either. However there are plans for investigating potential other ways to achieve transactional operations such as server side stored procedures that Cosmonaut could provision and call.
+
+Every operational call (Add, Update, Upsert, Delete) however returns it's status back alongside the reason it failed, if it failed, and the entity so you can add your own retry logic.
 
 #### Indexing
 By default CosmosDB is created with the following indexing rules
