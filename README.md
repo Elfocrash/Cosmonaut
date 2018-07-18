@@ -38,6 +38,14 @@ serviceCollection.AddCosmosStore<Book>(options =>
 ICosmosStore<Book> bookStore = new CosmosStore<Book>(cosmosSettings)
 ```
 
+##### Retrieving an entity by id (and partition key)
+
+```csharp
+var user = await cosmosStore.FindAsync("userId");
+var user = await cosmosStore.FindAsync("userId", "partitionKey");
+var user = await cosmosStore.FindAsync("userId", new RequestOptions());
+```
+
 ##### Quering for entities
 
 In order to query for entities all you have to do is call the `.Query()` method and then use LINQ to create the query you want.
