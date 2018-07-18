@@ -16,13 +16,8 @@ namespace Cosmonaut.Console
         {
             var connectionPolicy = new ConnectionPolicy
             {
-                ConnectionProtocol = Protocol.Tcp,
-                ConnectionMode = ConnectionMode.Direct,
-                RetryOptions = new RetryOptions
-                {
-                    MaxRetryAttemptsOnThrottledRequests = 2,
-                    MaxRetryWaitTimeInSeconds = 3
-                }
+                ConnectionProtocol = Protocol.Https,
+                ConnectionMode = ConnectionMode.Gateway
             };
 
             var cosmosSettings = new CosmosStoreSettings("localtest", 
@@ -74,8 +69,6 @@ namespace Cosmonaut.Console
             watch.Restart();
             //await Task.Delay(3000);
 
-            var testResult = await carStore.Query(new FeedOptions{EnableScanInQuery = true}).SingleOrDefaultAsync(x => x.ModelName.StartsWith("Car 1"));
-
             var addedRetrieved = booksStore.Query().ToListAsync().Result;
             System.Console.WriteLine($"Retrieved 50 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
@@ -84,7 +77,7 @@ namespace Cosmonaut.Console
                 addedre.AnotherRandomProp += " Nick";
             }
 
-            var updated = booksStore.UpdateRangeAsync(addedRetrieved).Result;
+            var updated = booksStore.UpsertRangeAsync(addedRetrieved).Result;
             System.Console.WriteLine($"Updated 50 documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
 

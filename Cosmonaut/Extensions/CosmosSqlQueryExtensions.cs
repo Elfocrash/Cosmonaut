@@ -27,16 +27,21 @@ namespace Cosmonaut.Extensions
 
             var hasExistingWhereClause = sql.IndexOf(" where ", StringComparison.OrdinalIgnoreCase) >= 0;
 
-            if (hasExistingWhereClause)
-            {
-                var splitQuery = Regex.Split(sql, " where ", RegexOptions.IgnoreCase);
-                var firstPartQuery = splitQuery[0];
-                var secondPartQuery = splitQuery[1];
-                var sharedCollectionExpressionQuery = $"{identifier}.{nameof(ISharedCosmosEntity.CosmosEntityName)} = '{cosmosEntityNameValue}'";
-                return $"{firstPartQuery} where {sharedCollectionExpressionQuery} and {secondPartQuery}";
-            }
+            if (!hasExistingWhereClause)
+                return $"{sql} where {identifier}.{nameof(ISharedCosmosEntity.CosmosEntityName)} = '{cosmosEntityNameValue}'";
+            
+            return GetQueryWithExistingWhereClauseInjectedWithSharedCollection(sql, identifier, cosmosEntityNameValue);
+        }
 
-            return $"{sql} where {identifier}.{nameof(ISharedCosmosEntity.CosmosEntityName)} = '{cosmosEntityNameValue}'";
+        private static string GetQueryWithExistingWhereClauseInjectedWithSharedCollection(string sql,
+            string identifier, string cosmosEntityNameValue)
+        {
+            var splitQuery = Regex.Split(sql, " where ", RegexOptions.IgnoreCase);
+            var firstPartQuery = splitQuery[0];
+            var secondPartQuery = splitQuery[1];
+            var sharedCollectionExpressionQuery =
+                $"{identifier}.{nameof(ISharedCosmosEntity.CosmosEntityName)} = '{cosmosEntityNameValue}'";
+            return $"{firstPartQuery} where {sharedCollectionExpressionQuery} and {secondPartQuery}";
         }
 
         private static string GetCollectionIdentifier(string sql)
@@ -45,26 +50,13 @@ namespace Cosmonaut.Extensions
 
             if (matchedWithAs.Success)
             {
-                var potentialIdentifierFromAs = matchedWithAs.Groups[2].Value;
-                if (PostSelectCosmosSqlOperators.Contains(potentialIdentifierFromAs, StringComparer.OrdinalIgnoreCase))
-                {
-                    throw new InvalidSqlQueryException(sql);
-                }
-
-                return potentialIdentifierFromAs;
+                return GetPorentialIdentifierWithTheAsKeyword(sql, matchedWithAs);
             }
 
             var matchedGroups = IdentifierMatchRegex.Match(sql);
             if (matchedGroups.Success && matchedGroups.Groups.Count == 3)
             {
-                var potentialIdentifier = matchedGroups.Groups[2].Value;
-
-                if (PostSelectCosmosSqlOperators.Contains(potentialIdentifier, StringComparer.OrdinalIgnoreCase))
-                {
-                    return matchedGroups.Groups[1].Value;
-                }
-
-                return potentialIdentifier;
+                return GetPotentialIdentifierWith3MatchedGroups(matchedGroups);
             }
 
             if (matchedGroups.Success && matchedGroups.Groups.Count == 2)
@@ -85,6 +77,24 @@ namespace Cosmonaut.Extensions
             }
 
             throw new InvalidSqlQueryException(sql);
+        }
+
+        private static string GetPotentialIdentifierWith3MatchedGroups(Match matchedGroups)
+        {
+            var potentialIdentifier = matchedGroups.Groups[2].Value;
+
+            return PostSelectCosmosSqlOperators.Contains(potentialIdentifier, StringComparer.OrdinalIgnoreCase) ? matchedGroups.Groups[1].Value : potentialIdentifier;
+        }
+
+        private static string GetPorentialIdentifierWithTheAsKeyword(string sql, Match matchedWithAs)
+        {
+            var potentialIdentifierFromAs = matchedWithAs.Groups[2].Value;
+            if (PostSelectCosmosSqlOperators.Contains(potentialIdentifierFromAs, StringComparer.OrdinalIgnoreCase))
+            {
+                throw new InvalidSqlQueryException(sql);
+            }
+
+            return potentialIdentifierFromAs;
         }
     }
 }

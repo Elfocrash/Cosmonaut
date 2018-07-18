@@ -4,12 +4,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Cosmonaut.Diagnostics;
 using Cosmonaut.Extensions;
 using Cosmonaut.Operations;
 using Cosmonaut.Response;
 using Cosmonaut.Storage;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
+using Newtonsoft.Json;
 
 namespace Cosmonaut
 {
@@ -27,35 +29,65 @@ namespace Cosmonaut
 
         public CosmosStoreSettings Settings { get; }
 
-        private Database _database;
-        private DocumentCollection _collection;
+        public string DatabaseName { get; private set; }
+
         private readonly IDatabaseCreator _databaseCreator;
         private readonly ICollectionCreator _collectionCreator;
         private readonly CosmosScaler<TEntity> _cosmosScaler;
 
-        public CosmosStore(CosmosStoreSettings settings,
-            IDatabaseCreator databaseCreator = null,
-            ICollectionCreator collectionCreator = null)
+        public CosmosStore(CosmosStoreSettings settings) : this(settings, string.Empty)
         {
+        }
+
+        public CosmosStore(IDocumentClient documentClient,
+            string databaseName,
+            string authKey, 
+            string endpoint) : this(documentClient, databaseName, authKey, endpoint, string.Empty,
+            new CosmosDatabaseCreator(documentClient),
+            new CosmosCollectionCreator(documentClient))
+        {
+        }
+
+        public CosmosStore(IDocumentClient documentClient,
+            string databaseName,
+            string authKey,
+            string endpoint,
+            string overriddenCollectionName) : this(documentClient, 
+            databaseName, 
+            authKey,
+            endpoint,
+            overriddenCollectionName,
+            new CosmosDatabaseCreator(documentClient),
+            new CosmosCollectionCreator(documentClient))
+        {
+        }
+
+        public CosmosStore(CosmosStoreSettings settings, string overriddenCollectionName)
+        {
+            CollectionName = overriddenCollectionName;
             Settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            var endpointUrl = Settings.EndpointUrl ?? throw new ArgumentNullException(nameof(Settings.EndpointUrl));
-            var authKey = Settings.AuthKey ?? throw new ArgumentNullException(nameof(Settings.AuthKey));
-            DocumentClient = DocumentClientFactory.CreateDocumentClient(endpointUrl, authKey);
+            DatabaseName = settings.DatabaseName;
+            DocumentClient = DocumentClientFactory.CreateDocumentClient(settings);
             if (string.IsNullOrEmpty(Settings.DatabaseName)) throw new ArgumentNullException(nameof(Settings.DatabaseName));
-            _collectionCreator = collectionCreator ?? new CosmosCollectionCreator(DocumentClient);
-            _databaseCreator = databaseCreator ?? new CosmosDatabaseCreator(DocumentClient);
+            _collectionCreator = new CosmosCollectionCreator(DocumentClient);
+            _databaseCreator = new CosmosDatabaseCreator(DocumentClient);
             _cosmosScaler = new CosmosScaler<TEntity>(this);
             InitialiseCosmosStore();
         }
 
         internal CosmosStore(IDocumentClient documentClient,
             string databaseName,
+            string authKey,
+            string endpoint,
+            string overriddenCollectionName,
             IDatabaseCreator databaseCreator = null,
             ICollectionCreator collectionCreator = null,
             bool scaleable = false)
         {
+            CollectionName = overriddenCollectionName;
+            DatabaseName = databaseName;
             DocumentClient = documentClient ?? throw new ArgumentNullException(nameof(documentClient));
-            Settings = new CosmosStoreSettings(databaseName, documentClient.ServiceEndpoint, documentClient.AuthKey.ToString(), documentClient.ConnectionPolicy, 
+            Settings = new CosmosStoreSettings(databaseName, endpoint, authKey, documentClient.ConnectionPolicy, 
                 scaleCollectionRUsAutomatically: scaleable);
             if (string.IsNullOrEmpty(Settings.DatabaseName)) throw new ArgumentNullException(nameof(Settings.DatabaseName));
             _collectionCreator = collectionCreator ?? new CosmosCollectionCreator(DocumentClient);
@@ -64,52 +96,37 @@ namespace Cosmonaut
             InitialiseCosmosStore();
         }
 
-        internal CosmosStore(IDocumentClient documentClient,
-            string databaseName) : this(documentClient, databaseName,
-            new CosmosDatabaseCreator(documentClient),
-            new CosmosCollectionCreator(documentClient))
-        {
-        }
-
         public IQueryable<TEntity> Query(FeedOptions feedOptions = null)
         {
-            var queryable = DocumentClient.CreateDocumentQuery<TEntity>(_collection.SelfLink, GetFeedOptionsForQuery(feedOptions));
+            var queryable = DocumentClient.CreateDocumentQuery<TEntity>(CollectionLink, GetFeedOptionsForQuery(feedOptions));
 
             return IsShared ? queryable.Where(ExpressionExtensions.SharedCollectionExpression<TEntity>()) : queryable;
         }
 
         public async Task<TEntity> QuerySingleAsync(string sql, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
-            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-
-            var queryable = DocumentClient.CreateDocumentQuery<TEntity>(_collection.SelfLink, collectionSharingFriendlySql, GetFeedOptionsForQuery(feedOptions));
+            var queryable = GetSqlBasedQueryableForType<TEntity>(sql, feedOptions);
 
             return await queryable.SingleOrDefaultAsync(cancellationToken);
         }
 
         public async Task<T> QuerySingleAsync<T>(string sql, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
-            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-
-            var queryable = DocumentClient.CreateDocumentQuery<T>(_collection.SelfLink, collectionSharingFriendlySql, GetFeedOptionsForQuery(feedOptions));
+            var queryable = GetSqlBasedQueryableForType<T>(sql, feedOptions);
 
             return await queryable.SingleOrDefaultGenericAsync(cancellationToken);
         }
-
+        
         public async Task<IEnumerable<TEntity>> QueryMultipleAsync(string sql, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
-            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-
-            var queryable = DocumentClient.CreateDocumentQuery<TEntity>(_collection.SelfLink, collectionSharingFriendlySql, GetFeedOptionsForQuery(feedOptions));
+            var queryable = GetSqlBasedQueryableForType<TEntity>(sql, feedOptions);
 
             return await queryable.ToListAsync(cancellationToken);
         }
 
         public async Task<IEnumerable<T>> QueryMultipleAsync<T>(string sql, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
-            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-
-            var queryable = DocumentClient.CreateDocumentQuery<T>(_collection.SelfLink, collectionSharingFriendlySql, GetFeedOptionsForQuery(feedOptions));
+            var queryable = GetSqlBasedQueryableForType<T>(sql, feedOptions);
 
             return await queryable.ToGenericListAsync(cancellationToken);
         }
@@ -120,8 +137,9 @@ namespace Cosmonaut
             
             try
             {
-                ResourceResponse<Document> addedDocument =
-                    await DocumentClient.CreateDocumentAsync(_collection.SelfLink, safeDocument, GetRequestOptions(requestOptions, entity));
+                var addedDocument =
+                    await this.InvokeCosmosOperationAsync(() => 
+                        DocumentClient.CreateDocumentAsync(CollectionLink, safeDocument, GetRequestOptions(requestOptions, entity)), entity.GetDocumentId());
                 return new CosmosResponse<TEntity>(entity, addedDocument);
             }
             catch (Exception exception)
@@ -157,7 +175,7 @@ namespace Cosmonaut
                 entity.ValidateEntityForCosmosDb();
                 var documentId = entity.GetDocumentId();
                 var documentUri = UriFactory.CreateDocumentUri(Settings.DatabaseName, CollectionName, documentId);
-                var result = await DocumentClient.DeleteDocumentAsync(documentUri, GetRequestOptions(requestOptions, entity));
+                var result = await this.InvokeCosmosOperationAsync(() => DocumentClient.DeleteDocumentAsync(documentUri, GetRequestOptions(requestOptions, entity)), documentId);
                 return new CosmosResponse<TEntity>(entity, result);
             }
             catch (Exception exception)
@@ -184,7 +202,7 @@ namespace Cosmonaut
                 var documentId = entity.GetDocumentId();
                 var document = entity.GetCosmosDbFriendlyEntity();
                 var documentUri = UriFactory.CreateDocumentUri(Settings.DatabaseName, CollectionName, documentId);
-                var result = await DocumentClient.ReplaceDocumentAsync(documentUri, document, GetRequestOptions(requestOptions, entity));
+                var result = await this.InvokeCosmosOperationAsync(() => DocumentClient.ReplaceDocumentAsync(documentUri, document, GetRequestOptions(requestOptions, entity)), documentId);
                 return new CosmosResponse<TEntity>(entity, result);
             }
             catch (Exception exception)
@@ -209,7 +227,7 @@ namespace Cosmonaut
             {
                 entity.ValidateEntityForCosmosDb();
                 var document = entity.GetCosmosDbFriendlyEntity();
-                ResourceResponse<Document> result = await DocumentClient.UpsertDocumentAsync(_collection.DocumentsLink, document, GetRequestOptions(requestOptions, entity));
+                var result = await this.InvokeCosmosOperationAsync(() => DocumentClient.UpsertDocumentAsync(CollectionLink, document, GetRequestOptions(requestOptions, entity)), entity.GetDocumentId());
                 return new CosmosResponse<TEntity>(entity, result);
             }
             catch (Exception exception)
@@ -233,7 +251,7 @@ namespace Cosmonaut
             try
             {
                 var documentUri = UriFactory.CreateDocumentUri(Settings.DatabaseName, CollectionName, id);
-                var result = await DocumentClient.DeleteDocumentAsync(documentUri, GetRequestOptions(id, requestOptions, typeof(TEntity)));
+                var result = await this.InvokeCosmosOperationAsync(() => DocumentClient.DeleteDocumentAsync(documentUri, GetRequestOptions(id, requestOptions)), id);
                 return new CosmosResponse<TEntity>(result);
             }
             catch (Exception exception)
@@ -242,11 +260,48 @@ namespace Cosmonaut
             }
         }
 
-        private async Task<CosmosMultipleResponse<TEntity>> HandleOperationWithRateLimitRetry(IEnumerable<Task<CosmosResponse<TEntity>>> entitiesTasks,
+        public async Task<TEntity> FindAsync(string id, RequestOptions requestOptions = null)
+        {
+            try
+            {
+                var document = await this.InvokeCosmosOperationAsync(() => DocumentClient.ReadDocumentAsync(
+                    UriFactory.CreateDocumentUri(DatabaseName, CollectionName, id),
+                    GetRequestOptions(id, requestOptions)), id);
+
+                if (document?.Resource == null)
+                    return null;
+
+                return JsonConvert.DeserializeObject<TEntity>(document.Resource.ToString());
+            }
+            catch (DocumentClientException exception)
+            {
+                var result = exception.HandleOperationException<TEntity>();
+
+                switch (result.CosmosOperationStatus)
+                {
+                    case CosmosOperationStatus.ResourceNotFound:
+                        return null;
+                    case CosmosOperationStatus.RequestRateIsLarge:
+                        await Task.Delay(exception.RetryAfter);
+                        return await FindAsync(id, requestOptions);
+                }
+                throw;
+            }
+        }
+
+        public async Task<TEntity> FindAsync(string id, string partitionKeyValue)
+        {
+            var requestOptions = !string.IsNullOrEmpty(partitionKeyValue)
+                ? new RequestOptions { PartitionKey = new PartitionKey(partitionKeyValue) }
+                : null;
+            return await FindAsync(id, requestOptions);
+        }
+
+        private static async Task<CosmosMultipleResponse<TEntity>> HandleOperationWithRateLimitRetry(IEnumerable<Task<CosmosResponse<TEntity>>> entitiesTasks,
             Func<TEntity, Task<CosmosResponse<TEntity>>> operationFunc)
         {
             var response = new CosmosMultipleResponse<TEntity>();
-            var results = (await Task.WhenAll(entitiesTasks)).ToList();
+            var results = (await entitiesTasks.WhenAllTasksAsync()).ToList();
 
             async Task RetryPotentialRateLimitFailures()
             {
@@ -257,7 +312,7 @@ namespace Cosmonaut
 
                 results.RemoveAll(x => x.CosmosOperationStatus == CosmosOperationStatus.RequestRateIsLarge);
                 entitiesTasks = failedBecauseOfRateLimit.Select(entity => operationFunc(entity.Entity));
-                results.AddRange(await Task.WhenAll(entitiesTasks));
+                results.AddRange(await entitiesTasks.WhenAllTasksAsync());
                 await RetryPotentialRateLimitFailures();
             }
 
@@ -266,39 +321,18 @@ namespace Cosmonaut
             response.SuccessfulEntities.AddRange(results.Where(x => x.IsSuccess));
             return response;
         }
-
-        private async Task<Database> GetDatabaseAsync()
-        {
-            await _databaseCreator.EnsureCreatedAsync(Settings.DatabaseName);
-
-            var database = DocumentClient.CreateDatabaseQuery()
-                .Where(db => db.Id == Settings.DatabaseName)
-                .ToArray()
-                .First();
-
-            return database;
-        }
-
-        private async Task<DocumentCollection> GetCollectionAsync()
-        {
-            await _collectionCreator.EnsureCreatedAsync<TEntity>(_database, CollectionThrouput, Settings.IndexingPolicy);
-
-            var collection = DocumentClient
-                .CreateDocumentCollectionQuery(_database.SelfLink)
-                .ToArray()
-                .FirstOrDefault(c => c.Id == CollectionName);
-
-            return collection;
-        }
         
         private void InitialiseCosmosStore()
         {
             IsShared = typeof(TEntity).UsesSharedCollection();
-            CollectionName = IsShared ? typeof(TEntity).GetSharedCollectionName() : typeof(TEntity).GetCollectionName();
+
+            if(string.IsNullOrEmpty(CollectionName))
+                CollectionName = IsShared ? typeof(TEntity).GetSharedCollectionName() : typeof(TEntity).GetCollectionName();
+
             CollectionThrouput = typeof(TEntity).GetCollectionThroughputForEntity(Settings.DefaultCollectionThroughput);
 
-            _database = GetDatabaseAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-            _collection = GetCollectionAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+            _databaseCreator.EnsureCreatedAsync(DatabaseName).ConfigureAwait(false).GetAwaiter().GetResult();
+            _collectionCreator.EnsureCreatedAsync<TEntity>(DatabaseLink.ToString(), CollectionName, CollectionThrouput, Settings.IndexingPolicy);
         }
 
         private async Task<CosmosMultipleResponse<TEntity>> ExecuteMultiOperationAsync(IEnumerable<TEntity> entities,
@@ -310,17 +344,17 @@ namespace Cosmonaut
 
             try
             {
-                var multipleResponse = await _cosmosScaler.UpscaleCollectionIfConfiguredAsSuch(entitiesList, _collection, operationFunc);
+                var multipleResponse = await _cosmosScaler.UpscaleCollectionIfConfiguredAsSuch(entitiesList, CollectionLink.ToString(), operationFunc);
                 var multiOperationEntitiesTasks = entitiesList.Select(operationFunc);
                 var operationResult = await HandleOperationWithRateLimitRetry(multiOperationEntitiesTasks, operationFunc);
                 multipleResponse.SuccessfulEntities.AddRange(operationResult.SuccessfulEntities);
                 multipleResponse.FailedEntities.AddRange(operationResult.FailedEntities);
-                await _cosmosScaler.DownscaleCollectionRequestUnitsToDefault(_collection);
+                await _cosmosScaler.DownscaleCollectionRequestUnitsToDefault(CollectionLink.ToString());
                 return multipleResponse;
             }
             catch (Exception exception)
             {
-                await _cosmosScaler.DownscaleCollectionRequestUnitsToDefault(_collection);
+                await _cosmosScaler.DownscaleCollectionRequestUnitsToDefault(CollectionLink.ToString());
                 return new CosmosMultipleResponse<TEntity>(exception);
             }
         }
@@ -340,9 +374,9 @@ namespace Cosmonaut
             return requestOptions;
         }
 
-        private RequestOptions GetRequestOptions(string id, RequestOptions requestOptions, Type typeOfEntity)
+        private RequestOptions GetRequestOptions(string id, RequestOptions requestOptions)
         {
-            var partitionKeyDefinition = typeOfEntity.GetPartitionKeyForEntity();
+            var partitionKeyDefinition = typeof(TEntity).GetPartitionKeyForEntity();
             var partitionKeyIsId = IsShared || (partitionKeyDefinition?.Paths?.SingleOrDefault()?.Equals($"/{CosmosConstants.CosmosId}") ?? false);
             if (requestOptions == null && partitionKeyIsId)
             {
@@ -373,5 +407,18 @@ namespace Cosmonaut
             feedOptions.EnableCrossPartitionQuery = shouldEnablePartitionQuery;
             return feedOptions;
         }
+        
+        private IQueryable<T> GetSqlBasedQueryableForType<T>(string sql, FeedOptions feedOptions)
+        {
+            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
+
+            var queryable = DocumentClient.CreateDocumentQuery<T>(CollectionLink, collectionSharingFriendlySql,
+                GetFeedOptionsForQuery(feedOptions));
+            return queryable;
+        }
+
+        private Uri DatabaseLink => UriFactory.CreateDatabaseUri(DatabaseName);
+
+        private Uri CollectionLink => UriFactory.CreateDocumentCollectionUri(DatabaseName, CollectionName);
     }
 }

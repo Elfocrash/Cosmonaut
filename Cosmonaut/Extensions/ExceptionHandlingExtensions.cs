@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using Cosmonaut.Response;
 using Microsoft.Azure.Documents;
 
@@ -8,14 +9,15 @@ namespace Cosmonaut.Extensions
     {
         internal static CosmosResponse<TEntity> HandleDocumentClientException<TEntity>(DocumentClientException exception, TEntity entity) where TEntity : class
         {
-            if (exception.Message.Contains(CosmosConstants.ResourceNotFoundMessage))
-                return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.ResourceNotFound);
-
-            if (exception.Message.Contains(CosmosConstants.RequestRateIsLargeMessage))
-                return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.RequestRateIsLarge);
-
-            if (exception.Message.Contains(CosmosConstants.ResourceWithIdExistsMessage))
-                return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.ResourceWithIdAlreadyExists);
+            switch (exception.StatusCode)
+            {
+                case HttpStatusCode.NotFound:
+                    return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.ResourceNotFound);
+                case (HttpStatusCode) CosmosConstants.TooManyRequestsStatusCode:
+                    return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.RequestRateIsLarge);
+                case HttpStatusCode.Conflict:
+                    return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.ResourceWithIdAlreadyExists);
+            }
 
             throw exception;
         }

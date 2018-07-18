@@ -34,11 +34,11 @@ namespace Cosmonaut.Tests
                 Name = "Test"
             };
 
-            var document = dummy.GetCosmosDbFriendlyEntity() as Document;
+            var document = dummy.ConvertObjectToDocument();
             var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
 
             // Act
             var result = await entityStore.RemoveAsync(dummy);
@@ -46,6 +46,8 @@ namespace Cosmonaut.Tests
             // Assert
             result.IsSuccess.Should().BeTrue();
             result.Entity.Should().BeEquivalentTo(dummy);
+            result.ResourceResponse.Resource.Should().NotBeNull();
+            result.ResourceResponse.Resource.Should().BeEquivalentTo(document);
             result.CosmosOperationStatus.Should().Be(CosmosOperationStatus.Success);
             result.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         }
@@ -60,17 +62,19 @@ namespace Cosmonaut.Tests
                 Id = id,
                 Name = "Test"
             };
-            var document = toRemove.GetCosmosDbFriendlyEntity() as Document;
+            var document = toRemove.ConvertObjectToDocument();
             var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
 
             // Act
             var result = await entityStore.RemoveByIdAsync(id);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
+            result.ResourceResponse.Resource.Should().NotBeNull();
+            result.ResourceResponse.Resource.Should().BeEquivalentTo(document);
             result.CosmosOperationStatus.Should().Be(CosmosOperationStatus.Success);
             result.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         }
@@ -88,11 +92,11 @@ namespace Cosmonaut.Tests
 
             var dummies = new List<Dummy> {dummy};
 
-            var document = dummy.GetCosmosDbFriendlyEntity() as Document;
+            var document = dummy.ConvertObjectToDocument();
             var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
-            _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<string>(), It.IsAny<RequestOptions>()))
+            _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", new CosmosDatabaseCreator(_mockDocumentClient.Object), new CosmosCollectionCreator(_mockDocumentClient.Object));
+            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
 
             // Act
             var result = await entityStore.RemoveRangeAsync(dummies);
@@ -101,6 +105,8 @@ namespace Cosmonaut.Tests
             result.IsSuccess.Should().BeTrue();
             result.FailedEntities.Should().BeEmpty();
             result.SuccessfulEntities.Should().HaveCount(1);
+            result.SuccessfulEntities.Single().ResourceResponse.Resource.Should().NotBeNull();
+            result.SuccessfulEntities.Single().ResourceResponse.Resource.Should().BeEquivalentTo(document);
         }
     }
 }

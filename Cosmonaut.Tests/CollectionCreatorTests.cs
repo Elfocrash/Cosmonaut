@@ -41,7 +41,7 @@ namespace Cosmonaut.Tests
             var creator = new CosmosCollectionCreator(_mockDocumentClient.Object);
 
             // Act
-            var result = await creator.EnsureCreatedAsync<Dummy>(new Database {Id = "databaseName"}, 500);
+            var result = await creator.EnsureCreatedAsync<Dummy>(UriFactory.CreateDatabaseUri("databaseName").ToString(), collection.Id, 500);
 
             // Assert
             result.Should().BeTrue();

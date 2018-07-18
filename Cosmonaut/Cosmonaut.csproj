@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>Nick Chapsas</Authors>
-    <Description>A simple object mapper for CosmosDB SQL API</Description>
+    <Description>A simple object mapper for Azure CosmosDB (ORM)</Description>
 	<Summary>A simple and easy to use entity store for Microsoft's CosmosDB.</Summary>
     <Copyright>Copyright 2018 - Nick Chapsas</Copyright>
 	<Title>Cosmonaut</Title>
@@ -12,8 +12,9 @@
     <RepositoryUrl>https://github.com/Elfocrash/Cosmonaut</RepositoryUrl>
     <PackageTags>cosmosdb azure cosmos entitystore entity db orm</PackageTags>
     <PackageReleaseNotes>Please report any issues on Github.</PackageReleaseNotes>
-    <Version>1.4.2</Version>
+    <Version>1.4.8</Version>
     <NeutralLanguage></NeutralLanguage>
+    <Company>Nick Chapsas</Company>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -25,9 +26,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Humanizer.Core.uk" Version="2.2.0" />
+    <PackageReference Include="Humanizer.Core.uk" Version="2.4.2" />
     <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="1.9.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.1.1" />
   </ItemGroup>
 
 </Project>

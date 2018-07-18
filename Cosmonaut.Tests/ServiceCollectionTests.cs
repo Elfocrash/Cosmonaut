@@ -17,7 +17,7 @@ namespace Cosmonaut.Tests
             var documentClient = MockHelpers.GetMockDocumentClient();
 
             // Act
-            serviceCollection.AddCosmosStore<Dummy>(documentClient.Object, "databaseName", new CosmosDatabaseCreator(documentClient.Object), new CosmosCollectionCreator(documentClient.Object));
+            serviceCollection.AddCosmosStore<Dummy>(documentClient.Object, "databaseName", "", "http://test.com");
             var provider = serviceCollection.BuildServiceProvider();
 
             // Assert

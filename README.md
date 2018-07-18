@@ -1,10 +1,16 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/au32jna62iue4wut?svg=true)](https://ci.appveyor.com/project/Elfocrash/cosmonaut) [![NuGet Package](https://img.shields.io/nuget/v/Cosmonaut.svg)](https://www.nuget.org/packages/Cosmonaut)
 
-# What is Cosmonaut?
+# Cosmonaut
 
 > The word was derived from "kosmos" (Ancient Greek: κόσμος) which means world/universe and "nautes" (Ancient Greek: ναῦς) which means sailor/navigator
 
 Cosmonaut is an object mapper that enables .NET developers to work with a CosmosDB using .NET objects. It eliminates the need for most of the data-access code that developers usually need to write.
+
+### Getting started
+
+- [How to easily start using CosmosDB in your C# application in no time with Cosmonaut](http://chapsas.com/how-to-easily-start-using-cosmosdb-in-your-c-application-in-no-time-with-cosmonaut/)
+- [(Video) Getting started with .NET Core and CosmosDB using Cosmonaut](http://chapsas.com/video-getting-started-with-net-core-and-cosmosdb-using-cosmonaut/)
+- [(Video) How to save money in CosmosDB with Cosmonaut's Collection Sharing](http://chapsas.com/video-how-to-save-money-in-cosmosdb-with-cosmonauts-collection-sharing/)
 
 ### Usage 
 The idea is pretty simple. You can have one CosmoStore per entity (POCO/dtos etc)
@@ -39,8 +45,7 @@ It is HIGHLY recommended that you use one of the `Async` extension methods to ge
 
 ```csharp
 var user = await cosmoStore.Query().FirstOrDefaultAsync(x => x.Username == "elfocrash");
-var users = await cosmoStore.Query().ToListAsync(x => x.HairColor == HairColor.Black);
-var otherUsers = await cosmosStore.Query().Where(x => x.Name.StartsWith("Smit")).ToListAsync(cancellationToken)
+var users = await cosmoStore.Query().Where(x => x.HairColor == HairColor.Black).ToListAsync(cancellationToken);
 
 // or you can use SQL
 
@@ -104,6 +109,11 @@ Once you set this up you can add individual CosmosStores with shared collections
 
 Something worths noting is that because you will use this to share objects partitioning will be virtually impossible. For that reason the `id` will be used as a partition key by default as it is the only property that will be definately shared between all objects.
 
+#### Transactions
+
+There is currently no way to reliably do transactions with the current CosmosDB SDK. Because Cosmonaut is a wrapper around the CosmosDB SDK it doesn't support them either. However there are plans for investigating potential other ways to achieve transactional operations such as server side stored procedures that Cosmonaut could provision and call.
+
+Every operational call (Add, Update, Upsert, Delete) however returns it's status back alongside the reason it failed, if it failed, and the entity so you can add your own retry logic.
 
 #### Indexing
 By default CosmosDB is created with the following indexing rules
@@ -173,26 +183,32 @@ Example:
 [CosmosCollection("somename")]
 ```
 
+### Logging
+
+#### Event source
+
+Cosmonaut uses the .NET Standard's `System.Diagnostics` to log it's actions as dependency events. 
+By default, this system is deactivated. In order to activated and actually do something with those events you need to create an  `EventListener` which will activate the logging and give you the option do something with the logs.
+
+#### `Cosmonaut.ApplicationInsights`
+
+By using this package you are able to log the events as dependencies in [Application Insights](https://azure.microsoft.com/en-gb/services/application-insights/) in detail. The logs are batched and send in intervals OR automatically sent when the batch buffer is filled to max.
+
+Just initialise the AppInsightsTelemetryModule in your Startup or setup pipeline like this.
+Example: `AppInsightsTelemetryModule.Instance.Initialize(new TelemetryConfiguration("InstrumentationKey"))`
+
 #### Benchmarks
 
-##### Averages of 1000 iterations for 500 documents per operation on collection with default indexing and 5000 RU/s (POCO serialization)
+##### Averages of 1000 iterations for 1000 documents (1Kb each) per operation on collection with default indexing and Unlimited RU/s (POCO serialization)
 
 | Operation used | Duration |
 | ------------- |:-------------:|
-| AddRangeAsync | 596.5ms |
-| ToListAsync |23.1ms|
-| UpdateRangeAsync |653.6ms|
-| UpsertRangeAsync |620.2ms|
-| RemoveAsync | 502.2ms |
+| AddRangeAsync | 1152ms |
+| ToListAsync |51ms|
+| UpdateRangeAsync |1129ms|
+| UpsertRangeAsync |1034ms|
+| RemoveRangeAsync | 899ms |
 
-##### Averages of 10000 iterations for 1 document per operation on collection with default indexing and 5000 RU/s (POCO serialization)
-| Operation used | Duration |
-| ------------- |:-------------:|
-| AddAsync | 3.9433ms |
-| FirstOrDefaultAsync | 2.7492ms |
-| UpdateAsync | 4.1562ms |
-| UpsertAsync | 4.1842ms |
-| RemoveAsync | 3.9682ms |
 
 ### Restrictions
 Because of the way the internal `id` property of Cosmosdb works, there is a mandatory restriction made.
