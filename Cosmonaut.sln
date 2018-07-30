@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut", "src\Cosmonaut\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut.Console", "samples\Cosmonaut.Console\Cosmonaut.Console.csproj", "{6E770C8F-3D14-4527-B713-C3845BA507DE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut.Unit", "tests\Cosmonaut.Tests\Cosmonaut.Unit.csproj", "{35FB474B-E172-4850-BFEC-54F86A8E03C4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut.Unit", "tests\Cosmonaut.Unit\Cosmonaut.Unit.csproj", "{35FB474B-E172-4850-BFEC-54F86A8E03C4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut.ApplicationInsights", "src\Cosmonaut.ApplicationInsights\Cosmonaut.ApplicationInsights.csproj", "{C53E8DF6-9172-499E-9919-10A049A234C6}"
 EndProject
