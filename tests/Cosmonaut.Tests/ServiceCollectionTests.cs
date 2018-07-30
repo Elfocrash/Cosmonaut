@@ -1,11 +1,8 @@
-﻿using System;
-using System.Text;
-using Cosmonaut.Extensions;
-using Cosmonaut.Storage;
+﻿using Cosmonaut.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace Cosmonaut.Tests
+namespace Cosmonaut.Unit
 {
     public class ServiceCollectionTests
     {

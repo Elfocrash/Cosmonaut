@@ -15,7 +15,7 @@ using Moq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Cosmonaut.Tests
+namespace Cosmonaut.Unit
 {
     public static class MockHelpers
     {

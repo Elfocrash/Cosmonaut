@@ -4,15 +4,15 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Cosmonaut.Exceptions;
+using Cosmonaut.Extensions;
 using Cosmonaut.Storage;
 using FluentAssertions;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Moq;
 using Xunit;
-using Cosmonaut.Extensions;
 
-namespace Cosmonaut.Tests
+namespace Cosmonaut.Unit
 {
     public class CollectionCreatorTests
     {

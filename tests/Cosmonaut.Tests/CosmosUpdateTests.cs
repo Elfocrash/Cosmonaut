@@ -3,16 +3,14 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
-using Cosmonaut.Storage;
 using FluentAssertions;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Moq;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
-namespace Cosmonaut.Tests
+namespace Cosmonaut.Unit
 {
     public class CosmosUpdateTests
     {

@@ -4,7 +4,7 @@ using Cosmonaut.Extensions;
 using FluentAssertions;
 using Xunit;
 
-namespace Cosmonaut.Tests
+namespace Cosmonaut.Unit
 {
     public class CosmosSqlQueryExtensionsTests
     {

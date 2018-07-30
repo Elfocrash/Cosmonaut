@@ -1,7 +1,7 @@
 ﻿using Cosmonaut.Attributes;
 using Xunit;
 
-namespace Cosmonaut.Tests
+namespace Cosmonaut.Unit
 {
     public class CosmosCollectionAttributeTests
     {

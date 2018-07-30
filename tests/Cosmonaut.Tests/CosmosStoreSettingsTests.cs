@@ -1,7 +1,7 @@
 ﻿using System;
 using Xunit;
 
-namespace Cosmonaut.Tests
+namespace Cosmonaut.Unit
 {
     public class CosmosStoreSettingsTests
     {

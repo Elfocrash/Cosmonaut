@@ -1,7 +1,7 @@
 ﻿using Cosmonaut.Attributes;
 using Newtonsoft.Json;
 
-namespace Cosmonaut.Tests
+namespace Cosmonaut.Unit
 {
     public class Dummy
     {

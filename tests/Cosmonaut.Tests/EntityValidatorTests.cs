@@ -3,7 +3,7 @@ using Cosmonaut.Exceptions;
 using Cosmonaut.Extensions;
 using Xunit;
 
-namespace Cosmonaut.Tests
+namespace Cosmonaut.Unit
 {
     public class EntityValidatorTests
     {

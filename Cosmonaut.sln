@@ -3,17 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27428.2015
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut", "Cosmonaut\Cosmonaut.csproj", "{70D43CE3-CCB1-41C4-AF30-EF67E29D87F9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut", "src\Cosmonaut\Cosmonaut.csproj", "{70D43CE3-CCB1-41C4-AF30-EF67E29D87F9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut.Console", "Cosmonaut.Console\Cosmonaut.Console.csproj", "{6E770C8F-3D14-4527-B713-C3845BA507DE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut.Console", "samples\Cosmonaut.Console\Cosmonaut.Console.csproj", "{6E770C8F-3D14-4527-B713-C3845BA507DE}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{6BEC6D60-9DEC-4A4C-8FC3-E255EE8B6D95}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut.Unit", "tests\Cosmonaut.Tests\Cosmonaut.Unit.csproj", "{35FB474B-E172-4850-BFEC-54F86A8E03C4}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3688635B-693B-43B4-AFEE-2F95640D2C7C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut.ApplicationInsights", "src\Cosmonaut.ApplicationInsights\Cosmonaut.ApplicationInsights.csproj", "{C53E8DF6-9172-499E-9919-10A049A234C6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut.Tests", "Cosmonaut.Tests\Cosmonaut.Tests.csproj", "{35FB474B-E172-4850-BFEC-54F86A8E03C4}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{42392F64-A623-4C18-BF93-A5181AEE30C1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cosmonaut.ApplicationInsights", "Cosmonaut.ApplicationInsights\Cosmonaut.ApplicationInsights.csproj", "{C53E8DF6-9172-499E-9919-10A049A234C6}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{1900E4D6-A0A0-4675-A049-AA2843143E01}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{E50F9511-8F2F-4753-8D4B-B0CAD4E5D573}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,10 +44,10 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{70D43CE3-CCB1-41C4-AF30-EF67E29D87F9} = {3688635B-693B-43B4-AFEE-2F95640D2C7C}
-		{6E770C8F-3D14-4527-B713-C3845BA507DE} = {3688635B-693B-43B4-AFEE-2F95640D2C7C}
-		{35FB474B-E172-4850-BFEC-54F86A8E03C4} = {6BEC6D60-9DEC-4A4C-8FC3-E255EE8B6D95}
-		{C53E8DF6-9172-499E-9919-10A049A234C6} = {3688635B-693B-43B4-AFEE-2F95640D2C7C}
+		{70D43CE3-CCB1-41C4-AF30-EF67E29D87F9} = {42392F64-A623-4C18-BF93-A5181AEE30C1}
+		{6E770C8F-3D14-4527-B713-C3845BA507DE} = {E50F9511-8F2F-4753-8D4B-B0CAD4E5D573}
+		{35FB474B-E172-4850-BFEC-54F86A8E03C4} = {1900E4D6-A0A0-4675-A049-AA2843143E01}
+		{C53E8DF6-9172-499E-9919-10A049A234C6} = {42392F64-A623-4C18-BF93-A5181AEE30C1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CBCF8635-B781-4296-9756-2D461FD0AE27}

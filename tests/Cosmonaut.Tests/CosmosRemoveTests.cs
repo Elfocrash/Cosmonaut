@@ -4,15 +4,13 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Cosmonaut.Response;
-using Cosmonaut.Storage;
-using Cosmonaut.Extensions;
 using FluentAssertions;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Moq;
 using Xunit;
 
-namespace Cosmonaut.Tests
+namespace Cosmonaut.Unit
 {
     public class CosmosRemoveTests
     {
