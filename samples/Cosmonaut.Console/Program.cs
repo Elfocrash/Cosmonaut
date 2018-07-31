@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Cosmonaut.ApplicationInsights;
 using Cosmonaut.Extensions;
@@ -26,6 +27,9 @@ namespace Cosmonaut.Console
                 , connectionPolicy
                 , defaultCollectionThroughput: 5000);
 
+            var cosmonautClient = new CosmonautClient("https://localhost:8081",
+                "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==");
+
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddCosmosStore<Book>(cosmosSettings);
             serviceCollection.AddCosmosStore<Car>(cosmosSettings);
@@ -35,9 +39,15 @@ namespace Cosmonaut.Console
             var booksStore = provider.GetService<ICosmosStore<Book>>();
             var carStore = provider.GetService<ICosmosStore<Car>>();
 
-
+            var database = await cosmonautClient.GetDatabaseAsync("localtest");
+            var collection = await cosmonautClient.GetCollectionAsync("localtest", "shared");
+            var offer = await cosmonautClient.GetOfferForCollectionAsync("localtest", "shared");
+            var offerV2 = await cosmonautClient.GetOfferV2ForCollectionAsync("localtest", "shared");
+            var databases = await cosmonautClient.QueryDatabasesAsync();
+            
             var booksRemoved = await booksStore.RemoveAsync(x => true);
-            var carsRemoved = await carStore.RemoveAsync(x => true);
+            var carsRemoved = await carStore.RemoveAsync(x => true);            
+
             System.Console.WriteLine($"Started");
             
             var books = new List<Book>();
@@ -45,7 +55,7 @@ namespace Cosmonaut.Console
             {
                 books.Add(new Book
                 {
-                    Id = Guid.NewGuid().ToString(),
+                    //Id = Guid.NewGuid().ToString(),
                     Name = "Test " + i,
                     AnotherRandomProp = "Random " + i
                 });

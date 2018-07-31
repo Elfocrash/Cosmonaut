@@ -59,7 +59,7 @@ namespace Cosmonaut.Unit
 
         public static ResourceResponse<T> CreateResourceResponse<T>(T resource, HttpStatusCode statusCode) where T : Resource, new()
         {
-            resource.SetResourceTimestamp(DateTime.UtcNow);
+            //resource.SetResourceTimestamp(DateTime.UtcNow);
             var resourceResponse = new ResourceResponse<T>(resource);
             var documentServiceResponseType = Type.GetType("Microsoft.Azure.Documents.DocumentServiceResponse, Microsoft.Azure.DocumentDB.Core, Version=1.9.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
 
@@ -197,17 +197,6 @@ namespace Cosmonaut.Unit
 
             var entityStore = new CosmosStore<Dummy>(mockDocumentClient.Object, "databaseName", "", "http://test.com");
             return entityStore;
-        }
-
-        internal static Document ConvertObjectToDocument<T>(this T obj) where T : class
-        {
-            var document = obj.GetCosmosDbFriendlyEntity();
-            using (JsonReader reader = new JTokenReader(document))
-            {
-                var actualDocument = new Document();
-                actualDocument.LoadFrom(reader);
-                return actualDocument;
-            }
         }
     }
 }

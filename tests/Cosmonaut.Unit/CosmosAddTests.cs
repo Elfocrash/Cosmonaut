@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
+using Cosmonaut.Extensions;
 using Cosmonaut.Response;
 using FluentAssertions;
 using Microsoft.Azure.Documents;
@@ -33,7 +34,7 @@ namespace Cosmonaut.Unit
             var document = dummy.ConvertObjectToDocument();
             var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
             _mockDocumentClient.Setup(x => x.CreateDocumentAsync(It.IsAny<Uri>(),
-                    It.IsAny<object>(), It.IsAny<RequestOptions>(), false))
+                    It.IsAny<Document>(), It.IsAny<RequestOptions>(), false))
                 .ReturnsAsync(resourceResponse);
                 
             var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
@@ -68,7 +69,7 @@ namespace Cosmonaut.Unit
                 var document = dummy.ConvertObjectToDocument();
                 var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
                 _mockDocumentClient.Setup(x => x.CreateDocumentAsync(It.IsAny<Uri>(),
-                        It.IsAny<object>(), It.IsAny<RequestOptions>(), false))
+                        document, It.IsAny<RequestOptions>(), false))
                     .ReturnsAsync(resourceResponse);
             }
 
@@ -101,7 +102,7 @@ namespace Cosmonaut.Unit
                 var document = dummy.ConvertObjectToDocument();
                 var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
                 _mockDocumentClient.Setup(x => x.CreateDocumentAsync(It.IsAny<Uri>(),
-                        It.IsAny<object>(), It.IsAny<RequestOptions>(), false))
+                        document, It.IsAny<RequestOptions>(), false))
                     .ReturnsAsync(resourceResponse);
             }
 
@@ -127,7 +128,7 @@ namespace Cosmonaut.Unit
             var document = dummy.ConvertObjectToDocument();
             var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
             _mockDocumentClient.Setup(x => x.CreateDocumentAsync(It.IsAny<Uri>(),
-                    It.IsAny<object>(), It.IsAny<RequestOptions>(), false))
+                    It.IsAny<Document>(), It.IsAny<RequestOptions>(), false))
                 .ReturnsAsync(resourceResponse);
 
             var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");

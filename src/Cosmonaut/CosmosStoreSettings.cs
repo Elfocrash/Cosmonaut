@@ -8,11 +8,13 @@ namespace Cosmonaut
     {
         public string DatabaseName { get; set; }
 
-        public string AuthKey { get; set; }
+        internal string AuthKey { get; set; }
 
         public Uri EndpointUrl { get; set; }
 
         public ConnectionPolicy ConnectionPolicy { get; set; }
+
+        public ConsistencyLevel? ConsistencyLevel { get; set; } = null;
 
         public IndexingPolicy IndexingPolicy { get; set; }
 

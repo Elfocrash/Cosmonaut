@@ -104,6 +104,9 @@ namespace Cosmonaut.Diagnostics
 
         private void SetResourceResponseProperties<TEntity>(ResourceResponse<TEntity> result) where TEntity : Resource, new()
         {
+            if (result == null)
+                return;
+
             EventMetadata.ResultCode = result.StatusCode.ToString("D");
             EventMetadata.Properties[nameof(result.RequestCharge)] = result.RequestCharge;
             EventMetadata.Properties[nameof(result.ActivityId)] = result.ActivityId;

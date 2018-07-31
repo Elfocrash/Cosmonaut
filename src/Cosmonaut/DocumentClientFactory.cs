@@ -6,14 +6,14 @@ namespace Cosmonaut
 {
     public class DocumentClientFactory
     {
-        public static IDocumentClient CreateDocumentClient(Uri endpointUrl, string authKey, ConnectionPolicy connectionPolicy = null)
+        public static IDocumentClient CreateDocumentClient(Uri endpointUrl, string authKey, ConnectionPolicy connectionPolicy = null, ConsistencyLevel? desiredConsistencyLevel = null)
         {
-            return new DocumentClient(endpointUrl, authKey, connectionPolicy ?? ConnectionPolicy.Default);
+            return new DocumentClient(endpointUrl, authKey, connectionPolicy ?? ConnectionPolicy.Default, desiredConsistencyLevel);
         }
 
         public static IDocumentClient CreateDocumentClient(CosmosStoreSettings settings)
         {
-            return new DocumentClient(settings.EndpointUrl, settings.AuthKey, settings.ConnectionPolicy ?? ConnectionPolicy.Default);
+            return new DocumentClient(settings.EndpointUrl, settings.AuthKey, settings.ConnectionPolicy ?? ConnectionPolicy.Default, settings.ConsistencyLevel);
         }
     }
 }

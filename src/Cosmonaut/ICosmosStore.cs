@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Cosmonaut.Exceptions;
 using Cosmonaut.Response;
-using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 
 namespace Cosmonaut
@@ -368,9 +367,12 @@ namespace Cosmonaut
         /// <returns>The entity that matches the id and partition key. Returns null if the entity is not found.</returns>
         Task<TEntity> FindAsync(string id, string partitionKeyValue);
 
-        /// <summary>
-        ///     Exposes the lower level DocumentClient to the consumer.
-        /// </summary>
-        IDocumentClient DocumentClient { get; }
+        CosmosStoreSettings Settings { get; }
+
+        bool IsShared { get; }
+
+        string CollectionName { get; }
+
+        string DatabaseName { get; }
     }
 }

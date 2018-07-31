@@ -10,28 +10,6 @@ namespace Cosmonaut.Extensions
 {
     public static class DocumentEntityExtensions
     {
-        internal static dynamic GetCosmosDbFriendlyEntity<TEntity>(this TEntity entity) where TEntity : class
-        {
-            var validatedEntity = entity.ValidateEntityForCosmosDb();
-
-            //TODO Clean this up. It is a very bad hack
-            dynamic mapped = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(validatedEntity));
-
-            SetTheCosmosDbIdBasedOnTheObjectIndex(validatedEntity, mapped);
-
-            RemovePotentialDuplicateIdProperties(ref mapped);
-
-            if (typeof(TEntity).UsesSharedCollection())
-                mapped.CosmosEntityName = $"{typeof(TEntity).GetSharedCollectionEntityName()}";
-
-            return mapped;
-        }
-
-        internal static void SetTheCosmosDbIdBasedOnTheObjectIndex<TEntity>(TEntity entity, dynamic mapped) where TEntity : class
-        {
-            mapped.id = entity.GetDocumentId();
-        }
-
         internal static PartitionKeyDefinition GetPartitionKeyForEntity(this Type type)
         {
             var partitionKeyProperties = type.GetProperties()
@@ -97,7 +75,7 @@ namespace Cosmonaut.Extensions
             return partitionKeyProperty.Count != 0;
         }
 
-        internal static TEntity ValidateEntityForCosmosDb<TEntity>(this TEntity entity) where TEntity : class
+        internal static void ValidateEntityForCosmosDb<TEntity>(this TEntity entity) where TEntity : class
         {
             var propertyInfos = entity.GetType().GetProperties();
 
@@ -112,25 +90,21 @@ namespace Cosmonaut.Extensions
 
             if (idProperty != null && containsJsonAttributeIdCount == 1)
             {
-                return HandleEntityWithMultipleIds(entity, idProperty);
+                CheckIfPropertyHasMultpleIdAttributes(idProperty);
             }
 
             if (idProperty != null && idProperty.GetValue(entity) == null)
             {
                 idProperty.SetValue(entity, Guid.NewGuid().ToString());
             }
-
-            return entity;
         }
 
-        private static TEntity HandleEntityWithMultipleIds<TEntity>(TEntity entity, PropertyInfo idProperty)
-            where TEntity : class
+        private static void CheckIfPropertyHasMultpleIdAttributes(PropertyInfo idProperty)
         {
             if (!idProperty.GetCustomAttributes<JsonPropertyAttribute>().Any(x =>
                 x.PropertyName.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase)))
                 throw new MultipleCosmosIdsException(
                     "An entity can only have one cosmos db id. Either rename the Id property or remove the [JsonAttribute(\"id\")].");
-            return entity;
         }
 
         private static int GetCountOfJsonPropertiesWithNameIdForObject<TEntity>(TEntity entity, PropertyInfo[] propertyInfos) where TEntity : class
@@ -201,24 +175,6 @@ namespace Cosmonaut.Extensions
 
             propertyNamedId.SetValue(entity, Guid.NewGuid().ToString());
             return propertyNamedId.GetValue(entity).ToString();
-        }
-
-        internal static void RemovePotentialDuplicateIdProperties(ref dynamic mapped)
-        {
-            if (mapped.Id != null)
-            {
-                mapped.Remove("Id");
-            }
-
-            if (mapped.ID != null)
-            {
-                mapped.Remove("ID");
-            }
-
-            if (mapped.iD != null)
-            {
-                mapped.Remove("iD");
-            }
         }
     }
 }

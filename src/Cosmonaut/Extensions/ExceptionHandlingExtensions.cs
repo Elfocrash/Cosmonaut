@@ -7,7 +7,7 @@ namespace Cosmonaut.Extensions
 {
     public static class ExceptionHandlingExtensions
     {
-        internal static CosmosResponse<TEntity> HandleDocumentClientException<TEntity>(DocumentClientException exception, TEntity entity) where TEntity : class
+        internal static CosmosResponse<TEntity> DocumentClientExceptionToCosmosResponse<TEntity>(DocumentClientException exception, TEntity entity) where TEntity : class
         {
             switch (exception.StatusCode)
             {
@@ -22,17 +22,17 @@ namespace Cosmonaut.Extensions
             throw exception;
         }
 
-        internal static CosmosResponse<TEntity> HandleOperationException<TEntity>(this Exception exception) where TEntity : class
+        internal static CosmosResponse<TEntity> ToCosmosResponse<TEntity>(this Exception exception) where TEntity : class
         {
-            return HandleOperationException<TEntity>(exception, null);
+            return ToCosmosResponse<TEntity>(exception, null);
         }
 
-        internal static CosmosResponse<TEntity> HandleOperationException<TEntity>(this Exception exception, TEntity entity) where TEntity : class
+        internal static CosmosResponse<TEntity> ToCosmosResponse<TEntity>(this Exception exception, TEntity entity) where TEntity : class
         {
             if (exception is DocumentClientException documentClientException)
-                return HandleDocumentClientException(documentClientException, entity);
+                return DocumentClientExceptionToCosmosResponse(documentClientException, entity);
 
-            return new CosmosResponse<TEntity>(entity, exception);
+            throw exception;
         }
     }
 }

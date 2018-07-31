@@ -69,29 +69,7 @@ namespace Cosmonaut.Unit
             // Assert
             result.Should().BeFalse();
         }
-
-        [Fact]
-        public void RemovePotentialDuplicateIdPropertiesRemovesNoMatterTheCase()
-        {
-            // Arrange
-            var dynamicObject = new
-            {
-                iD = "1",
-                Id = "2",
-                ID = "3"
-            };
-
-            dynamic obj = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(dynamicObject));
-
-            // Act
-            DocumentEntityExtensions.RemovePotentialDuplicateIdProperties(ref obj);
-            
-            // Assert
-            ((string)obj.iD?.ToString()).Should().BeNull();
-            ((string)obj.ID?.ToString()).Should().BeNull();
-            ((string)obj.Id?.ToString()).Should().BeNull();
-        }
-
+        
         [Fact]
         public async Task FindAsync_ReturnsEntity_WhenFoundInCosmosDB()
         {

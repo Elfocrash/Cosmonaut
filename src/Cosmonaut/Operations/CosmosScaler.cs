@@ -78,10 +78,10 @@ namespace Cosmonaut.Operations
 
         private async Task ChangeCollectionThroughput(string collectionLink, int requestUnits)
         {
-            var collectionOffer = (OfferV2)_cosmosStore.DocumentClient.CreateOfferQuery()
+            var collectionOffer = (OfferV2)_cosmosStore.GetDocumentClient().CreateOfferQuery()
                 .Where(x => x.ResourceLink == collectionLink).AsEnumerable().Single();
             _cosmosStore.CollectionThrouput = requestUnits;
-            var replaced = await _cosmosStore.DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, _cosmosStore.CollectionThrouput));
+            var replaced = await _cosmosStore.GetDocumentClient().ReplaceOfferAsync(new OfferV2(collectionOffer, _cosmosStore.CollectionThrouput));
             _cosmosStore.IsUpscaled = replaced.StatusCode == HttpStatusCode.OK;
         }
     }
