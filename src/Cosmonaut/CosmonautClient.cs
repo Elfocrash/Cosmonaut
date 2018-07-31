@@ -44,7 +44,13 @@ namespace Cosmonaut
             if (predicate == null) predicate = x => true;
             return await DocumentClient.CreateDatabaseQuery(feedOptions).Where(predicate).ToListAsync();
         }
-        
+
+        public async Task<Document> GetDocumentAsync(string databaseId, string collectionId, string documentId, RequestOptions requestOptions = null)
+        {
+            var documentUri = UriFactory.CreateDocumentUri(databaseId, collectionId, documentId);
+            return await DocumentClient.ReadDocumentAsync(documentUri, requestOptions).ExecuteCosmosQuery();
+        }
+
         public async Task<IEnumerable<DocumentCollection>> QueryDocumentCollectionsAsync(string databaseId, Expression<Func<DocumentCollection, bool>> predicate = null, FeedOptions feedOptions = null)
         {
             if (predicate == null) predicate = x => true;
@@ -75,7 +81,7 @@ namespace Cosmonaut
         public async Task<Offer> GetOfferForCollectionAsync(string databaseId, string collectionId, FeedOptions feedOptions = null)
         {
             var collection = await GetCollectionAsync(databaseId, collectionId);
-            return await DocumentClient.CreateOfferQuery(feedOptions).SingleAsync(x=>x.ResourceLink == collection.SelfLink);
+            return await DocumentClient.CreateOfferQuery(feedOptions).SingleOrDefaultAsync(x=>x.ResourceLink == collection.SelfLink);
         }
 
         public async Task<OfferV2> GetOfferV2ForCollectionAsync(string databaseId, string collectionId, FeedOptions feedOptions = null)
@@ -93,6 +99,32 @@ namespace Cosmonaut
         {
             if (predicate == null) predicate = x => true;
             return (IEnumerable<OfferV2>) await QueryOffersAsync(predicate, feedOptions);
+        }
+
+        public async Task<IEnumerable<StoredProcedure>> QueryStoredProceduresAsync(string databaseId, string collectionId, Expression<Func<StoredProcedure, bool>> predicate = null, FeedOptions feedOptions = null)
+        {
+            if (predicate == null) predicate = x => true;
+            var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
+            return await DocumentClient.CreateStoredProcedureQuery(collectionUri, feedOptions).Where(predicate).ToListAsync();
+        }
+
+        public async Task<StoredProcedure> GetStoredProcedureAsync(string databaseId, string collectionId, string storedProcedureId, RequestOptions requestOptions = null)
+        {
+            var storedProcedureUri = UriFactory.CreateStoredProcedureUri(databaseId, collectionId, storedProcedureId);
+            return await DocumentClient.ReadStoredProcedureAsync(storedProcedureUri, requestOptions).ExecuteCosmosQuery();
+        }
+
+        public async Task<IEnumerable<UserDefinedFunction>> QueryUserDefinedFunctionsAsync(string databaseId, string collectionId, Expression<Func<UserDefinedFunction, bool>> predicate = null, FeedOptions feedOptions = null)
+        {
+            if (predicate == null) predicate = x => true;
+            var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
+            return await DocumentClient.CreateUserDefinedFunctionQuery(collectionUri, feedOptions).Where(predicate).ToListAsync();
+        }
+
+        public async Task<UserDefinedFunction> GetUserDefinedFunctionAsync(string databaseId, string collectionId, string storedProcedureId, RequestOptions requestOptions = null)
+        {
+            var storedProcedureUri = UriFactory.CreateUserDefinedFunctionUri(databaseId, collectionId, storedProcedureId);
+            return await DocumentClient.ReadUserDefinedFunctionAsync(storedProcedureUri, requestOptions).ExecuteCosmosQuery();
         }
 
         public IDocumentClient DocumentClient { get; }
