@@ -50,7 +50,7 @@ namespace Cosmonaut
             var documentUri = UriFactory.CreateDocumentUri(databaseId, collectionId, documentId);
             return await DocumentClient.ReadDocumentAsync(documentUri, requestOptions).ExecuteCosmosQuery();
         }
-
+        
         public async Task<IEnumerable<DocumentCollection>> QueryDocumentCollectionsAsync(string databaseId, Expression<Func<DocumentCollection, bool>> predicate = null, FeedOptions feedOptions = null)
         {
             if (predicate == null) predicate = x => true;
