@@ -44,7 +44,7 @@ namespace Cosmonaut
             if (predicate == null) predicate = x => true;
             return await DocumentClient.CreateDatabaseQuery(feedOptions).Where(predicate).ToListAsync();
         }
-
+        
         public async Task<Document> GetDocumentAsync(string databaseId, string collectionId, string documentId, RequestOptions requestOptions = null)
         {
             var documentUri = UriFactory.CreateDocumentUri(databaseId, collectionId, documentId);
@@ -63,6 +63,15 @@ namespace Cosmonaut
             if (predicate == null) predicate = x => true;
             var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
             return await DocumentClient.CreateDocumentQuery<T>(collectionUri, feedOptions).Where(predicate).ToGenericListAsync();
+        }
+
+        public async Task<IEnumerable<T>> QueryDocumentsAsync<T>(string databaseId, string collectionId, string sql, object parameters = null,
+            FeedOptions feedOptions = null)
+        {
+            var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
+            var sqlParameters = parameters.ConvertToSqlParameterCollection();
+            var sqlQuerySpec = sqlParameters != null && sqlParameters.Any() ? new SqlQuerySpec(sql, sqlParameters) : new SqlQuerySpec(sql);
+            return await DocumentClient.CreateDocumentQuery<T>(collectionUri, sqlQuerySpec, feedOptions).ToGenericListAsync();
         }
 
         public async Task<IEnumerable<Document>> QueryDocumentsAsync(string databaseId, string collectionId, Expression<Func<Document, bool>> predicate = null, FeedOptions feedOptions = null)

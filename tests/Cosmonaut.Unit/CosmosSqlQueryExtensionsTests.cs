@@ -1,7 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Cosmonaut.Exceptions;
 using Cosmonaut.Extensions;
 using FluentAssertions;
+using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Linq;
+using Moq;
 using Xunit;
 
 namespace Cosmonaut.Unit
@@ -110,6 +115,23 @@ namespace Cosmonaut.Unit
 
             // Assert
             action.Should().Throw<InvalidSqlQueryException>();
+        }
+
+        [Fact]
+        public void ConvertToSqlParameterCollection_WhenValidObject_ReturnsCorrectCollection()
+        {
+            // Arrange
+            var obj = new {Cosmonaut = "Nick", Position = "Software Engineer"};
+
+            // Act
+            var collection = obj.ConvertToSqlParameterCollection();
+
+            // Assert
+            collection.Count.Should().Be(2);
+            collection[0].Name.Should().BeEquivalentTo($"@{nameof(obj.Cosmonaut)}");
+            collection[0].Value.Should().BeEquivalentTo("Nick");
+            collection[1].Name.Should().BeEquivalentTo($"@{nameof(obj.Position)}");
+            collection[1].Value.Should().BeEquivalentTo("Software Engineer");
         }
     }
 }

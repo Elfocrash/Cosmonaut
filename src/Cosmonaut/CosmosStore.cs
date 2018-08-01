@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -104,31 +103,31 @@ namespace Cosmonaut
             return IsShared ? queryable.Where(ExpressionExtensions.SharedCollectionExpression<TEntity>()) : queryable;
         }
 
-        public async Task<TEntity> QuerySingleAsync(string sql, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
+        public async Task<TEntity> QuerySingleAsync(string sql, object parameters = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
-            var queryable = GetSqlBasedQueryableForType<TEntity>(sql, feedOptions);
-
+            var sqlParameters = parameters.ConvertToSqlParameterCollection();
+            var queryable = GetSqlBasedQueryableForType<TEntity>(sql, sqlParameters, feedOptions);
             return await queryable.SingleOrDefaultAsync(cancellationToken);
         }
 
-        public async Task<T> QuerySingleAsync<T>(string sql, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
+        public async Task<T> QuerySingleAsync<T>(string sql, object parameters = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
-            var queryable = GetSqlBasedQueryableForType<T>(sql, feedOptions);
-
+            var sqlParameters = parameters.ConvertToSqlParameterCollection();
+            var queryable = GetSqlBasedQueryableForType<T>(sql, sqlParameters, feedOptions);
             return await queryable.SingleOrDefaultGenericAsync(cancellationToken);
         }
         
-        public async Task<IEnumerable<TEntity>> QueryMultipleAsync(string sql, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<TEntity>> QueryMultipleAsync(string sql, object parameters = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
-            var queryable = GetSqlBasedQueryableForType<TEntity>(sql, feedOptions);
-
+            var sqlParameters = parameters.ConvertToSqlParameterCollection();
+            var queryable = GetSqlBasedQueryableForType<TEntity>(sql, sqlParameters, feedOptions);
             return await queryable.ToListAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<T>> QueryMultipleAsync<T>(string sql, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<T>> QueryMultipleAsync<T>(string sql, object parameters = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
-            var queryable = GetSqlBasedQueryableForType<T>(sql, feedOptions);
-
+            var sqlParameters = parameters.ConvertToSqlParameterCollection();
+            var queryable = GetSqlBasedQueryableForType<T>(sql, sqlParameters, feedOptions);
             return await queryable.ToGenericListAsync(cancellationToken);
         }
 
@@ -358,11 +357,11 @@ namespace Cosmonaut
             return feedOptions;
         }
         
-        private IQueryable<T> GetSqlBasedQueryableForType<T>(string sql, FeedOptions feedOptions)
+        private IQueryable<T> GetSqlBasedQueryableForType<T>(string sql, SqlParameterCollection parameters, FeedOptions feedOptions)
         {
             var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-
-            var queryable = _documentClient.CreateDocumentQuery<T>(CollectionLink, collectionSharingFriendlySql,
+            var sqlQuerySpec = parameters != null && parameters.Any() ? new SqlQuerySpec(collectionSharingFriendlySql, parameters) : new SqlQuerySpec(collectionSharingFriendlySql);
+            var queryable = _documentClient.CreateDocumentQuery<T>(CollectionLink, sqlQuerySpec,
                 GetFeedOptionsForQuery(feedOptions));
             return queryable;
         }

@@ -24,7 +24,10 @@ namespace Cosmonaut
 
         Task<IEnumerable<Document>> QueryDocumentsAsync(string databaseId, string collectionId,
             Expression<Func<Document, bool>> predicate = null, FeedOptions feedOptions = null);
-        
+
+        Task<IEnumerable<T>> QueryDocumentsAsync<T>(string databaseId, string collectionId,
+            string sql, object parameters = null, FeedOptions feedOptions = null);
+
         Task<Document> GetDocumentAsync(string databaseId, string collectionId, string documentId,
             RequestOptions requestOptions = null);
 

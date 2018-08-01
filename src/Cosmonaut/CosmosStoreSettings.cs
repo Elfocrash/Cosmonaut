@@ -12,7 +12,7 @@ namespace Cosmonaut
 
         public Uri EndpointUrl { get; set; }
 
-        public ConnectionPolicy ConnectionPolicy { get; set; }
+        public ConnectionPolicy ConnectionPolicy { get; set; } = null;
 
         public ConsistencyLevel? ConsistencyLevel { get; set; } = null;
 
@@ -45,7 +45,7 @@ namespace Cosmonaut
                   maximumUpscaleRequestUnits)
         {
         }
-
+        
         public CosmosStoreSettings(
             string databaseName, 
             Uri endpointUrl, 

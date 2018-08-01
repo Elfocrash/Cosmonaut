@@ -39,17 +39,31 @@ namespace Cosmonaut.Console
             var booksStore = provider.GetService<ICosmosStore<Book>>();
             var carStore = provider.GetService<ICosmosStore<Car>>();
 
-            var database = await cosmonautClient.GetDatabaseAsync("localtest");
-            var collection = await cosmonautClient.GetCollectionAsync("localtest", "shared");
-            var offer = await cosmonautClient.GetOfferForCollectionAsync("localtest", "shared");
-            var offerV2 = await cosmonautClient.GetOfferV2ForCollectionAsync("localtest", "shared");
-            var databases = await cosmonautClient.QueryDatabasesAsync();
-            
-            var booksRemoved = await booksStore.RemoveAsync(x => true);
-            var carsRemoved = await carStore.RemoveAsync(x => true);            
 
             System.Console.WriteLine($"Started");
-            
+
+            var database = await cosmonautClient.GetDatabaseAsync("localtest");
+            System.Console.WriteLine($"Retrieved database with id {database.Id}");
+
+            var collection = await cosmonautClient.GetCollectionAsync("localtest", "shared");
+            System.Console.WriteLine($"Retrieved collection with id {collection.Id}");
+
+            var offer = await cosmonautClient.GetOfferForCollectionAsync("localtest", "shared");
+            System.Console.WriteLine($"Retrieved offer with id {offer.Id}");
+
+            var offerV2 = await cosmonautClient.GetOfferV2ForCollectionAsync("localtest", "shared");
+            System.Console.WriteLine($"Retrieved offerV2 with id {offerV2.Id}");
+
+            var databases = await cosmonautClient.QueryDatabasesAsync();
+            System.Console.WriteLine($"Retrieved all {databases.Count()} databased in the account.");
+
+            var booksRemoved = await booksStore.RemoveAsync(x => true);
+            System.Console.WriteLine($"Removed {booksRemoved.SuccessfulEntities.Count} books from the database.");
+
+            var carsRemoved = await carStore.RemoveAsync(x => true);
+            System.Console.WriteLine($"Removed {carsRemoved.SuccessfulEntities.Count} cars from the database.");
+
+
             var books = new List<Book>();
             for (int i = 0; i < 50; i++)
             {
@@ -79,6 +93,8 @@ namespace Cosmonaut.Console
             watch.Restart();
             //await Task.Delay(3000);
 
+            var aCarId = addedCars.SuccessfulEntities.First().Entity.Id;
+            var firstAddedCar = await carStore.QueryMultipleAsync("select * from c where c.id = @id", new { id= aCarId });
             var addedRetrieved = await booksStore.Query().ToListAsync();
 
             System.Console.WriteLine($"Retrieved {addedRetrieved.Count} documents in {watch.ElapsedMilliseconds}ms");

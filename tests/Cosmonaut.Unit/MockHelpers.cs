@@ -140,7 +140,7 @@ namespace Cosmonaut.Unit
             return (FeedResponse<T>) feedResponse;
         }
 
-        public static CosmosStore<Dummy> ResponseSetupForQuery<T>(string sql, IQueryable<T> expected, IQueryable<Dummy> dataSource, ref Mock<IDocumentClient> mockDocumentClient)
+        public static CosmosStore<Dummy> ResponseSetupForQuery<T>(string sql, SqlParameterCollection parameters, IQueryable<T> expected, IQueryable<Dummy> dataSource, ref Mock<IDocumentClient> mockDocumentClient)
         {
             FeedResponse<T> response = CreateFeedResponse(expected);
 
@@ -159,15 +159,16 @@ namespace Cosmonaut.Unit
                 .Setup(_ => _.CreateQuery<T>(It.IsAny<Expression>()))
                 .Returns(mockDocumentQuery.Object);
 
-            mockDocumentClient.Setup(x => x.CreateDocumentQuery<T>(It.IsAny<Uri>(), sql,
+            mockDocumentClient.Setup(x => x.CreateDocumentQuery<T>(It.IsAny<Uri>(), It.Is<SqlQuerySpec>(query => query.QueryText == sql),
                     It.IsAny<FeedOptions>()))
                 .Returns(mockDocumentQuery.Object);
+            
 
             var entityStore = new CosmosStore<Dummy>(mockDocumentClient.Object, "databaseName", "", "http://test.com");
             return entityStore;
         }
 
-        public static CosmosStore<Dummy> ResponseSetupForQuery(string sql, IQueryable<Dummy> expected, IQueryable<Dummy> dataSource, ref Mock<IDocumentClient> mockDocumentClient)
+        public static CosmosStore<Dummy> ResponseSetupForQuery(string sql, object parameters, IQueryable<Dummy> expected, IQueryable<Dummy> dataSource, ref Mock<IDocumentClient> mockDocumentClient)
         {
             FeedResponse<Dummy> response = CreateFeedResponse(expected);
 
@@ -190,10 +191,21 @@ namespace Cosmonaut.Unit
             mockDocumentQuery.As<IQueryable<Dummy>>().Setup(x => x.ElementType).Returns(dataSource.ElementType);
             mockDocumentQuery.As<IQueryable<Dummy>>().Setup(x => x.GetEnumerator()).Returns(dataSource.GetEnumerator);
 
-
-            mockDocumentClient.Setup(x => x.CreateDocumentQuery<Dummy>(It.IsAny<Uri>(), sql,
-                    It.IsAny<FeedOptions>()))
-                .Returns(mockDocumentQuery.Object);
+            if (parameters == null)
+            {
+                mockDocumentClient.Setup(x => x.CreateDocumentQuery<Dummy>(It.IsAny<Uri>(), It.Is<SqlQuerySpec>(query => query.QueryText == sql),
+                        It.IsAny<FeedOptions>()))
+                    .Returns(mockDocumentQuery.Object);
+            }
+            else
+            {
+                var sqlParameters = parameters.ConvertToSqlParameterCollection();
+                mockDocumentClient.Setup(x => x.CreateDocumentQuery<Dummy>(It.IsAny<Uri>(), 
+                        It.Is<SqlQuerySpec>(query => query.QueryText == sql && query.Parameters == sqlParameters),
+                        It.IsAny<FeedOptions>()))
+                    .Returns(mockDocumentQuery.Object);
+            }
+            
 
             var entityStore = new CosmosStore<Dummy>(mockDocumentClient.Object, "databaseName", "", "http://test.com");
             return entityStore;

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using Cosmonaut.Exceptions;
+using Microsoft.Azure.Documents;
 
 namespace Cosmonaut.Extensions
 {
@@ -31,6 +33,24 @@ namespace Cosmonaut.Extensions
                 return $"{sql} where {identifier}.{nameof(ISharedCosmosEntity.CosmosEntityName)} = '{cosmosEntityNameValue}'";
             
             return GetQueryWithExistingWhereClauseInjectedWithSharedCollection(sql, identifier, cosmosEntityNameValue);
+        }
+
+        internal static SqlParameterCollection ConvertToSqlParameterCollection(this object obj)
+        {
+            var sqlParameterCollection = new SqlParameterCollection();
+
+            if (obj == null)
+                return sqlParameterCollection;
+
+            foreach (var propertyInfo in obj.GetType().GetProperties())
+            {
+                var propertyName = propertyInfo.Name.StartsWith("@") ? propertyInfo.Name : $"@{propertyInfo.Name}";
+                var propertyValue = propertyInfo.GetValue(obj);
+                var sqlparameter = new SqlParameter(propertyName, propertyValue);
+                sqlParameterCollection.Add(sqlparameter);
+            }
+
+            return sqlParameterCollection;
         }
 
         private static string GetQueryWithExistingWhereClauseInjectedWithSharedCollection(string sql,

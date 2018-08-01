@@ -72,8 +72,7 @@ namespace Cosmonaut.Unit
             };
 
             var dataSource = dummies.AsQueryable();
-
-            var entityStore = MockHelpers.ResponseSetupForQuery("select * from c", dataSource, dataSource, ref _mockDocumentClient);
+            var entityStore = MockHelpers.ResponseSetupForQuery("select * from c", null, dataSource, dataSource, ref _mockDocumentClient);
 
             // Act
             var result = (await entityStore.QueryMultipleAsync("select * from c")).ToList();
@@ -84,7 +83,7 @@ namespace Cosmonaut.Unit
         }
 
         [Fact]
-        public async Task QuerySingleAsyncReturnsSingleIdCorrectly()
+        public async Task QuerySingleAsync_ReturnsSingleIdCorrectly()
         {
             // Arrange
             var id = Guid.NewGuid().ToString();
@@ -104,8 +103,8 @@ namespace Cosmonaut.Unit
 
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Where(x => x.Name == "Nick").Select(x => x.Id);
-
-            var entityStore = MockHelpers.ResponseSetupForQuery("select value c.id from c where c.Name = 'Nick'", expected, dataSource, ref _mockDocumentClient);
+            var sql = "select value c.id from c where c.Name = 'Nick'";
+            var entityStore = MockHelpers.ResponseSetupForQuery(sql, null, expected, dataSource, ref _mockDocumentClient);
 
             // Act
             var result = await entityStore.QuerySingleAsync<string>("select value c.id from c where c.Name = 'Nick'");
@@ -115,7 +114,7 @@ namespace Cosmonaut.Unit
         }
 
         [Fact]
-        public async Task QuerySingleAsyncReturnsCorrectItem()
+        public async Task QuerySingleAsync_ReturnsCorrectItem()
         {
             // Arrange
             var nickDummy = new Dummy
@@ -137,13 +136,45 @@ namespace Cosmonaut.Unit
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Where(x => x.Name == "Nick");
 
-            var entityStore = MockHelpers.ResponseSetupForQuery("select top 1 * from c where c.Name = 'Nick'", expected, dataSource, ref _mockDocumentClient);
+            var entityStore = MockHelpers.ResponseSetupForQuery("select top 1 * from c where c.Name = 'Nick'", null, expected, dataSource, ref _mockDocumentClient);
 
             // Act
             var result = await entityStore.QuerySingleAsync("select top 1 * from c where c.Name = 'Nick'");
 
             //Assert
             result.Should().BeEquivalentTo(nickDummy);
+        }
+
+        [Fact]
+        public async Task QuerySingleAsync_WithObjectParameters_ReturnsSingleIdCorrectly()
+        {
+            // Arrange
+            var id = Guid.NewGuid().ToString();
+            var dummies = new List<Dummy>
+            {
+                new Dummy
+                {
+                    Id = id,
+                    Name = "Nick"
+                },
+                new Dummy
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = "John"
+                }
+            };
+
+            var dataSource = dummies.AsQueryable();
+            var expected = dataSource.Where(x => x.Name == "Nick").Select(x => x.Id);
+            var sql = "select value c.id from c where c.Name = @name";
+            var obj = new {name = "Nick"};
+            var entityStore = MockHelpers.ResponseSetupForQuery("select value c.id from c where c.Name = @name", null, expected, dataSource, ref _mockDocumentClient);
+
+            // Act
+            var result = await entityStore.QuerySingleAsync<string>(sql, obj);
+
+            //Assert
+            result.Should().Be(id);
         }
 
         [Fact]
@@ -169,7 +200,7 @@ namespace Cosmonaut.Unit
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Select(x => x.Id);
 
-            var entityStore = MockHelpers.ResponseSetupForQuery("select value c.id from c", expected, dataSource, ref _mockDocumentClient);
+            var entityStore = MockHelpers.ResponseSetupForQuery("select value c.id from c", null, expected, dataSource, ref _mockDocumentClient);
 
             // Act
             var result = await entityStore.QueryMultipleAsync<string>("select value c.id from c");
