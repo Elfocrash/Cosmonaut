@@ -46,7 +46,7 @@ var user = await cosmosStore.FindAsync("userId", "partitionKey");
 var user = await cosmosStore.FindAsync("userId", new RequestOptions());
 ```
 
-##### Quering for entities
+##### Quering for entities using LINQ
 
 In order to query for entities all you have to do is call the `.Query()` method and then use LINQ to create the query you want.
 It is HIGHLY recommended that you use one of the `Async` methods to get the results back, such as `ToListAsync` or `FirstOrDefaultAsync` , when available.
@@ -54,10 +54,16 @@ It is HIGHLY recommended that you use one of the `Async` methods to get the resu
 ```csharp
 var user = await cosmoStore.Query().FirstOrDefaultAsync(x => x.Username == "elfocrash");
 var users = await cosmoStore.Query().Where(x => x.HairColor == HairColor.Black).ToListAsync(cancellationToken);
+```
 
-// or you can use SQL
+##### Quering for entities using SQL
 
+```csharp
+// plain sql query
 var user = await cosmoStore.QueryMultipleAsync("select * from c w.Firstname = 'Smith'");
+
+// or parameterised sql query
+var user = await cosmoStore.QueryMultipleAsync("select * from c w.Firstname = @name", new { name = "Smith" });
 ```
 
 ##### Adding an entity in the entity store
