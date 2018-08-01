@@ -15,7 +15,7 @@ namespace Cosmonaut.Diagnostics
             var resultCode = TranslateResultCode(eventData);
             var dependencyTypeName = TranslateDependencyTypeName(eventData);
             var dependencyName = TranslateDependencyName(eventData);
-            var target = Translate(eventData);
+            var target = TranslateTarget(eventData);
             var evData = TranslateData(eventData);
             var success = TranslateSuccess(eventData);
             var errorMessage = TranslateErrorMessage(eventData);
@@ -103,7 +103,7 @@ namespace Cosmonaut.Diagnostics
             return evData;
         }
 
-        private static object Translate(IDictionary<string, object> eventData)
+        private static object TranslateTarget(IDictionary<string, object> eventData)
         {
             if (!eventData.TryGetValue("target", out var target)) target = "unknown";
             return target;
@@ -124,7 +124,7 @@ namespace Cosmonaut.Diagnostics
 
         private static object TranslateResultCode(IDictionary<string, object> eventData)
         {
-            if (!eventData.TryGetValue("resultCode", out var resultCode)) resultCode = "";
+            if (!eventData.TryGetValue("resultCode", out var resultCode)) resultCode = string.Empty;
             return resultCode;
         }
 
