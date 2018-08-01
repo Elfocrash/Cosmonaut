@@ -40,7 +40,7 @@ namespace Cosmonaut.Extensions
             }
             catch (DocumentClientException exception)
             {
-                var cosmosReponse = exception.ToCosmosResponse<TEntity>();
+                var cosmosReponse = exception.ToCosmosResponse(entity);
 
                 if (cosmosReponse.CosmosOperationStatus != CosmosOperationStatus.RequestRateIsLarge)
                     return cosmosReponse;

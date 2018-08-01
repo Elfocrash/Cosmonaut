@@ -415,8 +415,6 @@ namespace Cosmonaut
             return queryable;
         }
 
-        private Uri DatabaseLink => UriFactory.CreateDatabaseUri(DatabaseName);
-
         private Uri CollectionLink => UriFactory.CreateDocumentCollectionUri(DatabaseName, CollectionName);
 
         internal ICosmonautClient CosmonautClient => _cosmonautClient;
