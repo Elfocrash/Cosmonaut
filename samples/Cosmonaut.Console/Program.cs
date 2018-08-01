@@ -69,7 +69,6 @@ namespace Cosmonaut.Console
             {
                 books.Add(new Book
                 {
-                    //Id = Guid.NewGuid().ToString(),
                     Name = "Test " + i,
                     AnotherRandomProp = "Random " + i
                 });

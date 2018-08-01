@@ -139,10 +139,14 @@ namespace Cosmonaut.Extensions
             var propertyWithJsonPropertyId =
                 propertyInfos.SingleOrDefault(x => x.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName == CosmosConstants.CosmosId);
 
-            if (propertyWithJsonPropertyId != null &&
-                !string.IsNullOrEmpty(propertyWithJsonPropertyId.GetValue(entity)?.ToString()))
+            if (propertyWithJsonPropertyId != null)
             {
-                return propertyWithJsonPropertyId.GetValue(entity).ToString();
+                if (string.IsNullOrEmpty(propertyWithJsonPropertyId.GetValue(entity)?.ToString()))
+                {
+                    propertyWithJsonPropertyId.SetValue(entity, Guid.NewGuid().ToString());
+                }
+
+                return propertyWithJsonPropertyId.GetValue(entity)?.ToString();
             }
 
             var propertyNamedId = propertyInfos.SingleOrDefault(x => x.Name.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase));

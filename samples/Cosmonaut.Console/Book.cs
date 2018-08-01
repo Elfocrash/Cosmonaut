@@ -10,6 +10,7 @@ namespace Cosmonaut.Console
 
         public string AnotherRandomProp { get; set; }
         
-        public string Id { get; set; }
+        [JsonProperty("id")]
+        public string BookId { get; set; }
     }
 }
