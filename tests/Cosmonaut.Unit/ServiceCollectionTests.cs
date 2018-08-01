@@ -1,5 +1,12 @@
-﻿using Cosmonaut.Extensions;
+﻿using System;
+using System.Net;
+using Cosmonaut.Extensions;
+using Cosmonaut.Testing;
+using FluentAssertions;
+using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using Xunit;
 
 namespace Cosmonaut.Unit
@@ -12,9 +19,33 @@ namespace Cosmonaut.Unit
             // Arrange
             var serviceCollection = new ServiceCollection();
             var documentClient = MockHelpers.GetMockDocumentClient();
+            var databaseResource = new Database { Id = "databaseName" }.ToResourceResponse(HttpStatusCode.OK);
+            documentClient.Setup(x => x.ReadDatabaseAsync(UriFactory.CreateDatabaseUri("databaseName"), It.IsAny<RequestOptions>()))
+                .ReturnsAsync(databaseResource);
 
             // Act
-            serviceCollection.AddCosmosStore<Dummy>(documentClient.Object, "databaseName", "", "http://test.com");
+            serviceCollection.AddCosmosStore<Dummy>(new CosmonautClient(documentClient.Object), "databaseName", "", "http://test.com");
+            var provider = serviceCollection.BuildServiceProvider();
+
+            // Assert
+            var cosmosStore = provider.GetService<ICosmosStore<Dummy>>();
+            Assert.NotNull(cosmosStore);
+        }
+
+        [Fact]
+        public void AddCosmosStoreWithCosmonautClientRegistersStore()
+        {
+            // Arrange
+            var serviceCollection = new ServiceCollection();
+            var documentClient = MockHelpers.GetMockDocumentClient();
+            var cosmonautClient = new CosmonautClient(documentClient.Object);
+            var databaseResource = new Database{Id= "databaseName" }.ToResourceResponse(HttpStatusCode.OK);
+
+            documentClient.Setup(x => x.ReadDatabaseAsync(UriFactory.CreateDatabaseUri("databaseName"), It.IsAny<RequestOptions>()))
+                .ReturnsAsync(databaseResource);
+
+            // Act
+            serviceCollection.AddCosmosStore<Dummy>(cosmonautClient, "databaseName", "", "http://test.com");
             var provider = serviceCollection.BuildServiceProvider();
 
             // Assert

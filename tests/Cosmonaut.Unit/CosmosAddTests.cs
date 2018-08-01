@@ -4,7 +4,9 @@ using System.Net;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Cosmonaut.Response;
+using Cosmonaut.Testing;
 using FluentAssertions;
+using FluentAssertions.Common;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Moq;
@@ -32,12 +34,12 @@ namespace Cosmonaut.Unit
                 Name = "Nick"
             };
             var document = dummy.ConvertObjectToDocument();
-            var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
-            _mockDocumentClient.Setup(x => x.CreateDocumentAsync(It.IsAny<Uri>(),
-                    It.IsAny<Document>(), It.IsAny<RequestOptions>(), false))
+            var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
+            _mockDocumentClient.Setup(x => x.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri("databaseName", "dummies"),
+                    document.ItIsSameDocument(), It.IsAny<RequestOptions>(), false))
                 .ReturnsAsync(resourceResponse);
                 
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName", "", "http://test.com");
 
             // Act
             var result = await entityStore.AddAsync(dummy);
@@ -67,13 +69,13 @@ namespace Cosmonaut.Unit
                 dummies.Add(dummy);
 
                 var document = dummy.ConvertObjectToDocument();
-                var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
-                _mockDocumentClient.Setup(x => x.CreateDocumentAsync(It.IsAny<Uri>(),
-                        document, It.IsAny<RequestOptions>(), false))
+                var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
+                _mockDocumentClient.Setup(x => x.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri("databaseName", "dummies"),
+                        document.ItIsSameDocument(), It.IsAny<RequestOptions>(), false))
                     .ReturnsAsync(resourceResponse);
             }
 
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName", "", "http://test.com");
 
             // Act
             var result = await entityStore.AddRangeAsync(dummies);
@@ -83,7 +85,7 @@ namespace Cosmonaut.Unit
             result.FailedEntities.Should().BeEmpty();
             result.SuccessfulEntities.Should().HaveCount(5);
         }
-
+        
         [Fact]
         public async Task AddRangeParamsValidObjectsSuccess()
         {
@@ -100,13 +102,13 @@ namespace Cosmonaut.Unit
                 dummies.Add(dummy);
 
                 var document = dummy.ConvertObjectToDocument();
-                var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
-                _mockDocumentClient.Setup(x => x.CreateDocumentAsync(It.IsAny<Uri>(),
-                        document, It.IsAny<RequestOptions>(), false))
+                var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
+                _mockDocumentClient.Setup(x => x.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri("databaseName", "dummies"),
+                        document.ItIsSameDocument(), It.IsAny<RequestOptions>(), false))
                     .ReturnsAsync(resourceResponse);
             }
 
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName", "", "http://test.com");
 
             // Act
             var result = await entityStore.AddRangeAsync(dummies[0], dummies[1], dummies[2], dummies[3], dummies[4]);
@@ -126,12 +128,12 @@ namespace Cosmonaut.Unit
                 Name = "Nick"
             };
             var document = dummy.ConvertObjectToDocument();
-            var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
-            _mockDocumentClient.Setup(x => x.CreateDocumentAsync(It.IsAny<Uri>(),
-                    It.IsAny<Document>(), It.IsAny<RequestOptions>(), false))
+            var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
+            _mockDocumentClient.Setup(x => x.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri("databaseName", "dummies"),
+                    document.ItIsSameDocument(), It.IsAny<RequestOptions>(), false))
                 .ReturnsAsync(resourceResponse);
 
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName", "", "http://test.com");
 
             // Act
             var result = await entityStore.AddAsync(dummy);

@@ -371,12 +371,24 @@ namespace Cosmonaut
         /// <returns>The entity that matches the id and partition key. Returns null if the entity is not found.</returns>
         Task<TEntity> FindAsync(string id, string partitionKeyValue);
 
+        /// <summary>
+        ///     The settings that were used to initialise this CosmosStore
+        /// </summary>
         CosmosStoreSettings Settings { get; }
 
+        /// <summary>
+        ///     Indicates whether this is a shared CosmostStore
+        /// </summary>
         bool IsShared { get; }
 
+        /// <summary>
+        ///     The name of the collection that this CosmosStore is targeting
+        /// </summary>
         string CollectionName { get; }
 
+        /// <summary>
+        ///     The name of the database that this CosmosStore is targeting
+        /// </summary>
         string DatabaseName { get; }
     }
 }

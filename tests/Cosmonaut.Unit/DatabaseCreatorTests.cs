@@ -1,7 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Cosmonaut.Storage;
+using Cosmonaut.Testing;
+using FluentAssertions;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Moq;
@@ -16,18 +19,21 @@ namespace Cosmonaut.Unit
         {
             // Arrange
             var databaseName = "test";
-            var expectedDatabase = new Database {Id = databaseName};
-            var orderQueriable = new EnumerableQuery<Database>(new List<Database> {expectedDatabase});
+            var expectedDatabase = new Database {Id = databaseName}.ToResourceResponse(HttpStatusCode.OK);
 
             var mockDocumentClient = new Mock<IDocumentClient>();
-            mockDocumentClient.Setup(x => x.CreateDatabaseQuery(null)).Returns(orderQueriable);
+            mockDocumentClient.Setup(x => x.ReadDatabaseAsync(UriFactory.CreateDatabaseUri(databaseName), It.IsAny<RequestOptions>()))
+                .ReturnsAsync(expectedDatabase);
             var databaseCreator = new CosmosDatabaseCreator(mockDocumentClient.Object);
+            var databaseCreatorWithCosmonaut = new CosmosDatabaseCreator(new CosmonautClient(mockDocumentClient.Object));
 
             // Act
             var created = await databaseCreator.EnsureCreatedAsync(databaseName);
+            var createdCosmonaut = await databaseCreatorWithCosmonaut.EnsureCreatedAsync(databaseName);
 
             // Assert
-            Assert.False(created);
+            created.Should().BeFalse();
+            createdCosmonaut.Should().BeFalse();
         }
 
         [Fact]
@@ -43,12 +49,15 @@ namespace Cosmonaut.Unit
             mockDocumentClient.Setup(x => x.CreateDatabaseAsync(It.IsAny<Database>(), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(new ResourceResponse<Database>(expectedDatabase));
             var databaseCreator = new CosmosDatabaseCreator(mockDocumentClient.Object);
+            var databaseCreatorCosmonaut = new CosmosDatabaseCreator(new CosmonautClient(mockDocumentClient.Object));
 
             // Act
             var created = await databaseCreator.EnsureCreatedAsync(databaseName);
+            var createdCosmonaut = await databaseCreatorCosmonaut.EnsureCreatedAsync(databaseName);
 
             // Assert
-            Assert.True(created);
+            created.Should().BeTrue();
+            createdCosmonaut.Should().BeTrue();
         }
     }
 }

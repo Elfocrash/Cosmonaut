@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Cosmonaut.Exceptions;
 using Cosmonaut.Extensions;
 using Cosmonaut.Storage;
+using Cosmonaut.Testing;
 using FluentAssertions;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
@@ -33,15 +34,16 @@ namespace Cosmonaut.Unit
             _mockDocumentClient.Setup(x =>
                 x.CreateDocumentCollectionQuery(It.IsAny<string>(), It.IsAny<FeedOptions>())).Returns(queryable);
             var collection = new DocumentCollection {Id = "collection"};
-            var collectionResponse = MockHelpers.CreateResourceResponse(collection, HttpStatusCode.OK);
-            _mockDocumentClient.Setup(x => x.CreateDocumentCollectionAsync(It.IsAny<string>(),
-                It.IsAny<DocumentCollection>(),
+            var collectionResponse = collection.ToResourceResponse(HttpStatusCode.OK);
+            var databaseUri = UriFactory.CreateDatabaseUri("databaseName");
+            _mockDocumentClient.Setup(x => x.CreateDocumentCollectionAsync(It.Is<Uri>(uri => uri == databaseUri),
+                It.Is<DocumentCollection>(coll => coll.Id == collection.Id),
                 It.IsAny<RequestOptions>())).ReturnsAsync(collectionResponse);
 
-            var creator = new CosmosCollectionCreator(_mockDocumentClient.Object);
+            var creator = new CosmosCollectionCreator(new CosmonautClient(_mockDocumentClient.Object));
 
             // Act
-            var result = await creator.EnsureCreatedAsync<Dummy>(UriFactory.CreateDatabaseUri("databaseName").ToString(), collection.Id, 500);
+            var result = await creator.EnsureCreatedAsync<Dummy>("databaseName", collection.Id, 500);
 
             // Assert
             result.Should().BeTrue();

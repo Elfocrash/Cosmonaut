@@ -1,6 +1,4 @@
 ﻿using System;
-using Cosmonaut.Storage;
-using Microsoft.Azure.Documents;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Cosmonaut.Extensions
@@ -34,23 +32,23 @@ namespace Cosmonaut.Extensions
         }
 
         public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services,
-            IDocumentClient documentClient, 
+            ICosmonautClient cosmonautClient,
             string databaseName,
             string authKey,
             string endpoint) where TEntity : class
         {
-            services.AddSingleton<ICosmosStore<TEntity>>(x => new CosmosStore<TEntity>(documentClient, databaseName, authKey, endpoint));
+            services.AddSingleton<ICosmosStore<TEntity>>(x => new CosmosStore<TEntity>(cosmonautClient, databaseName, authKey, endpoint));
             return services;
         }
-
+        
         public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services,
-            IDocumentClient documentClient,
+            ICosmonautClient cosmonautClient,
             string databaseName,
             string authKey,
             string endpoint,
             string overriddenCollectionName) where TEntity : class
         {
-            services.AddSingleton<ICosmosStore<TEntity>>(x => new CosmosStore<TEntity>(documentClient, databaseName, authKey, endpoint, overriddenCollectionName));
+            services.AddSingleton<ICosmosStore<TEntity>>(x => new CosmosStore<TEntity>(cosmonautClient, databaseName, authKey, endpoint, overriddenCollectionName));
             return services;
         }
     }

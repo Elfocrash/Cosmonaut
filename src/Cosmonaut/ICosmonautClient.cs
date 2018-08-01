@@ -16,6 +16,8 @@ namespace Cosmonaut
         Task<IEnumerable<Database>> QueryDatabasesAsync(Expression<Func<Database, bool>> predicate = null,
             FeedOptions feedOptions = null);
 
+        Task<ResourceResponse<Database>> CreateDatabaseAsync(Database database, RequestOptions requestOptions = null);
+
         Task<IEnumerable<DocumentCollection>> QueryDocumentCollectionsAsync(string databaseId,
             Expression<Func<DocumentCollection, bool>> predicate = null, FeedOptions feedOptions = null);
 
@@ -32,6 +34,9 @@ namespace Cosmonaut
             RequestOptions requestOptions = null);
 
         Task<DocumentCollection> GetCollectionAsync(string databaseId, string collectionId,
+            RequestOptions requestOptions = null);
+
+        Task<ResourceResponse<DocumentCollection>> CreateCollectionAsync(DocumentCollection collection, string databaseId,
             RequestOptions requestOptions = null);
 
         Task<Offer> GetOfferForCollectionAsync(string databaseId, string collectionId, FeedOptions feedOptions = null);

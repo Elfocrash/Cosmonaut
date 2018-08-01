@@ -3,6 +3,7 @@ using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
+using Cosmonaut.Testing;
 using FluentAssertions;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
@@ -82,11 +83,11 @@ namespace Cosmonaut.Unit
                 Name = "Nick"
             };
             var document = dummy.ConvertObjectToDocument();
-            var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
+            var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
             mockDocumentClient.Setup(x => x.ReadDocumentAsync(UriFactory.CreateDocumentUri("databaseName", "dummies", id), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
 
-            var entityStore = new CosmosStore<Dummy>(mockDocumentClient.Object, "databaseName", "", "http://test.com");
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(mockDocumentClient.Object), "databaseName", "", "http://test.com");
 
             // Act
             var result = await entityStore.FindAsync(id);

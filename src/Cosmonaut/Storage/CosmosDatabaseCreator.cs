@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using System;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 
@@ -6,24 +6,28 @@ namespace Cosmonaut.Storage
 {
     public class CosmosDatabaseCreator : IDatabaseCreator
     {
-        private readonly IDocumentClient _documentClient;
+        private readonly ICosmonautClient _cosmonautClient;
 
-        public CosmosDatabaseCreator(IDocumentClient documentClient)
+        public CosmosDatabaseCreator(ICosmonautClient cosmonautClient)
         {
-            _documentClient = documentClient;
+            _cosmonautClient = cosmonautClient;
         }
 
-        public async Task<bool> EnsureCreatedAsync(string databaseName)
+        [Obsolete("This constructor will be dropped. Please use the one using ICosmonautClient instead.")]
+        public CosmosDatabaseCreator(IDocumentClient documentClient)
         {
-            var database = _documentClient.CreateDatabaseQuery()
-                .Where(db => db.Id == databaseName)
-                .ToArray()
-                .FirstOrDefault();
+            _cosmonautClient = new CosmonautClient(documentClient);
+        }
+
+        public async Task<bool> EnsureCreatedAsync(string databaseId)
+        {
+            var database = await _cosmonautClient.GetDatabaseAsync(databaseId);
 
             if (database != null) return false;
 
-            database = await _documentClient.CreateDatabaseAsync(
-                new Database { Id = databaseName });
+            var newDatabase = new Database {Id = databaseId};
+
+            database = await _cosmonautClient.CreateDatabaseAsync(newDatabase);
             return database != null;
         }
     }

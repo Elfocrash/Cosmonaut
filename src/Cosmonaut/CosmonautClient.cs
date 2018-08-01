@@ -1,11 +1,11 @@
-﻿using System;
+﻿using Cosmonaut.Extensions;
+using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Cosmonaut.Extensions;
-using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Client;
 
 namespace Cosmonaut
 {
@@ -14,6 +14,11 @@ namespace Cosmonaut
         public CosmonautClient(IDocumentClient documentClient)
         {
             DocumentClient = documentClient;
+        }
+
+        public CosmonautClient(Func<IDocumentClient> documentClientFunc)
+        {
+            DocumentClient = documentClientFunc();
         }
 
         public CosmonautClient(
@@ -85,6 +90,18 @@ namespace Cosmonaut
         {
             var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
             return await DocumentClient.ReadDocumentCollectionAsync(collectionUri, requestOptions).ExecuteCosmosQuery();
+        }
+
+        public async Task<ResourceResponse<DocumentCollection>> CreateCollectionAsync(DocumentCollection collection, string databaseId,
+            RequestOptions requestOptions = null)
+        {
+            var databaseUri = UriFactory.CreateDatabaseUri(databaseId);
+            return await DocumentClient.CreateDocumentCollectionAsync(databaseUri, collection, requestOptions);
+        }
+
+        public async Task<ResourceResponse<Database>> CreateDatabaseAsync(Database database, RequestOptions requestOptions = null)
+        {
+            return await DocumentClient.CreateDatabaseAsync(database, requestOptions);
         }
 
         public async Task<Offer> GetOfferForCollectionAsync(string databaseId, string collectionId, FeedOptions feedOptions = null)

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Microsoft.Azure.Documents;
@@ -9,32 +8,35 @@ namespace Cosmonaut.Storage
 {
     public class CosmosCollectionCreator : ICollectionCreator
     {
-        private readonly IDocumentClient _documentClient;
+        private readonly ICosmonautClient _cosmonautClient;
 
+        public CosmosCollectionCreator(ICosmonautClient cosmonautClient)
+        {
+            _cosmonautClient = cosmonautClient;
+        }
+
+        [Obsolete("This constructor will be dropped. Please use the one using ICosmonautClient instead.")]
         public CosmosCollectionCreator(IDocumentClient documentClient)
         {
-            _documentClient = documentClient;
+            _cosmonautClient = new CosmonautClient(documentClient);
         }
 
         public async Task<bool> EnsureCreatedAsync<TEntity>(
-            string databaseLink,
-            string collectionName,
+            string databaseId,
+            string collectionId,
             int collectionThroughput,
             IndexingPolicy indexingPolicy = null) where TEntity : class
         {
             var isSharedCollection = typeof(TEntity).UsesSharedCollection();
-            
-            var collection = _documentClient
-                .CreateDocumentCollectionQuery(databaseLink)
-                .ToArray()
-                .FirstOrDefault(c => c.Id == collectionName);
+
+            var collection = await _cosmonautClient.GetCollectionAsync(databaseId, collectionId);
 
             if (collection != null)
                 return true;
 
             collection = new DocumentCollection
             {
-                Id = collectionName
+                Id = collectionId
             };
 
             SetPartitionKeyIfCollectionIsNotShared(typeof(TEntity), isSharedCollection, collection);
@@ -43,7 +45,7 @@ namespace Cosmonaut.Storage
             if (indexingPolicy != null)
                 collection.IndexingPolicy = indexingPolicy;
             
-            collection = await _documentClient.CreateDocumentCollectionAsync(databaseLink, collection, new RequestOptions
+            collection = await _cosmonautClient.CreateCollectionAsync(collection, databaseId, new RequestOptions
             {
                 OfferThroughput = collectionThroughput
             });

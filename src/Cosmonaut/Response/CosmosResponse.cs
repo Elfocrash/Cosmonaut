@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
+using Newtonsoft.Json;
 
 namespace Cosmonaut.Response
 {
@@ -50,6 +51,17 @@ namespace Cosmonaut.Response
         {
             CosmosOperationStatus = statusType;
             Entity = entity;
+        }
+
+        public static implicit operator TEntity(CosmosResponse<TEntity> response)
+        {
+            if (response?.Entity != null)
+                return response.Entity;
+
+            if (!string.IsNullOrEmpty(response?.ResourceResponse?.Resource?.ToString()))
+                return JsonConvert.DeserializeObject<TEntity>(response.ResourceResponse.Resource.ToString());
+
+            return null;
         }
     }
 }

@@ -68,7 +68,7 @@ namespace Cosmonaut.Extensions
                 return await ExecuteCosmosCommand<TEntity>(operationTask);
             }
         }
-
+        
         internal static async Task<FeedResponse<T>> ExecuteCosmosCommand<T>(this Task<FeedResponse<T>> operationTask)
         {
             try

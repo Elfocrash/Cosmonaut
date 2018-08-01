@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Cosmonaut.Response;
+using Cosmonaut.Testing;
 using FluentAssertions;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
@@ -34,10 +35,10 @@ namespace Cosmonaut.Unit
             };
 
             var document = dummy.ConvertObjectToDocument();
-            var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
+            var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName", "", "http://test.com");
 
             // Act
             var result = await entityStore.RemoveAsync(dummy);
@@ -62,10 +63,10 @@ namespace Cosmonaut.Unit
                 Name = "Test"
             };
             var document = toRemove.ConvertObjectToDocument();
-            var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
+            var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName", "", "http://test.com");
 
             // Act
             var result = await entityStore.RemoveByIdAsync(id);
@@ -92,10 +93,10 @@ namespace Cosmonaut.Unit
             var dummies = new List<Dummy> {dummy};
 
             var document = dummy.ConvertObjectToDocument();
-            var resourceResponse = MockHelpers.CreateResourceResponse(document, HttpStatusCode.OK);
+            var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
-            var entityStore = new CosmosStore<Dummy>(_mockDocumentClient.Object, "databaseName", "", "http://test.com");
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName", "", "http://test.com");
 
             // Act
             var result = await entityStore.RemoveRangeAsync(dummies);
