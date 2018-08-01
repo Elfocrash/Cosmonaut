@@ -37,12 +37,7 @@ namespace Cosmonaut.Unit
         {
             // Arrange
             var serviceCollection = new ServiceCollection();
-            var documentClient = MockHelpers.GetMockDocumentClient();
-            var cosmonautClient = new CosmonautClient(documentClient.Object);
-            var databaseResource = new Database{Id= "databaseName" }.ToResourceResponse(HttpStatusCode.OK);
-
-            documentClient.Setup(x => x.ReadDatabaseAsync(UriFactory.CreateDatabaseUri("databaseName"), It.IsAny<RequestOptions>()))
-                .ReturnsAsync(databaseResource);
+            var cosmonautClient = SetupCosmonautClient();
 
             // Act
             serviceCollection.AddCosmosStore<Dummy>(cosmonautClient, "databaseName", "", "http://test.com");
@@ -51,6 +46,18 @@ namespace Cosmonaut.Unit
             // Assert
             var cosmosStore = provider.GetService<ICosmosStore<Dummy>>();
             Assert.NotNull(cosmosStore);
+        }
+        
+        private static CosmonautClient SetupCosmonautClient()
+        {
+            var documentClient = MockHelpers.GetMockDocumentClient();
+            var cosmonautClient = new CosmonautClient(documentClient.Object);
+            var databaseResource = new Database {Id = "databaseName"}.ToResourceResponse(HttpStatusCode.OK);
+
+            documentClient.Setup(x =>
+                    x.ReadDatabaseAsync(UriFactory.CreateDatabaseUri("databaseName"), It.IsAny<RequestOptions>()))
+                .ReturnsAsync(databaseResource);
+            return cosmonautClient;
         }
     }
 }

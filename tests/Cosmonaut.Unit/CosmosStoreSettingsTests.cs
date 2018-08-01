@@ -1,4 +1,5 @@
 ﻿using System;
+using FluentAssertions;
 using Xunit;
 
 namespace Cosmonaut.Unit
@@ -26,6 +27,41 @@ namespace Cosmonaut.Unit
 
             // Assert
             Assert.Equal(expectedUri, settings.EndpointUrl);
+        }
+
+        [Fact]
+        public void CosmosStoreSettings_Defaults_CreatedCorrectDefaults()
+        {
+            // Arrange
+            var endpointUri = new Uri("http://test.com");
+
+            // Act
+            var settings = new CosmosStoreSettings("dbName", endpointUri, "key");
+
+            // Assert
+            settings.EndpointUrl.Should().Be(endpointUri);
+            settings.AuthKey.Should().Be("key");
+            settings.ConnectionPolicy.Should().BeNull();
+            settings.ConsistencyLevel.Should().BeNull();
+            settings.IndexingPolicy.Should().BeNull();
+            settings.DefaultCollectionThroughput.Should().Be(CosmosConstants.MinimumCosmosThroughput);
+            settings.MaximumUpscaleRequestUnits.Should().Be(CosmosConstants.DefaultMaximumUpscaleThroughput);
+        }
+
+        [Fact]
+        public void CosmosStoreSettings_ParameterlessCtor_CreatedCorrectDefaults()
+        {
+            // Arrange
+            var settings = new CosmosStoreSettings();
+            
+            // Act & Assert
+            settings.EndpointUrl.Should().BeNull();
+            settings.AuthKey.Should().BeNull();
+            settings.ConnectionPolicy.Should().BeNull();
+            settings.ConsistencyLevel.Should().BeNull();
+            settings.IndexingPolicy.Should().BeNull();
+            settings.DefaultCollectionThroughput.Should().Be(CosmosConstants.MinimumCosmosThroughput);
+            settings.MaximumUpscaleRequestUnits.Should().Be(CosmosConstants.DefaultMaximumUpscaleThroughput);
         }
     }
 }

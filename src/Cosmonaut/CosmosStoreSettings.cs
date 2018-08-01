@@ -8,7 +8,7 @@ namespace Cosmonaut
     {
         public string DatabaseName { get; set; }
 
-        internal string AuthKey { get; set; }
+        public string AuthKey { get; set; }
 
         public Uri EndpointUrl { get; set; }
 
@@ -16,7 +16,7 @@ namespace Cosmonaut
 
         public ConsistencyLevel? ConsistencyLevel { get; set; } = null;
 
-        public IndexingPolicy IndexingPolicy { get; set; }
+        public IndexingPolicy IndexingPolicy { get; set; } = null;
 
         public int DefaultCollectionThroughput { get; set; } =  CosmosConstants.MinimumCosmosThroughput;
 

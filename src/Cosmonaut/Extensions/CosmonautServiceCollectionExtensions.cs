@@ -7,7 +7,7 @@ namespace Cosmonaut.Extensions
     {
         public static IServiceCollection  AddCosmosStore<TEntity>(this IServiceCollection services, CosmosStoreSettings settings) where TEntity : class
         {
-            services.AddSingleton<ICosmosStore<TEntity>>(x=> new CosmosStore<TEntity>(settings));
+            services.AddCosmosStore<TEntity>(settings, string.Empty);
             return services;
         }
 
@@ -19,9 +19,7 @@ namespace Cosmonaut.Extensions
 
         public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services, Action<CosmosStoreSettings> settingsAction) where TEntity : class
         {
-            var settings = new CosmosStoreSettings();
-            settingsAction?.Invoke(settings);
-            return services.AddCosmosStore<TEntity>(settings);
+            return services.AddCosmosStore<TEntity>(settingsAction, string.Empty);
         }
 
         public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services, Action<CosmosStoreSettings> settingsAction, string overriddenCollectionName) where TEntity : class
@@ -37,7 +35,7 @@ namespace Cosmonaut.Extensions
             string authKey,
             string endpoint) where TEntity : class
         {
-            services.AddSingleton<ICosmosStore<TEntity>>(x => new CosmosStore<TEntity>(cosmonautClient, databaseName, authKey, endpoint));
+            services.AddCosmosStore<TEntity>(cosmonautClient, databaseName, authKey, endpoint, string.Empty);
             return services;
         }
         

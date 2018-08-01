@@ -324,7 +324,8 @@ namespace Cosmonaut
             CollectionThrouput = typeof(TEntity).GetCollectionThroughputForEntity(Settings.DefaultCollectionThroughput);
 
             _databaseCreator.EnsureCreatedAsync(DatabaseName).ConfigureAwait(false).GetAwaiter().GetResult();
-            _collectionCreator.EnsureCreatedAsync<TEntity>(DatabaseLink.ToString(), CollectionName, CollectionThrouput, Settings.IndexingPolicy);
+            _collectionCreator.EnsureCreatedAsync<TEntity>(DatabaseName, CollectionName, CollectionThrouput, Settings.IndexingPolicy)
+                .ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         private async Task<CosmosMultipleResponse<TEntity>> ExecuteMultiOperationAsync(IEnumerable<TEntity> entities,
