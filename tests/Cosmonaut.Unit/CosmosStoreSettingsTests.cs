@@ -1,5 +1,7 @@
 ﻿using System;
 using FluentAssertions;
+using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
 using Xunit;
 
 namespace Cosmonaut.Unit
@@ -49,19 +51,44 @@ namespace Cosmonaut.Unit
         }
 
         [Fact]
-        public void CosmosStoreSettings_ParameterlessCtor_CreatedCorrectDefaults()
+        public void CosmosStoreSettings_DefaultCtor_CreatedCorrectDefaults()
         {
             // Arrange
-            var settings = new CosmosStoreSettings();
+            var settings = new CosmosStoreSettings("test", "http://test.com", "key");
             
             // Act & Assert
-            settings.EndpointUrl.Should().BeNull();
-            settings.AuthKey.Should().BeNull();
+            settings.EndpointUrl.Should().BeEquivalentTo(new Uri("http://test.com"));
+            settings.AuthKey.Should().BeEquivalentTo("key");
+            settings.DatabaseName.Should().BeEquivalentTo("test");
             settings.ConnectionPolicy.Should().BeNull();
             settings.ConsistencyLevel.Should().BeNull();
             settings.IndexingPolicy.Should().BeNull();
             settings.DefaultCollectionThroughput.Should().Be(CosmosConstants.MinimumCosmosThroughput);
             settings.MaximumUpscaleRequestUnits.Should().Be(CosmosConstants.DefaultMaximumUpscaleThroughput);
+        }
+
+        [Fact]
+        public void CosmosStoreSettings_DefaultCtorWithAction_CreatedCorrectDefaults()
+        {
+            // Arrange
+            var settings = new CosmosStoreSettings("test", "http://test.com", "key", setting =>
+            {
+                setting.DefaultCollectionThroughput = 5000;
+                setting.MaximumUpscaleRequestUnits = 5000;
+                setting.IndexingPolicy = new IndexingPolicy();
+                setting.ConsistencyLevel = ConsistencyLevel.Eventual;
+                setting.ConnectionPolicy = ConnectionPolicy.Default;
+            });
+
+            // Act & Assert
+            settings.EndpointUrl.Should().BeEquivalentTo(new Uri("http://test.com"));
+            settings.AuthKey.Should().BeEquivalentTo("key");
+            settings.DatabaseName.Should().BeEquivalentTo("test");
+            settings.ConnectionPolicy.Should().BeEquivalentTo(ConnectionPolicy.Default);
+            settings.ConsistencyLevel.Should().BeEquivalentTo(ConsistencyLevel.Eventual);
+            settings.IndexingPolicy.Should().NotBeNull();
+            settings.DefaultCollectionThroughput.Should().Be(5000);
+            settings.MaximumUpscaleRequestUnits.Should().Be(5000);
         }
     }
 }

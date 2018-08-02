@@ -24,7 +24,23 @@ namespace Cosmonaut
 
         public int MaximumUpscaleRequestUnits { get; set; } = CosmosConstants.DefaultMaximumUpscaleThroughput;
 
-        public CosmosStoreSettings() { }
+        public CosmosStoreSettings(string databaseName,
+            string endpointUrl,
+            string authKey,
+            Action<CosmosStoreSettings> settings) : this(databaseName, new Uri(endpointUrl), authKey, settings)
+        {
+        }
+
+        public CosmosStoreSettings(string databaseName,
+            Uri endpointUrl,
+            string authKey,
+            Action<CosmosStoreSettings> settings)
+        {
+            DatabaseName = databaseName;
+            EndpointUrl = endpointUrl;
+            AuthKey = authKey;
+            settings?.Invoke(this);
+        }
         
         public CosmosStoreSettings(
             string databaseName,
