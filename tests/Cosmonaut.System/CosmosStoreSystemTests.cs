@@ -33,11 +33,10 @@ namespace Cosmonaut.System
         {
             _cosmonautClient = new CosmonautClient(_emulatorUri, _emulatorKey, _connectionPolicy);
             var serviceCollection = new ServiceCollection();
-            serviceCollection.AddCosmosStore<Cat>(settings =>
+            serviceCollection.AddCosmosStore<Cat>(_emulatorKey, settings =>
             {
                 settings.DatabaseName = _databaseId;
                 settings.EndpointUrl = _emulatorUri;
-                settings.AuthKey = _emulatorKey;
                 settings.ConnectionPolicy = _connectionPolicy;
             }, _collectionName);
 

@@ -17,36 +17,34 @@ namespace Cosmonaut.Extensions
             return services;
         }
 
-        public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services, Action<CosmosStoreSettings> settingsAction) where TEntity : class
+        public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services, string authKey,
+            Action<CosmosStoreSettings> settingsAction) where TEntity : class
         {
-            return services.AddCosmosStore<TEntity>(settingsAction, string.Empty);
+            return services.AddCosmosStore<TEntity>(authKey, settingsAction, string.Empty);
         }
 
-        public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services, Action<CosmosStoreSettings> settingsAction, string overriddenCollectionName) where TEntity : class
+        public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services, string authKey, 
+            Action<CosmosStoreSettings> settingsAction, string overriddenCollectionName) where TEntity : class
         {
-            var settings = new CosmosStoreSettings();
+            var settings = new CosmosStoreSettings(authKey);
             settingsAction?.Invoke(settings);
             return services.AddCosmosStore<TEntity>(settings, overriddenCollectionName);
         }
 
         public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services,
             ICosmonautClient cosmonautClient,
-            string databaseName,
-            string authKey,
-            string endpoint) where TEntity : class
+            string databaseName) where TEntity : class
         {
-            services.AddCosmosStore<TEntity>(cosmonautClient, databaseName, authKey, endpoint, string.Empty);
+            services.AddCosmosStore<TEntity>(cosmonautClient, databaseName, string.Empty);
             return services;
         }
         
         public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services,
             ICosmonautClient cosmonautClient,
             string databaseName,
-            string authKey,
-            string endpoint,
             string overriddenCollectionName) where TEntity : class
         {
-            services.AddSingleton<ICosmosStore<TEntity>>(x => new CosmosStore<TEntity>(cosmonautClient, databaseName, authKey, endpoint, overriddenCollectionName));
+            services.AddSingleton<ICosmosStore<TEntity>>(x => new CosmosStore<TEntity>(cosmonautClient, databaseName, overriddenCollectionName));
             return services;
         }
     }

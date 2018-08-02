@@ -39,29 +39,6 @@ namespace Cosmonaut
         {
         }
 
-        public CosmosStore(ICosmonautClient cosmonautClient,
-            string databaseName,
-            string authKey, 
-            string endpoint) : this(cosmonautClient, databaseName, authKey, endpoint, string.Empty,
-            new CosmosDatabaseCreator(cosmonautClient),
-            new CosmosCollectionCreator(cosmonautClient))
-        {
-        }
-
-        public CosmosStore(ICosmonautClient cosmonautClient,
-            string databaseName,
-            string authKey,
-            string endpoint,
-            string overriddenCollectionName) : this(cosmonautClient, 
-            databaseName, 
-            authKey,
-            endpoint,
-            overriddenCollectionName,
-            new CosmosDatabaseCreator(cosmonautClient),
-            new CosmosCollectionCreator(cosmonautClient))
-        {
-        }
-
         public CosmosStore(CosmosStoreSettings settings, string overriddenCollectionName)
         {
             CollectionName = overriddenCollectionName;
@@ -74,6 +51,23 @@ namespace Cosmonaut
             _databaseCreator = new CosmosDatabaseCreator(_cosmonautClient);
             _cosmosScaler = new CosmosScaler<TEntity>(this);
             InitialiseCosmosStore();
+        }
+
+        public CosmosStore(ICosmonautClient cosmonautClient,
+            string databaseName) : this(cosmonautClient, databaseName, string.Empty,
+            new CosmosDatabaseCreator(cosmonautClient),
+            new CosmosCollectionCreator(cosmonautClient))
+        {
+        }
+
+        public CosmosStore(ICosmonautClient cosmonautClient,
+            string databaseName,
+            string overriddenCollectionName) : this(cosmonautClient,
+            databaseName,
+            overriddenCollectionName,
+            new CosmosDatabaseCreator(cosmonautClient),
+            new CosmosCollectionCreator(cosmonautClient))
+        {
         }
 
         [Obsolete("This constructor will be dropped. Use the constructor the uses ICosmonautClient.")]
@@ -103,8 +97,6 @@ namespace Cosmonaut
 
         internal CosmosStore(ICosmonautClient cosmonautClient,
             string databaseName,
-            string authKey,
-            string endpoint,
             string overriddenCollectionName,
             IDatabaseCreator databaseCreator = null,
             ICollectionCreator collectionCreator = null,
@@ -113,7 +105,7 @@ namespace Cosmonaut
             CollectionName = overriddenCollectionName;
             DatabaseName = databaseName;
             _cosmonautClient = cosmonautClient ?? throw new ArgumentNullException(nameof(cosmonautClient));
-            Settings = new CosmosStoreSettings(databaseName, endpoint, authKey, cosmonautClient.DocumentClient.ConnectionPolicy, 
+            Settings = new CosmosStoreSettings(databaseName, cosmonautClient.DocumentClient.ServiceEndpoint.ToString(), string.Empty, cosmonautClient.DocumentClient.ConnectionPolicy, 
                 scaleCollectionRUsAutomatically: scaleable);
             if (string.IsNullOrEmpty(Settings.DatabaseName)) throw new ArgumentNullException(nameof(Settings.DatabaseName));
             _collectionCreator = collectionCreator ?? new CosmosCollectionCreator(_cosmonautClient);

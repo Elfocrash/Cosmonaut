@@ -30,7 +30,7 @@ namespace Cosmonaut.Unit
 
             // Assert
             eventDataCosmos.Duration.Should().Be(TimeSpan.FromMilliseconds(1000));
-            eventDataCosmos.StartTime.Should().BeCloseTo(DateTimeOffset.UtcNow);
+            eventDataCosmos.StartTime.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(2));
             eventDataCosmos.ResultCode.Should().Be("OK");
             eventDataCosmos.DependencyTypeName.Should().Be(nameof(CosmosEventDataConverterTests));
             eventDataCosmos.DependencyName.Should().Be("dependency");

@@ -93,7 +93,7 @@ namespace Cosmonaut.Unit
                     It.IsAny<FeedOptions>()))
                 .Returns(mockDocumentQuery.Object);
 
-            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(mockDocumentClient.Object), "databaseName", "", "http://test.com");
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(mockDocumentClient.Object), "databaseName");
             return entityStore;
         }
         
@@ -143,7 +143,7 @@ namespace Cosmonaut.Unit
                 .Returns(mockDocumentQuery.Object);
             
 
-            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(mockDocumentClient.Object), "databaseName", "", "http://test.com");
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(mockDocumentClient.Object), "databaseName");
             return entityStore;
         }
 
@@ -186,7 +186,7 @@ namespace Cosmonaut.Unit
             }
             
 
-            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(mockDocumentClient.Object), "databaseName", "", "http://test.com");
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(mockDocumentClient.Object), "databaseName");
             return entityStore;
         }
     }

@@ -24,7 +24,7 @@ namespace Cosmonaut.Unit
                 .ReturnsAsync(databaseResource);
 
             // Act
-            serviceCollection.AddCosmosStore<Dummy>(new CosmonautClient(documentClient.Object), "databaseName", "", "http://test.com");
+            serviceCollection.AddCosmosStore<Dummy>(new CosmonautClient(documentClient.Object), "databaseName");
             var provider = serviceCollection.BuildServiceProvider();
 
             // Assert
@@ -40,7 +40,7 @@ namespace Cosmonaut.Unit
             var cosmonautClient = SetupCosmonautClient();
 
             // Act
-            serviceCollection.AddCosmosStore<Dummy>(cosmonautClient, "databaseName", "", "http://test.com");
+            serviceCollection.AddCosmosStore<Dummy>(cosmonautClient, "databaseName");
             var provider = serviceCollection.BuildServiceProvider();
 
             // Assert

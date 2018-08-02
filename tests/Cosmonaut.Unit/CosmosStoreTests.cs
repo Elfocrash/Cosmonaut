@@ -87,7 +87,7 @@ namespace Cosmonaut.Unit
             mockDocumentClient.Setup(x => x.ReadDocumentAsync(UriFactory.CreateDocumentUri("databaseName", "dummies", id), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
 
-            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(mockDocumentClient.Object), "databaseName", "", "http://test.com");
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(() => mockDocumentClient.Object), "databaseName");
 
             // Act
             var result = await entityStore.FindAsync(id);

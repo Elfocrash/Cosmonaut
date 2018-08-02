@@ -39,7 +39,7 @@ namespace Cosmonaut.Unit
                     document.ItIsSameDocument(), It.IsAny<RequestOptions>(), false))
                 .ReturnsAsync(resourceResponse);
                 
-            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName", "", "http://test.com");
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
 
             // Act
             var result = await entityStore.AddAsync(dummy);
@@ -75,7 +75,7 @@ namespace Cosmonaut.Unit
                     .ReturnsAsync(resourceResponse);
             }
 
-            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName", "", "http://test.com");
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
 
             // Act
             var result = await entityStore.AddRangeAsync(dummies);
@@ -108,7 +108,7 @@ namespace Cosmonaut.Unit
                     .ReturnsAsync(resourceResponse);
             }
 
-            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName", "", "http://test.com");
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
 
             // Act
             var result = await entityStore.AddRangeAsync(dummies[0], dummies[1], dummies[2], dummies[3], dummies[4]);
@@ -133,7 +133,7 @@ namespace Cosmonaut.Unit
                     document.ItIsSameDocument(), It.IsAny<RequestOptions>(), false))
                 .ReturnsAsync(resourceResponse);
 
-            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName", "", "http://test.com");
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
 
             // Act
             var result = await entityStore.AddAsync(dummy);

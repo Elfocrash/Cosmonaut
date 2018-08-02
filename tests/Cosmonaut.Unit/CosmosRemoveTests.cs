@@ -38,7 +38,7 @@ namespace Cosmonaut.Unit
             var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
-            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName", "", "http://test.com");
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
 
             // Act
             var result = await entityStore.RemoveAsync(dummy);
@@ -66,7 +66,7 @@ namespace Cosmonaut.Unit
             var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
-            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName", "", "http://test.com");
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
 
             // Act
             var result = await entityStore.RemoveByIdAsync(id);
@@ -96,7 +96,7 @@ namespace Cosmonaut.Unit
             var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(resourceResponse);
-            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName", "", "http://test.com");
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
 
             // Act
             var result = await entityStore.RemoveRangeAsync(dummies);

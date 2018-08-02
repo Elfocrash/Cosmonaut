@@ -32,12 +32,10 @@ namespace Cosmonaut.Console
 
             var serviceCollection = new ServiceCollection();
 
-            serviceCollection.AddCosmosStore<Book>(settings =>
+            serviceCollection.AddCosmosStore<Book>("C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==", settings =>
             {
                 settings.DatabaseName = "localtest";
                 settings.EndpointUrl = new Uri("https://localhost:8081");
-                settings.AuthKey =
-                    "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
                 settings.ConnectionPolicy = connectionPolicy;
                 settings.DefaultCollectionThroughput = 5000;
             }, "testcol");

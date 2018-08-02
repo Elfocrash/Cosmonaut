@@ -4,7 +4,7 @@ using Microsoft.Azure.Documents;
 
 namespace Cosmonaut.Storage
 {
-    public class CosmosDatabaseCreator : IDatabaseCreator
+    internal class CosmosDatabaseCreator : IDatabaseCreator
     {
         private readonly ICosmonautClient _cosmonautClient;
 
@@ -13,7 +13,6 @@ namespace Cosmonaut.Storage
             _cosmonautClient = cosmonautClient;
         }
 
-        [Obsolete("This constructor will be dropped. Please use the one using ICosmonautClient instead.")]
         public CosmosDatabaseCreator(IDocumentClient documentClient)
         {
             _cosmonautClient = new CosmonautClient(documentClient);
