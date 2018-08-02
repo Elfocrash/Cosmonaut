@@ -17,16 +17,32 @@ namespace Cosmonaut.Extensions
             return services;
         }
 
-        public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services, string authKey,
+        public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services,
+            string databaseName, string endpointUri, string authKey,
             Action<CosmosStoreSettings> settingsAction) where TEntity : class
         {
-            return services.AddCosmosStore<TEntity>(authKey, settingsAction, string.Empty);
+            return services.AddCosmosStore<TEntity>(databaseName, new Uri(endpointUri), databaseName, settingsAction, string.Empty);
         }
 
-        public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services, string authKey, 
+        public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services,
+            string databaseName, string endpointUri, string authKey,
             Action<CosmosStoreSettings> settingsAction, string overriddenCollectionName) where TEntity : class
         {
-            var settings = new CosmosStoreSettings(authKey);
+            return services.AddCosmosStore<TEntity>(databaseName, new Uri(endpointUri), authKey, settingsAction, overriddenCollectionName);
+        }
+
+        public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services,
+            string databaseName, Uri endpointUri, string authKey,
+            Action<CosmosStoreSettings> settingsAction) where TEntity : class
+        {
+            return services.AddCosmosStore<TEntity>(databaseName, endpointUri, databaseName, settingsAction, string.Empty);
+        }
+
+        public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services,
+            string databaseName, Uri endpointUri, string authKey,
+            Action<CosmosStoreSettings> settingsAction, string overriddenCollectionName) where TEntity : class
+        {
+            var settings = new CosmosStoreSettings(databaseName, endpointUri, authKey);
             settingsAction?.Invoke(settings);
             return services.AddCosmosStore<TEntity>(settings, overriddenCollectionName);
         }

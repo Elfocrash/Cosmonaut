@@ -6,11 +6,11 @@ namespace Cosmonaut
 {
     public class CosmosStoreSettings
     {
-        public string DatabaseName { get; set; }
+        public string DatabaseName { get; }
 
-        internal string AuthKey { get; set; }
+        public string AuthKey { get; }
 
-        public Uri EndpointUrl { get; set; }
+        public Uri EndpointUrl { get; }
 
         public ConnectionPolicy ConnectionPolicy { get; set; } = null;
 
@@ -25,12 +25,7 @@ namespace Cosmonaut
         public int MaximumUpscaleRequestUnits { get; set; } = CosmosConstants.DefaultMaximumUpscaleThroughput;
 
         public CosmosStoreSettings() { }
-
-        public CosmosStoreSettings(string authKey)
-        {
-            AuthKey = authKey;
-        }
-
+        
         public CosmosStoreSettings(
             string databaseName,
             string endpointUrl,
