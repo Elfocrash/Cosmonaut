@@ -38,6 +38,19 @@ namespace Cosmonaut.System
                 settings.ConnectionPolicy = _connectionPolicy;
             }, _collectionName);
 
+            serviceCollection.AddCosmosStore<Dog>(_databaseId, _emulatorUri, _emulatorKey, settings =>
+            {
+                settings.ConnectionPolicy = _connectionPolicy;
+            })
+            .AddCosmosStore<Crocodile>(_databaseId, _emulatorUri, _emulatorKey, settings =>
+            {
+                settings.ConnectionPolicy = _connectionPolicy;
+            })
+            .AddCosmosStore<Lion>(_databaseId, _emulatorUri, _emulatorKey, settings =>
+            {
+                settings.ConnectionPolicy = _connectionPolicy;
+            });
+
             _serviceProvider = serviceCollection.BuildServiceProvider();
         }
 
@@ -58,26 +71,52 @@ namespace Cosmonaut.System
         [Fact]
         public async Task WhenValidEntitiesAreAdded_ThenAddedResultsAreSuccessful()
         {
+            //TODO Clean this up in the future
             var cats = new List<Cat>();
-            var cosmosStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var dogs = new List<Dog>();
+            var crocodiles = new List<Crocodile>();
+            var lions = new List<Lion>();
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
+            var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            var crocodileStore = _serviceProvider.GetService<ICosmosStore<Crocodile>>();
+
             for (var i = 0; i < 50; i++)
             {
-                cats.Add(new Cat
-                {
-                    Name = Guid.NewGuid().ToString()
-                });
+                cats.Add(new Cat { Name = Guid.NewGuid().ToString() });
+                dogs.Add(new Dog { Name = Guid.NewGuid().ToString() });
+                crocodiles.Add(new Crocodile { Name = Guid.NewGuid().ToString() });
+                lions.Add(new Lion { Name = Guid.NewGuid().ToString() });
             }
 
-            var addedResults = await cosmosStore.AddRangeAsync(cats);
+            var addedCats = await catStore.AddRangeAsync(cats);
+            var addedDogs = await dogStore.AddRangeAsync(dogs);
+            var addeLions = await lionStore.AddRangeAsync(lions);
+            var addedCrocodiles = await crocodileStore.AddRangeAsync(crocodiles);
 
-            addedResults.Exception.Should().BeNull();
-            addedResults.SuccessfulEntities.Count.Should().Be(50);
-            addedResults.FailedEntities.Count.Should().Be(0);
-            addedResults.IsSuccess.Should().BeTrue();
-            addedResults.SuccessfulEntities.ToList().ForEach(entity =>
-            {
-                cats.Should().Contain(entity);
-            });
+            addedCats.Exception.Should().BeNull();
+            addedCats.SuccessfulEntities.Count.Should().Be(50);
+            addedCats.FailedEntities.Count.Should().Be(0);
+            addedCats.IsSuccess.Should().BeTrue();
+            addedCats.SuccessfulEntities.ToList().ForEach(entity => { cats.Should().Contain(entity); });
+
+            addedDogs.Exception.Should().BeNull();
+            addedDogs.SuccessfulEntities.Count.Should().Be(50);
+            addedDogs.FailedEntities.Count.Should().Be(0);
+            addedDogs.IsSuccess.Should().BeTrue();
+            addedDogs.SuccessfulEntities.ToList().ForEach(entity => { dogs.Should().Contain(entity); });
+
+            addeLions.Exception.Should().BeNull();
+            addeLions.SuccessfulEntities.Count.Should().Be(50);
+            addeLions.FailedEntities.Count.Should().Be(0);
+            addeLions.IsSuccess.Should().BeTrue();
+            addeLions.SuccessfulEntities.ToList().ForEach(entity => { lions.Should().Contain(entity); });
+
+            addedCrocodiles.Exception.Should().BeNull();
+            addedCrocodiles.SuccessfulEntities.Count.Should().Be(50);
+            addedCrocodiles.FailedEntities.Count.Should().Be(0);
+            addedCrocodiles.IsSuccess.Should().BeTrue();
+            addedCrocodiles.SuccessfulEntities.ToList().ForEach(entity => { crocodiles.Should().Contain(entity); });
         }
 
         [Fact]

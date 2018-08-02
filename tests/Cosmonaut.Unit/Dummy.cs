@@ -18,21 +18,17 @@ namespace Cosmonaut.Unit
         public string Name { get; set; }
     }
 
-    public class DummyImplEntity : ICosmosEntity
+    public class DummyImplEntity : CosmosEntity
     {
         public string Name { get; set; }
-
-        public string CosmosId { get; set; }
     }
 
-    public class DummyImplEntityWithAttr : ICosmosEntity
+    public class DummyImplEntityWithAttr : CosmosEntity
     {
         [JsonProperty("id")]
         public string Id { get; set; }
 
         public string Name { get; set; }
-
-        public string CosmosId { get; set; }
     }
 
     public class DummyWithIdAndWithAttr

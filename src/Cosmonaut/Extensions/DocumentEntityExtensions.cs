@@ -38,7 +38,6 @@ namespace Cosmonaut.Extensions
         private static bool IsCosmosIdThePartitionKey(JsonPropertyAttribute porentialJsonPropertyAttribute, PropertyInfo partitionKeyProperty)
         {
             return porentialJsonPropertyAttribute.HasJsonPropertyAttributeId()
-                   || partitionKeyProperty.Name.Equals(nameof(ICosmosEntity.CosmosId))
                    || partitionKeyProperty.Name.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase);
         }
 
@@ -155,18 +154,7 @@ namespace Cosmonaut.Extensions
             {
                 return HandlePropertyNamedId(entity, propertyNamedId);
             }
-
-            var potentialCosmosEntityId = entity.GetType()
-                .GetInterface(nameof(ICosmosEntity))
-                ?.GetProperties()
-                .SingleOrDefault(x => x.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName == CosmosConstants.CosmosId);
-
-            if (potentialCosmosEntityId != null &&
-                !string.IsNullOrEmpty(potentialCosmosEntityId.GetValue(entity)?.ToString()))
-            {
-                return potentialCosmosEntityId.GetValue(entity).ToString();
-            }
-
+            
             throw new CosmosEntityWithoutIdException<TEntity>(entity);
         }
 

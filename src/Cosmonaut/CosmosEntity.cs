@@ -2,7 +2,7 @@
 
 namespace Cosmonaut
 {
-    public class CosmosEntity : ICosmosEntity
+    public class CosmosEntity
     {
         [JsonProperty("id")]
         public string CosmosId { get; set; }
