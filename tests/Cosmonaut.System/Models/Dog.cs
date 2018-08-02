@@ -1,9 +1,7 @@
 ﻿namespace Cosmonaut.System.Models
 {
-    public class Dog
+    public class Dog : Animal
     {
-        public string Name { get; set; }
-
         public string Id { get; set; }
     }
 }

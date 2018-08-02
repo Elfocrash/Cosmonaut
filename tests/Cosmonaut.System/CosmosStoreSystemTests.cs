@@ -42,10 +42,6 @@ namespace Cosmonaut.System
             {
                 settings.ConnectionPolicy = _connectionPolicy;
             })
-            .AddCosmosStore<Crocodile>(_databaseId, _emulatorUri, _emulatorKey, settings =>
-            {
-                settings.ConnectionPolicy = _connectionPolicy;
-            })
             .AddCosmosStore<Lion>(_databaseId, _emulatorUri, _emulatorKey, settings =>
             {
                 settings.ConnectionPolicy = _connectionPolicy;
@@ -71,52 +67,12 @@ namespace Cosmonaut.System
         [Fact]
         public async Task WhenValidEntitiesAreAdded_ThenAddedResultsAreSuccessful()
         {
-            //TODO Clean this up in the future
-            var cats = new List<Cat>();
-            var dogs = new List<Dog>();
-            var crocodiles = new List<Crocodile>();
-            var lions = new List<Lion>();
             var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
             var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
             var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
-            var crocodileStore = _serviceProvider.GetService<ICosmosStore<Crocodile>>();
-
-            for (var i = 0; i < 50; i++)
-            {
-                cats.Add(new Cat { Name = Guid.NewGuid().ToString() });
-                dogs.Add(new Dog { Name = Guid.NewGuid().ToString() });
-                crocodiles.Add(new Crocodile { Name = Guid.NewGuid().ToString() });
-                lions.Add(new Lion { Name = Guid.NewGuid().ToString() });
-            }
-
-            var addedCats = await catStore.AddRangeAsync(cats);
-            var addedDogs = await dogStore.AddRangeAsync(dogs);
-            var addeLions = await lionStore.AddRangeAsync(lions);
-            var addedCrocodiles = await crocodileStore.AddRangeAsync(crocodiles);
-
-            addedCats.Exception.Should().BeNull();
-            addedCats.SuccessfulEntities.Count.Should().Be(50);
-            addedCats.FailedEntities.Count.Should().Be(0);
-            addedCats.IsSuccess.Should().BeTrue();
-            addedCats.SuccessfulEntities.ToList().ForEach(entity => { cats.Should().Contain(entity); });
-
-            addedDogs.Exception.Should().BeNull();
-            addedDogs.SuccessfulEntities.Count.Should().Be(50);
-            addedDogs.FailedEntities.Count.Should().Be(0);
-            addedDogs.IsSuccess.Should().BeTrue();
-            addedDogs.SuccessfulEntities.ToList().ForEach(entity => { dogs.Should().Contain(entity); });
-
-            addeLions.Exception.Should().BeNull();
-            addeLions.SuccessfulEntities.Count.Should().Be(50);
-            addeLions.FailedEntities.Count.Should().Be(0);
-            addeLions.IsSuccess.Should().BeTrue();
-            addeLions.SuccessfulEntities.ToList().ForEach(entity => { lions.Should().Contain(entity); });
-
-            addedCrocodiles.Exception.Should().BeNull();
-            addedCrocodiles.SuccessfulEntities.Count.Should().Be(50);
-            addedCrocodiles.FailedEntities.Count.Should().Be(0);
-            addedCrocodiles.IsSuccess.Should().BeTrue();
-            addedCrocodiles.SuccessfulEntities.ToList().ForEach(entity => { crocodiles.Should().Contain(entity); });
+            await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list));
+            await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list));
+            await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list));
         }
 
         [Fact]
@@ -145,6 +101,99 @@ namespace Cosmonaut.System
                 {
                     entity.CosmosOperationStatus.Should().Be(CosmosOperationStatus.ResourceWithIdAlreadyExists);
                 });
+        }
+        
+        [Fact]
+        public async Task WhenValidEntitiesAreRemoved_ThenRemovedResultsAreSuccessful()
+        {
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
+            var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            var addedCats = await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list));
+            var addedDogs = await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list));
+            var addedLions = await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list));
+
+            await ExecuteMultipleAddOperationsForType(() => catStore.RemoveRangeAsync(addedCats.SuccessfulEntities.Select(x=>x.Entity)), addedCats.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => dogStore.RemoveRangeAsync(addedDogs.SuccessfulEntities.Select(x => x.Entity)), addedDogs.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => lionStore.RemoveRangeAsync(addedLions.SuccessfulEntities.Select(x => x.Entity)), addedLions.SuccessfulEntities.Select(x => x.Entity).ToList());
+        }
+
+        [Fact]
+        public async Task WhenAllEntitiesAreRemoved_ThenAllTheEntitiesAreRemoved()
+        {
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
+            var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list));
+            await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list));
+            await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list));
+
+            await ExecuteMultipleAddOperationsForType(() => catStore.RemoveAsync(x => true));
+            await ExecuteMultipleAddOperationsForType(() => dogStore.RemoveAsync(x => true));
+            await ExecuteMultipleAddOperationsForType(() => lionStore.RemoveAsync(x => true));
+        }
+
+        [Fact]
+        public async Task WhenValidEntitiesAreUpdated_ThenUpdatedResultsAreSuccessful()
+        {
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
+            var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            var addedCats = await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list));
+            var addedDogs = await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list));
+            var addedLions = await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list));
+
+            await ExecuteMultipleAddOperationsForType(() => catStore.UpdateRangeAsync(addedCats.SuccessfulEntities.Select(x => x.Entity)), addedCats.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => dogStore.UpdateRangeAsync(addedDogs.SuccessfulEntities.Select(x => x.Entity)), addedDogs.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => lionStore.UpdateRangeAsync(addedLions.SuccessfulEntities.Select(x => x.Entity)), addedLions.SuccessfulEntities.Select(x => x.Entity).ToList());
+        }
+
+        [Fact]
+        public async Task WhenValidEntitiesAreUpserted_ThenUpsertedResultsAreSuccessful()
+        {
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
+            var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            var addedCats = await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list));
+            var addedDogs = await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list));
+            var addedLions = await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list));
+
+            await ExecuteMultipleAddOperationsForType(() => catStore.UpsertRangeAsync(addedCats.SuccessfulEntities.Select(x => x.Entity)), addedCats.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => dogStore.UpsertRangeAsync(addedDogs.SuccessfulEntities.Select(x => x.Entity)), addedDogs.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => lionStore.UpsertRangeAsync(addedLions.SuccessfulEntities.Select(x => x.Entity)), addedLions.SuccessfulEntities.Select(x => x.Entity).ToList());
+        }
+
+        private async Task<CosmosMultipleResponse<T>> ExecuteMultipleAddOperationsForType<T>(Func<IEnumerable<T>, Task<CosmosMultipleResponse<T>>> operationFunc) 
+            where T : Animal, new()
+        {
+            var cats = new List<T>();
+            
+            for (var i = 0; i < 50; i++){cats.Add(new T { Name = Guid.NewGuid().ToString() });}
+
+            var addedCats = await operationFunc(cats);
+
+            addedCats.Exception.Should().BeNull();
+            addedCats.SuccessfulEntities.Count.Should().Be(50);
+            addedCats.FailedEntities.Count.Should().Be(0);
+            addedCats.IsSuccess.Should().BeTrue();
+            addedCats.SuccessfulEntities.ToList().ForEach(entity => { cats.Should().Contain(entity); });
+
+            return addedCats;
+        }
+
+        private async Task ExecuteMultipleAddOperationsForType<T>(Func<Task<CosmosMultipleResponse<T>>> operationFunc, List<T> entitiesToAssert = null)
+            where T : Animal, new()
+        {
+            var addedCats = await operationFunc();
+
+            addedCats.Exception.Should().BeNull();
+            addedCats.SuccessfulEntities.Count.Should().Be(50);
+            addedCats.FailedEntities.Count.Should().Be(0);
+            addedCats.IsSuccess.Should().BeTrue();
+            if (entitiesToAssert != null)
+            {
+                addedCats.SuccessfulEntities.ToList().ForEach(entity => { entitiesToAssert.Should().Contain(entity); });
+            }
         }
 
         public void Dispose()

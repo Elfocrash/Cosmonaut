@@ -1,6 +1,6 @@
 ﻿namespace Cosmonaut.System.Models
 {
-    public class Crocodile : CosmosEntity
+    public class Animal
     {
         public string Name { get; set; }
     }

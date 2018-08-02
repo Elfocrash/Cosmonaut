@@ -2,10 +2,8 @@
 
 namespace Cosmonaut.System.Models
 {
-    public class Cat
+    public class Cat : Animal
     {
-        public string Name { get; set; }
-
         [JsonProperty("id")]
         public string CatId { get; set; }
     }
