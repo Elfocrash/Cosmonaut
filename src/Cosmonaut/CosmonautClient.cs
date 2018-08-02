@@ -153,6 +153,28 @@ namespace Cosmonaut
             return await DocumentClient.ReadUserDefinedFunctionAsync(storedProcedureUri, requestOptions).ExecuteCosmosQuery();
         }
 
+        public IQueryable<T> Query<T>(string databaseId, string collectionId, FeedOptions feedOptions = null)
+        {
+            var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
+            var queryable = DocumentClient.CreateDocumentQuery<T>(collectionUri, feedOptions);
+            return queryable;
+        }
+
+        public IQueryable<T> Query<T>(string databaseId, string collectionId, string sql, object parameters = null, FeedOptions feedOptions = null)
+        {
+            var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
+            var sqlParameters = parameters.ConvertToSqlParameterCollection();
+            return GetSqlBasedQueryableForType<T>(collectionUri, sql, sqlParameters, feedOptions);
+        }
+
+        private IQueryable<T> GetSqlBasedQueryableForType<T>(Uri collectionUri, string sql, 
+            SqlParameterCollection parameters, FeedOptions feedOptions)
+        {
+            var sqlQuerySpec = parameters != null && parameters.Any() ? new SqlQuerySpec(sql, parameters) : new SqlQuerySpec(sql);
+            var queryable = DocumentClient.CreateDocumentQuery<T>(collectionUri, sqlQuerySpec, feedOptions);
+            return queryable;
+        }
+
         public IDocumentClient DocumentClient { get; }
     }
 }

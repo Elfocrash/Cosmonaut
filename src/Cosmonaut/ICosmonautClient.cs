@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
@@ -61,5 +62,10 @@ namespace Cosmonaut
 
         Task<UserDefinedFunction> GetUserDefinedFunctionAsync(string databaseId, string collectionId,
             string storedProcedureId, RequestOptions requestOptions = null);
+
+        IQueryable<T> Query<T>(string databaseId, string collectionId, FeedOptions feedOptions = null);
+
+        IQueryable<T> Query<T>(string databaseId, string collectionId, string sql, object parameters = null,
+            FeedOptions feedOptions = null);
     }
 }

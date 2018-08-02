@@ -163,7 +163,32 @@ namespace Cosmonaut.System
             await ExecuteMultipleAddOperationsForType(() => lionStore.UpsertRangeAsync(addedLions.SuccessfulEntities.Select(x => x.Entity)), addedLions.SuccessfulEntities.Select(x => x.Entity).ToList());
         }
 
-        private async Task<CosmosMultipleResponse<T>> ExecuteMultipleAddOperationsForType<T>(Func<IEnumerable<T>, Task<CosmosMultipleResponse<T>>> operationFunc) 
+        [Fact]
+        public async Task WhenValidEntitiesAreAdded_ThenTheyCanBeQueriedFor()
+        {
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
+            var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            var addedCats = await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list));
+            var addedDogs = await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list));
+            var addedLions = await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list));
+
+
+            var cats = await catStore.Query().ToListAsync();
+            var dogs = await dogStore.QueryMultipleAsync<Dog>("select * from c");
+            var lions = await lionStore.QueryMultipleAsync("select * from c");
+
+            cats.Should().BeEquivalentTo(addedCats.SuccessfulEntities.Select(x=>x.Entity));
+            dogs.Should().BeEquivalentTo(addedDogs.SuccessfulEntities.Select(x => x.Entity));
+            lions.Should().BeEquivalentTo(addedLions.SuccessfulEntities.Select(x => x.Entity), config =>
+            {
+                config.Excluding(x => x.CosmosEntityName);
+                return config;
+            });
+        }
+
+        private async Task<CosmosMultipleResponse<T>> ExecuteMultipleAddOperationsForType<T>(
+            Func<IEnumerable<T>, Task<CosmosMultipleResponse<T>>> operationFunc) 
             where T : Animal, new()
         {
             var cats = new List<T>();
