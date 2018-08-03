@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Cosmonaut.Diagnostics;
+using Cosmonaut.Response;
 
 namespace Cosmonaut
 {
@@ -165,6 +167,17 @@ namespace Cosmonaut
             var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
             var sqlParameters = parameters.ConvertToSqlParameterCollection();
             return GetSqlBasedQueryableForType<T>(collectionUri, sql, sqlParameters, feedOptions);
+        }
+
+        public async Task<CosmosResponse<T>> CreateDocumentAsync<T>(string databaseId, string collectionId, T obj,
+            RequestOptions requestOptions = null) where T : class
+        {
+            var safeDocument = obj.ConvertObjectToDocument();
+            var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
+            return await this.InvokeCosmosOperationAsync(() =>
+                        DocumentClient.CreateDocumentAsync(collectionUri, safeDocument, requestOptions),
+                    obj.GetDocumentId())
+                .ExecuteCosmosCommand(obj);
         }
 
         private IQueryable<T> GetSqlBasedQueryableForType<T>(Uri collectionUri, string sql, 

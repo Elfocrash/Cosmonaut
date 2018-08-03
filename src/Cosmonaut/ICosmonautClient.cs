@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Cosmonaut.Response;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 
@@ -67,5 +68,8 @@ namespace Cosmonaut
 
         IQueryable<T> Query<T>(string databaseId, string collectionId, string sql, object parameters = null,
             FeedOptions feedOptions = null);
+
+        Task<CosmosResponse<T>> CreateDocumentAsync<T>(string databaseId, string collectionId, T obj,
+            RequestOptions requestOptions = null) where T : class;
     }
 }
