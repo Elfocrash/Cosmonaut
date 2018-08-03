@@ -69,7 +69,8 @@ namespace Cosmonaut
         IQueryable<T> Query<T>(string databaseId, string collectionId, string sql, object parameters = null,
             FeedOptions feedOptions = null);
 
-        Task<CosmosResponse<T>> CreateDocumentAsync<T>(string databaseId, string collectionId, T obj,
-            RequestOptions requestOptions = null) where T : class;
+        Task<ResourceResponse<Document>> CreateDocumentAsync<TResource>(string databaseId, string collectionId,
+            TResource obj,
+            RequestOptions requestOptions = null) where TResource : Resource, new();
     }
 }

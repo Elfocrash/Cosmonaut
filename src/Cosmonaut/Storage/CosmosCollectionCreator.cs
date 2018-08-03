@@ -28,28 +28,28 @@ namespace Cosmonaut.Storage
         {
             var isSharedCollection = typeof(TEntity).UsesSharedCollection();
 
-            var collection = await _cosmonautClient.GetCollectionAsync(databaseId, collectionId);
+            var collectionResource = await _cosmonautClient.GetCollectionAsync(databaseId, collectionId);
 
-            if (collection != null)
+            if (collectionResource != null)
                 return true;
 
-            collection = new DocumentCollection
+            var newCollection = new DocumentCollection
             {
                 Id = collectionId
             };
 
-            SetPartitionKeyIfCollectionIsNotShared(typeof(TEntity), isSharedCollection, collection);
-            SetPartitionKeyAsIdIfCollectionIsShared(isSharedCollection, collection);
+            SetPartitionKeyIfCollectionIsNotShared(typeof(TEntity), isSharedCollection, newCollection);
+            SetPartitionKeyAsIdIfCollectionIsShared(isSharedCollection, newCollection);
 
             if (indexingPolicy != null)
-                collection.IndexingPolicy = indexingPolicy;
-            
-            collection = await _cosmonautClient.CreateCollectionAsync(collection, databaseId, new RequestOptions
+                newCollection.IndexingPolicy = indexingPolicy;
+
+            newCollection = await _cosmonautClient.CreateCollectionAsync(newCollection, databaseId, new RequestOptions
             {
                 OfferThroughput = collectionThroughput
             });
 
-            return collection != null;
+            return newCollection != null;
         }
 
         private static void SetPartitionKeyAsIdIfCollectionIsShared(bool isSharedCollection, DocumentCollection collection)

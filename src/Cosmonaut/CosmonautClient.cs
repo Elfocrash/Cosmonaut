@@ -169,15 +169,14 @@ namespace Cosmonaut
             return GetSqlBasedQueryableForType<T>(collectionUri, sql, sqlParameters, feedOptions);
         }
 
-        public async Task<CosmosResponse<T>> CreateDocumentAsync<T>(string databaseId, string collectionId, T obj,
-            RequestOptions requestOptions = null) where T : class
+        public async Task<ResourceResponse<Document>> CreateDocumentAsync<TResource>(string databaseId,
+            string collectionId, TResource obj,
+            RequestOptions requestOptions = null) where TResource : Resource, new()
         {
-            var safeDocument = obj.ConvertObjectToDocument();
             var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
             return await this.InvokeCosmosOperationAsync(() =>
-                        DocumentClient.CreateDocumentAsync(collectionUri, safeDocument, requestOptions),
-                    obj.GetDocumentId())
-                .ExecuteCosmosCommand(obj);
+                    DocumentClient.CreateDocumentAsync(collectionUri, obj, requestOptions),
+                obj.GetDocumentId());
         }
 
         private IQueryable<T> GetSqlBasedQueryableForType<T>(Uri collectionUri, string sql, 

@@ -172,8 +172,9 @@ namespace Cosmonaut
 
         public async Task<CosmosResponse<TEntity>> AddAsync(TEntity entity, RequestOptions requestOptions = null)
         {
-            return await CosmonautClient.CreateDocumentAsync(DatabaseName, CollectionName, entity,
-                GetRequestOptions(requestOptions, entity));
+            var safeDocument = entity.ConvertObjectToDocument();
+            return await CosmonautClient.CreateDocumentAsync(DatabaseName, CollectionName, safeDocument,
+                GetRequestOptions(requestOptions, entity)).ExecuteCosmosCommand(entity);
         }
 
         public async Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(params TEntity[] entities)
