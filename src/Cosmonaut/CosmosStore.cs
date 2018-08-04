@@ -262,11 +262,9 @@ namespace Cosmonaut
 
         public async Task<TEntity> FindAsync(string id, RequestOptions requestOptions = null)
         {
-            var document = await this.InvokeCosmosOperationAsync(() =>
-                CosmonautClient.DocumentClient.ReadDocumentAsync(
-                    UriFactory.CreateDocumentUri(DatabaseName, CollectionName, id),
-                    GetRequestOptions(id, requestOptions)), id).ExecuteCosmosQuery();
-
+            var document = await CosmonautClient.GetDocumentAsync(DatabaseName, CollectionName, id,
+                GetRequestOptions(id, requestOptions));
+            
             return JsonConvert.DeserializeObject<TEntity>(document.ToString());
         }
 

@@ -38,7 +38,7 @@ namespace Cosmonaut.Console
             {
                 settings.ConnectionPolicy = connectionPolicy;
                 settings.DefaultCollectionThroughput = 5000;
-            }, "testcol");
+            }, "pewpew");
 
             serviceCollection.AddCosmosStore<Car>(cosmosSettings);
 
@@ -77,6 +77,7 @@ namespace Cosmonaut.Console
             {
                 books.Add(new Book
                 {
+                    Id = Guid.NewGuid().ToString(),
                     Name = "Test " + i,
                     AnotherRandomProp = "Random " + i
                 });
@@ -94,8 +95,10 @@ namespace Cosmonaut.Console
 
             var watch = new Stopwatch();
             watch.Start();
-            var addedBooks = await booksStore.AddRangeAsync(books);
             var addedCars = await carStore.AddRangeAsync(cars);
+
+            var addedBooks = await booksStore.AddRangeAsync(books);
+            
             System.Console.WriteLine($"Added {addedCars.SuccessfulEntities.Count + addedBooks.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
             //await Task.Delay(3000);

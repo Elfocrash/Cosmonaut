@@ -33,19 +33,7 @@ namespace Cosmonaut.System
         {
             _cosmonautClient = new CosmonautClient(_emulatorUri, _emulatorKey, _connectionPolicy);
             var serviceCollection = new ServiceCollection();
-            serviceCollection.AddCosmosStore<Cat>(_databaseId, _emulatorUri, _emulatorKey, settings =>
-            {
-                settings.ConnectionPolicy = _connectionPolicy;
-            }, _collectionName);
-
-            serviceCollection.AddCosmosStore<Dog>(_databaseId, _emulatorUri, _emulatorKey, settings =>
-            {
-                settings.ConnectionPolicy = _connectionPolicy;
-            })
-            .AddCosmosStore<Lion>(_databaseId, _emulatorUri, _emulatorKey, settings =>
-            {
-                settings.ConnectionPolicy = _connectionPolicy;
-            });
+            AddCosmosStores(serviceCollection);
 
             _serviceProvider = serviceCollection.BuildServiceProvider();
         }
@@ -70,9 +58,11 @@ namespace Cosmonaut.System
             var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
             var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
             var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            var birdStore = _serviceProvider.GetService<ICosmosStore<Bird>>();
             await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list));
             await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list));
             await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list));
+            await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list));
         }
 
         [Fact]
@@ -109,13 +99,16 @@ namespace Cosmonaut.System
             var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
             var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
             var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            var birdStore = _serviceProvider.GetService<ICosmosStore<Bird>>();
             var addedCats = await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list));
             var addedDogs = await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list));
             var addedLions = await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list));
+            var addedBirds = await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list));
 
             await ExecuteMultipleAddOperationsForType(() => catStore.RemoveRangeAsync(addedCats.SuccessfulEntities.Select(x=>x.Entity)), addedCats.SuccessfulEntities.Select(x => x.Entity).ToList());
             await ExecuteMultipleAddOperationsForType(() => dogStore.RemoveRangeAsync(addedDogs.SuccessfulEntities.Select(x => x.Entity)), addedDogs.SuccessfulEntities.Select(x => x.Entity).ToList());
             await ExecuteMultipleAddOperationsForType(() => lionStore.RemoveRangeAsync(addedLions.SuccessfulEntities.Select(x => x.Entity)), addedLions.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => birdStore.RemoveRangeAsync(addedBirds.SuccessfulEntities.Select(x => x.Entity)), addedBirds.SuccessfulEntities.Select(x => x.Entity).ToList());
         }
 
         [Fact]
@@ -124,13 +117,16 @@ namespace Cosmonaut.System
             var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
             var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
             var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            var birdStore = _serviceProvider.GetService<ICosmosStore<Bird>>();
             await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list));
             await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list));
             await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list));
+            await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list));
 
             await ExecuteMultipleAddOperationsForType(() => catStore.RemoveAsync(x => true));
             await ExecuteMultipleAddOperationsForType(() => dogStore.RemoveAsync(x => true));
             await ExecuteMultipleAddOperationsForType(() => lionStore.RemoveAsync(x => true));
+            await ExecuteMultipleAddOperationsForType(() => birdStore.RemoveAsync(x => true));
         }
 
         [Fact]
@@ -139,13 +135,16 @@ namespace Cosmonaut.System
             var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
             var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
             var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            var birdStore = _serviceProvider.GetService<ICosmosStore<Bird>>();
             var addedCats = await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list));
             var addedDogs = await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list));
             var addedLions = await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list));
+            var addedBirds = await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list));
 
             await ExecuteMultipleAddOperationsForType(() => catStore.UpdateRangeAsync(addedCats.SuccessfulEntities.Select(x => x.Entity)), addedCats.SuccessfulEntities.Select(x => x.Entity).ToList());
             await ExecuteMultipleAddOperationsForType(() => dogStore.UpdateRangeAsync(addedDogs.SuccessfulEntities.Select(x => x.Entity)), addedDogs.SuccessfulEntities.Select(x => x.Entity).ToList());
             await ExecuteMultipleAddOperationsForType(() => lionStore.UpdateRangeAsync(addedLions.SuccessfulEntities.Select(x => x.Entity)), addedLions.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => birdStore.UpdateRangeAsync(addedBirds.SuccessfulEntities.Select(x => x.Entity)), addedBirds.SuccessfulEntities.Select(x => x.Entity).ToList());
         }
 
         [Fact]
@@ -154,13 +153,16 @@ namespace Cosmonaut.System
             var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
             var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
             var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            var birdStore = _serviceProvider.GetService<ICosmosStore<Bird>>();
             var addedCats = await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list));
             var addedDogs = await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list));
             var addedLions = await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list));
+            var addedBird = await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list));
 
             await ExecuteMultipleAddOperationsForType(() => catStore.UpsertRangeAsync(addedCats.SuccessfulEntities.Select(x => x.Entity)), addedCats.SuccessfulEntities.Select(x => x.Entity).ToList());
             await ExecuteMultipleAddOperationsForType(() => dogStore.UpsertRangeAsync(addedDogs.SuccessfulEntities.Select(x => x.Entity)), addedDogs.SuccessfulEntities.Select(x => x.Entity).ToList());
             await ExecuteMultipleAddOperationsForType(() => lionStore.UpsertRangeAsync(addedLions.SuccessfulEntities.Select(x => x.Entity)), addedLions.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => birdStore.UpsertRangeAsync(addedBird.SuccessfulEntities.Select(x => x.Entity)), addedBird.SuccessfulEntities.Select(x => x.Entity).ToList());
         }
 
         [Fact]
@@ -169,18 +171,25 @@ namespace Cosmonaut.System
             var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
             var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
             var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            var birdStore = _serviceProvider.GetService<ICosmosStore<Bird>>();
             var addedCats = await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list));
             var addedDogs = await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list));
             var addedLions = await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list));
-
+            var addedBirds = await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list));
 
             var cats = await catStore.Query().ToListAsync();
             var dogs = await dogStore.QueryMultipleAsync<Dog>("select * from c");
             var lions = await lionStore.QueryMultipleAsync("select * from c");
+            var birds = await birdStore.Query().ToListAsync();
 
             cats.Should().BeEquivalentTo(addedCats.SuccessfulEntities.Select(x=>x.Entity));
             dogs.Should().BeEquivalentTo(addedDogs.SuccessfulEntities.Select(x => x.Entity));
             lions.Should().BeEquivalentTo(addedLions.SuccessfulEntities.Select(x => x.Entity), config =>
+            {
+                config.Excluding(x => x.CosmosEntityName);
+                return config;
+            });
+            birds.Should().BeEquivalentTo(addedBirds.SuccessfulEntities.Select(x => x.Entity), config =>
             {
                 config.Excluding(x => x.CosmosEntityName);
                 return config;
@@ -191,17 +200,17 @@ namespace Cosmonaut.System
             Func<IEnumerable<T>, Task<CosmosMultipleResponse<T>>> operationFunc) 
             where T : Animal, new()
         {
-            var cats = new List<T>();
+            var items = new List<T>();
             
-            for (var i = 0; i < 50; i++){cats.Add(new T { Name = Guid.NewGuid().ToString() });}
+            for (var i = 0; i < 50; i++){items.Add(new T { Name = Guid.NewGuid().ToString() });}
 
-            var addedCats = await operationFunc(cats);
+            var addedCats = await operationFunc(items);
 
             addedCats.Exception.Should().BeNull();
             addedCats.SuccessfulEntities.Count.Should().Be(50);
             addedCats.FailedEntities.Count.Should().Be(0);
             addedCats.IsSuccess.Should().BeTrue();
-            addedCats.SuccessfulEntities.ToList().ForEach(entity => { cats.Should().Contain(entity); });
+            addedCats.SuccessfulEntities.ToList().ForEach(entity => { items.Should().Contain(entity); });
 
             return addedCats;
         }
@@ -225,6 +234,18 @@ namespace Cosmonaut.System
         {
             _cosmonautClient.DocumentClient.DeleteDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(_databaseId, _collectionName)).GetAwaiter().GetResult();
             _cosmonautClient.DocumentClient.DeleteDatabaseAsync(UriFactory.CreateDatabaseUri(_databaseId)).GetAwaiter().GetResult();
+        }
+        
+        private void AddCosmosStores(ServiceCollection serviceCollection)
+        {
+            serviceCollection.AddCosmosStore<Cat>(_databaseId, _emulatorUri, _emulatorKey,
+                settings => { settings.ConnectionPolicy = _connectionPolicy; }, _collectionName);
+            serviceCollection.AddCosmosStore<Dog>(_databaseId, _emulatorUri, _emulatorKey,
+                    settings => { settings.ConnectionPolicy = _connectionPolicy; })
+                .AddCosmosStore<Lion>(_databaseId, _emulatorUri, _emulatorKey,
+                    settings => { settings.ConnectionPolicy = _connectionPolicy; })
+                .AddCosmosStore<Bird>(_databaseId, _emulatorUri, _emulatorKey,
+                    settings => { settings.ConnectionPolicy = _connectionPolicy; });
         }
     }
 }

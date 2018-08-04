@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
+using Newtonsoft.Json;
 
 namespace Cosmonaut
 {
@@ -8,7 +9,7 @@ namespace Cosmonaut
     {
         public string DatabaseName { get; }
 
-        public string AuthKey { get; }
+        internal string AuthKey { get; }
 
         public Uri EndpointUrl { get; }
 
@@ -23,6 +24,8 @@ namespace Cosmonaut
         public bool ScaleCollectionRUsAutomatically { get; set; }
 
         public int MaximumUpscaleRequestUnits { get; set; } = CosmosConstants.DefaultMaximumUpscaleThroughput;
+
+        public JsonSerializerSettings JsonSerializerSettings { get; set; }
 
         public CosmosStoreSettings(string databaseName,
             string endpointUrl,

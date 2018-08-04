@@ -1,24 +1,25 @@
 ﻿using System;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
+using Newtonsoft.Json;
 
 namespace Cosmonaut
 {
-    public class DocumentClientFactory
+    internal class DocumentClientFactory
     {
-        public static IDocumentClient CreateDocumentClient(string endpointUrl, string authKey, ConnectionPolicy connectionPolicy = null, ConsistencyLevel? desiredConsistencyLevel = null)
+        internal static IDocumentClient CreateDocumentClient(CosmosStoreSettings settings)
         {
-            return CreateDocumentClient(new Uri(endpointUrl), authKey, connectionPolicy, desiredConsistencyLevel);
+            return new DocumentClient(settings.EndpointUrl, settings.AuthKey, settings.JsonSerializerSettings, settings.ConnectionPolicy ?? ConnectionPolicy.Default, settings.ConsistencyLevel);
         }
 
-        public static IDocumentClient CreateDocumentClient(Uri endpointUrl, string authKey, ConnectionPolicy connectionPolicy = null, ConsistencyLevel? desiredConsistencyLevel = null)
+        internal static DocumentClient CreateDocumentClient(Uri endpoint, string authKeyOrResourceToken, ConnectionPolicy connectionPolicy = null, ConsistencyLevel? desiredConsistencyLevel = null)
         {
-            return new DocumentClient(endpointUrl, authKey, connectionPolicy ?? ConnectionPolicy.Default, desiredConsistencyLevel);
+            return new DocumentClient(endpoint, authKeyOrResourceToken, connectionPolicy ?? ConnectionPolicy.Default, desiredConsistencyLevel);
         }
 
-        public static IDocumentClient CreateDocumentClient(CosmosStoreSettings settings)
+        internal static DocumentClient CreateDocumentClient(Uri endpoint, string authKeyOrResourceToken, JsonSerializerSettings jsonSerializerSettings, ConnectionPolicy connectionPolicy = null, ConsistencyLevel? desiredConsistencyLevel = null)
         {
-            return new DocumentClient(settings.EndpointUrl, settings.AuthKey, settings.ConnectionPolicy ?? ConnectionPolicy.Default, settings.ConsistencyLevel);
+            return new DocumentClient(endpoint, authKeyOrResourceToken, jsonSerializerSettings, connectionPolicy ?? ConnectionPolicy.Default, desiredConsistencyLevel);
         }
     }
 }

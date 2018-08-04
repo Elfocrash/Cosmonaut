@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -45,9 +46,10 @@ namespace Cosmonaut.Unit
             var orderQueriable = new EnumerableQuery<Database>(new List<Database>());
 
             var mockDocumentClient = new Mock<IDocumentClient>();
-            mockDocumentClient.Setup(x => x.CreateDatabaseQuery(null)).Returns(orderQueriable);
+            mockDocumentClient.Setup(x => x.ReadDatabaseAsync(UriFactory.CreateDatabaseUri(databaseName), It.IsAny<RequestOptions>()))
+                .ReturnsAsync(((Database)null).ToResourceResponse(HttpStatusCode.NotFound));
             mockDocumentClient.Setup(x => x.CreateDatabaseAsync(It.IsAny<Database>(), It.IsAny<RequestOptions>()))
-                .ReturnsAsync(new ResourceResponse<Database>(expectedDatabase));
+                .ReturnsAsync(expectedDatabase.ToResourceResponse(HttpStatusCode.OK));
             var databaseCreator = new CosmosDatabaseCreator(mockDocumentClient.Object);
             var databaseCreatorCosmonaut = new CosmosDatabaseCreator(new CosmonautClient(mockDocumentClient.Object));
 

@@ -7,7 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Cosmonaut.Diagnostics;
-using Cosmonaut.Response;
+using Newtonsoft.Json;
 
 namespace Cosmonaut
 {
@@ -29,7 +29,17 @@ namespace Cosmonaut
             ConnectionPolicy connectionPolicy = null,
             ConsistencyLevel? desiredConsistencyLevel = null)
         {
-            DocumentClient = new DocumentClient(endpoint, authKeyOrResourceToken, connectionPolicy, desiredConsistencyLevel);
+            DocumentClient = DocumentClientFactory.CreateDocumentClient(endpoint, authKeyOrResourceToken, connectionPolicy, desiredConsistencyLevel);
+        }
+
+        public CosmonautClient(
+            Uri endpoint,
+            string authKeyOrResourceToken,
+            JsonSerializerSettings jsonSerializerSettings,
+            ConnectionPolicy connectionPolicy = null,
+            ConsistencyLevel? desiredConsistencyLevel = null)
+        {
+            DocumentClient = DocumentClientFactory.CreateDocumentClient(endpoint, authKeyOrResourceToken, jsonSerializerSettings, connectionPolicy, desiredConsistencyLevel);
         }
 
         public CosmonautClient(
@@ -43,7 +53,8 @@ namespace Cosmonaut
         public async Task<Database> GetDatabaseAsync(string databaseId, RequestOptions requestOptions = null)
         {
             var databaseUri = UriFactory.CreateDatabaseUri(databaseId);
-            return await DocumentClient.ReadDatabaseAsync(databaseUri, requestOptions).ExecuteCosmosQuery();
+            return await this.InvokeCosmosOperationAsync(() => DocumentClient.ReadDatabaseAsync(databaseUri, requestOptions), databaseId)
+                .ExecuteCosmosQuery();
         }
 
         public async Task<IEnumerable<Database>> QueryDatabasesAsync(Expression<Func<Database, bool>> predicate = null, FeedOptions feedOptions = null)
@@ -55,7 +66,8 @@ namespace Cosmonaut
         public async Task<Document> GetDocumentAsync(string databaseId, string collectionId, string documentId, RequestOptions requestOptions = null)
         {
             var documentUri = UriFactory.CreateDocumentUri(databaseId, collectionId, documentId);
-            return await DocumentClient.ReadDocumentAsync(documentUri, requestOptions).ExecuteCosmosQuery();
+            return await this.InvokeCosmosOperationAsync(() => DocumentClient.ReadDocumentAsync(documentUri, requestOptions), documentId)
+                .ExecuteCosmosQuery();
         }
         
         public async Task<IEnumerable<DocumentCollection>> QueryDocumentCollectionsAsync(string databaseId, Expression<Func<DocumentCollection, bool>> predicate = null, FeedOptions feedOptions = null)
@@ -91,25 +103,28 @@ namespace Cosmonaut
         public async Task<DocumentCollection> GetCollectionAsync(string databaseId, string collectionId, RequestOptions requestOptions = null)
         {
             var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
-            return await DocumentClient.ReadDocumentCollectionAsync(collectionUri, requestOptions).ExecuteCosmosQuery();
+            return await this.InvokeCosmosOperationAsync(() => DocumentClient.ReadDocumentCollectionAsync(collectionUri, requestOptions), collectionId)
+                .ExecuteCosmosQuery();
         }
 
         public async Task<ResourceResponse<DocumentCollection>> CreateCollectionAsync(DocumentCollection collection, string databaseId,
             RequestOptions requestOptions = null)
         {
             var databaseUri = UriFactory.CreateDatabaseUri(databaseId);
-            return await DocumentClient.CreateDocumentCollectionAsync(databaseUri, collection, requestOptions);
+            return await this.InvokeCosmosOperationAsync(() => DocumentClient.CreateDocumentCollectionAsync(databaseUri, collection, requestOptions), collection.ToString())
+                .ExecuteCosmosCommand();
         }
 
         public async Task<ResourceResponse<Database>> CreateDatabaseAsync(Database database, RequestOptions requestOptions = null)
         {
-            return await DocumentClient.CreateDatabaseAsync(database, requestOptions);
+            return await this.InvokeCosmosOperationAsync(() => DocumentClient.CreateDatabaseAsync(database, requestOptions), database.ToString())
+                .ExecuteCosmosCommand();
         }
 
         public async Task<Offer> GetOfferForCollectionAsync(string databaseId, string collectionId, FeedOptions feedOptions = null)
         {
             var collection = await GetCollectionAsync(databaseId, collectionId);
-            return await DocumentClient.CreateOfferQuery(feedOptions).SingleOrDefaultAsync(x=>x.ResourceLink == collection.SelfLink);
+            return await DocumentClient.CreateOfferQuery(feedOptions).SingleOrDefaultAsync(x=> x.ResourceLink == collection.SelfLink);
         }
 
         public async Task<OfferV2> GetOfferV2ForCollectionAsync(string databaseId, string collectionId, FeedOptions feedOptions = null)
@@ -139,7 +154,8 @@ namespace Cosmonaut
         public async Task<StoredProcedure> GetStoredProcedureAsync(string databaseId, string collectionId, string storedProcedureId, RequestOptions requestOptions = null)
         {
             var storedProcedureUri = UriFactory.CreateStoredProcedureUri(databaseId, collectionId, storedProcedureId);
-            return await DocumentClient.ReadStoredProcedureAsync(storedProcedureUri, requestOptions).ExecuteCosmosQuery();
+            return await this.InvokeCosmosOperationAsync(() => DocumentClient.ReadStoredProcedureAsync(storedProcedureUri, requestOptions), storedProcedureId)
+                .ExecuteCosmosQuery();
         }
 
         public async Task<IEnumerable<UserDefinedFunction>> QueryUserDefinedFunctionsAsync(string databaseId, string collectionId, Expression<Func<UserDefinedFunction, bool>> predicate = null, FeedOptions feedOptions = null)
@@ -149,10 +165,11 @@ namespace Cosmonaut
             return await DocumentClient.CreateUserDefinedFunctionQuery(collectionUri, feedOptions).Where(predicate).ToListAsync();
         }
 
-        public async Task<UserDefinedFunction> GetUserDefinedFunctionAsync(string databaseId, string collectionId, string storedProcedureId, RequestOptions requestOptions = null)
+        public async Task<UserDefinedFunction> GetUserDefinedFunctionAsync(string databaseId, string collectionId, string udfId, RequestOptions requestOptions = null)
         {
-            var storedProcedureUri = UriFactory.CreateUserDefinedFunctionUri(databaseId, collectionId, storedProcedureId);
-            return await DocumentClient.ReadUserDefinedFunctionAsync(storedProcedureUri, requestOptions).ExecuteCosmosQuery();
+            var storedProcedureUri = UriFactory.CreateUserDefinedFunctionUri(databaseId, collectionId, udfId);
+            return await this.InvokeCosmosOperationAsync(() => DocumentClient.ReadUserDefinedFunctionAsync(storedProcedureUri, requestOptions), udfId)
+                .ExecuteCosmosQuery();
         }
 
         public IQueryable<T> Query<T>(string databaseId, string collectionId, FeedOptions feedOptions = null)
