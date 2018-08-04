@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
-using System.Reflection;
 using System.Security;
 using System.Threading;
 using Cosmonaut.Extensions;
@@ -13,8 +10,6 @@ using Cosmonaut.Testing;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Moq;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Cosmonaut.Unit
 {
@@ -60,14 +55,14 @@ namespace Cosmonaut.Unit
 
         public static void SetResourceTimestamp<T>(this T resource, DateTime dateTime) where T : Resource
         {
-            resource?.SetPropertyValue("_ts", (object)(ulong)(DateTime.UtcNow - UnixStartTime).TotalSeconds);
+            resource?.SetPropertyValue("_ts", (ulong)(DateTime.UtcNow - UnixStartTime).TotalSeconds);
         }
 
         private static readonly DateTime UnixStartTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
         public static CosmosStore<Dummy> ResponseSetup(IQueryable<Dummy> expected, IQueryable<Dummy> dataSource, ref Mock<IDocumentClient> mockDocumentClient)
         {
-            FeedResponse<Dummy> response = CreateFeedResponse(expected);
+            FeedResponse<Dummy> response = expected.ToFeedResponse();
 
             var mockDocumentQuery = new Mock<IFakeDocumentQuery<Dummy>>();
             mockDocumentQuery
@@ -97,31 +92,9 @@ namespace Cosmonaut.Unit
             return entityStore;
         }
         
-        public static FeedResponse<T> CreateFeedResponse<T>(IQueryable<T> resource)
-        {
-            var feedResponseType = Type.GetType("Microsoft.Azure.Documents.Client.FeedResponse`1, Microsoft.Azure.DocumentDB.Core, Version=1.9.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
-
-            var flags = BindingFlags.NonPublic | BindingFlags.Instance;
-
-            var headers = new NameValueCollection
-            {
-                { "x-ms-request-charge", "0" },
-                { "x-ms-activity-id", Guid.NewGuid().ToString() }
-            };
-
-
-            var arguments = new object[] { resource, resource.Count(), headers, false, null };
-
-            var t = feedResponseType.MakeGenericType(typeof(T));
-
-            var feedResponse = Activator.CreateInstance(t, flags, null, arguments, null);
-
-            return (FeedResponse<T>) feedResponse;
-        }
-
         public static CosmosStore<Dummy> ResponseSetupForQuery<T>(string sql, SqlParameterCollection parameters, IQueryable<T> expected, IQueryable<Dummy> dataSource, ref Mock<IDocumentClient> mockDocumentClient)
         {
-            FeedResponse<T> response = CreateFeedResponse(expected);
+            FeedResponse<T> response = expected.ToFeedResponse();
 
             var mockDocumentQuery = new Mock<IFakeDocumentQuery<T>>();
             mockDocumentQuery
@@ -149,7 +122,7 @@ namespace Cosmonaut.Unit
 
         public static CosmosStore<Dummy> ResponseSetupForQuery(string sql, object parameters, IQueryable<Dummy> expected, IQueryable<Dummy> dataSource, ref Mock<IDocumentClient> mockDocumentClient)
         {
-            FeedResponse<Dummy> response = CreateFeedResponse(expected);
+            FeedResponse<Dummy> response = expected.ToFeedResponse();
 
             var mockDocumentQuery = new Mock<IFakeDocumentQuery<Dummy>>();
             mockDocumentQuery

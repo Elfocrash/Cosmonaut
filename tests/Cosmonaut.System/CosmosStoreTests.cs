@@ -14,12 +14,12 @@ using Xunit;
 
 namespace Cosmonaut.System
 {
-    public class CosmosStoreSystemTests : IDisposable
+    public class CosmosStoreTests : IDisposable
     {
         private readonly ICosmonautClient _cosmonautClient;
         private readonly Uri _emulatorUri = new Uri("https://localhost:8081");
         private readonly string _databaseId = "systemtests";
-        private readonly string _collectionName = "testcol";
+        private readonly string _collectionName = nameof(CosmosStoreTests);
         private readonly string _emulatorKey =
             "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
 
@@ -31,7 +31,7 @@ namespace Cosmonaut.System
             ConnectionMode = ConnectionMode.Direct
         };
 
-        public CosmosStoreSystemTests()
+        public CosmosStoreTests()
         {
             _cosmonautClient = new CosmonautClient(_emulatorUri, _emulatorKey, _connectionPolicy);
             var serviceCollection = new ServiceCollection();

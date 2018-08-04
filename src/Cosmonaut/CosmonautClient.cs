@@ -73,7 +73,7 @@ namespace Cosmonaut
                 .ExecuteCosmosQuery();
         }
         
-        public async Task<IEnumerable<DocumentCollection>> QueryDocumentCollectionsAsync(string databaseId, 
+        public async Task<IEnumerable<DocumentCollection>> QueryCollectionsAsync(string databaseId, 
             Expression<Func<DocumentCollection, bool>> predicate = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
             if (predicate == null) predicate = x => true;
@@ -135,7 +135,8 @@ namespace Cosmonaut
         public async Task<IEnumerable<OfferV2>> QueryOffersV2Async(Expression<Func<Offer, bool>> predicate = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
             if (predicate == null) predicate = x => true;
-            return (IEnumerable<OfferV2>) await QueryOffersAsync(predicate, feedOptions, cancellationToken);
+            var offers = await DocumentClient.CreateOfferQuery(feedOptions).Where(predicate).ToListAsync(cancellationToken);
+            return offers.Cast<OfferV2>();
         }
 
         public async Task<IEnumerable<StoredProcedure>> QueryStoredProceduresAsync(string databaseId, string collectionId, Expression<Func<StoredProcedure, bool>> predicate = null, 
@@ -167,7 +168,7 @@ namespace Cosmonaut
             return GetSqlBasedQueryableForType<T>(collectionUri, sql, sqlParameters, feedOptions);
         }
 
-        public async Task<ResourceResponse<DocumentCollection>> CreateCollectionAsync(DocumentCollection collection, string databaseId,
+        public async Task<ResourceResponse<DocumentCollection>> CreateCollectionAsync(string databaseId, DocumentCollection collection,
             RequestOptions requestOptions = null)
         {
             var databaseUri = UriFactory.CreateDatabaseUri(databaseId);

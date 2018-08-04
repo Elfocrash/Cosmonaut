@@ -44,7 +44,7 @@ namespace Cosmonaut.Storage
             if (indexingPolicy != null)
                 newCollection.IndexingPolicy = indexingPolicy;
 
-            newCollection = await _cosmonautClient.CreateCollectionAsync(newCollection, databaseId, new RequestOptions
+            newCollection = await _cosmonautClient.CreateCollectionAsync(databaseId, newCollection, new RequestOptions
             {
                 OfferThroughput = collectionThroughput
             });
