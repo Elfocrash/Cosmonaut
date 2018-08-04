@@ -18,8 +18,6 @@ namespace Cosmonaut
         Task<IEnumerable<Database>> QueryDatabasesAsync(Expression<Func<Database, bool>> predicate = null,
             FeedOptions feedOptions = null);
 
-        Task<ResourceResponse<Database>> CreateDatabaseAsync(Database database, RequestOptions requestOptions = null);
-
         Task<IEnumerable<DocumentCollection>> QueryDocumentCollectionsAsync(string databaseId,
             Expression<Func<DocumentCollection, bool>> predicate = null, FeedOptions feedOptions = null);
 
@@ -36,9 +34,6 @@ namespace Cosmonaut
             RequestOptions requestOptions = null);
 
         Task<DocumentCollection> GetCollectionAsync(string databaseId, string collectionId,
-            RequestOptions requestOptions = null);
-
-        Task<ResourceResponse<DocumentCollection>> CreateCollectionAsync(DocumentCollection collection, string databaseId,
             RequestOptions requestOptions = null);
 
         Task<Offer> GetOfferForCollectionAsync(string databaseId, string collectionId, FeedOptions feedOptions = null);
@@ -68,9 +63,31 @@ namespace Cosmonaut
 
         IQueryable<T> Query<T>(string databaseId, string collectionId, string sql, object parameters = null,
             FeedOptions feedOptions = null);
+        
+        Task<ResourceResponse<DocumentCollection>> CreateCollectionAsync(DocumentCollection collection, string databaseId,
+            RequestOptions requestOptions = null);
 
-        Task<ResourceResponse<Document>> CreateDocumentAsync<TResource>(string databaseId, string collectionId,
-            TResource obj,
-            RequestOptions requestOptions = null) where TResource : Resource, new();
+        Task<ResourceResponse<Database>> CreateDatabaseAsync(Database database, RequestOptions requestOptions = null);
+
+        Task<ResourceResponse<Document>> CreateDocumentAsync(string databaseId, string collectionId,
+            Document document, RequestOptions requestOptions = null);
+
+        Task<CosmosResponse<T>> CreateDocumentAsync<T>(string databaseId, string collectionId, T document,
+            RequestOptions requestOptions = null) where T : class;
+
+        Task<ResourceResponse<Document>> DeleteDocumentAsync(string databaseId, string collectionId, string documentId,
+            RequestOptions requestOptions = null);
+
+        Task<ResourceResponse<Document>> ReplaceDocumentAsync(string databaseId, string collectionId, Document document,
+            RequestOptions requestOptions = null);
+
+        Task<CosmosResponse<T>> ReplaceDocumentAsync<T>(string databaseId, string collectionId, T document,
+            RequestOptions requestOptions = null) where T : class;
+
+        Task<ResourceResponse<Document>> UpsertDocumentAsync(string databaseId, string collectionId, Document document,
+            RequestOptions requestOptions = null);
+
+        Task<CosmosResponse<T>> UpsertDocumentAsync<T>(string databaseId, string collectionId, T document,
+            RequestOptions requestOptions = null) where T : class;
     }
 }

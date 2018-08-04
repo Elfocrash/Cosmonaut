@@ -7,6 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Cosmonaut.Diagnostics;
+using Cosmonaut.Response;
 using Newtonsoft.Json;
 
 namespace Cosmonaut
@@ -106,21 +107,7 @@ namespace Cosmonaut
             return await this.InvokeCosmosOperationAsync(() => DocumentClient.ReadDocumentCollectionAsync(collectionUri, requestOptions), collectionId)
                 .ExecuteCosmosQuery();
         }
-
-        public async Task<ResourceResponse<DocumentCollection>> CreateCollectionAsync(DocumentCollection collection, string databaseId,
-            RequestOptions requestOptions = null)
-        {
-            var databaseUri = UriFactory.CreateDatabaseUri(databaseId);
-            return await this.InvokeCosmosOperationAsync(() => DocumentClient.CreateDocumentCollectionAsync(databaseUri, collection, requestOptions), collection.ToString())
-                .ExecuteCosmosCommand();
-        }
-
-        public async Task<ResourceResponse<Database>> CreateDatabaseAsync(Database database, RequestOptions requestOptions = null)
-        {
-            return await this.InvokeCosmosOperationAsync(() => DocumentClient.CreateDatabaseAsync(database, requestOptions), database.ToString())
-                .ExecuteCosmosCommand();
-        }
-
+        
         public async Task<Offer> GetOfferForCollectionAsync(string databaseId, string collectionId, FeedOptions feedOptions = null)
         {
             var collection = await GetCollectionAsync(databaseId, collectionId);
@@ -186,14 +173,81 @@ namespace Cosmonaut
             return GetSqlBasedQueryableForType<T>(collectionUri, sql, sqlParameters, feedOptions);
         }
 
-        public async Task<ResourceResponse<Document>> CreateDocumentAsync<TResource>(string databaseId,
-            string collectionId, TResource obj,
-            RequestOptions requestOptions = null) where TResource : Resource, new()
+        public async Task<ResourceResponse<DocumentCollection>> CreateCollectionAsync(DocumentCollection collection, string databaseId,
+            RequestOptions requestOptions = null)
+        {
+            var databaseUri = UriFactory.CreateDatabaseUri(databaseId);
+            return await this.InvokeCosmosOperationAsync(() => DocumentClient.CreateDocumentCollectionAsync(databaseUri, collection, requestOptions), collection.ToString())
+                .ExecuteCosmosCommand();
+        }
+
+        public async Task<ResourceResponse<Database>> CreateDatabaseAsync(Database database, RequestOptions requestOptions = null)
+        {
+            return await this.InvokeCosmosOperationAsync(() => DocumentClient.CreateDatabaseAsync(database, requestOptions), database.ToString())
+                .ExecuteCosmosCommand();
+        }
+
+        public async Task<ResourceResponse<Document>> CreateDocumentAsync(string databaseId,
+            string collectionId, Document obj,
+            RequestOptions requestOptions = null)
         {
             var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
             return await this.InvokeCosmosOperationAsync(() =>
-                    DocumentClient.CreateDocumentAsync(collectionUri, obj, requestOptions),
-                obj.GetDocumentId());
+                    DocumentClient.CreateDocumentAsync(collectionUri, obj, requestOptions), obj.GetDocumentId())
+                .ExecuteCosmosCommand();
+        }
+
+        public async Task<CosmosResponse<T>> CreateDocumentAsync<T>(string databaseId, string collectionId, T obj, RequestOptions requestOptions = null) where T : class
+        {
+            var safeDocument = obj.ConvertObjectToDocument();
+            var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
+            return await this.InvokeCosmosOperationAsync(() =>
+                    DocumentClient.CreateDocumentAsync(collectionUri, safeDocument, requestOptions), obj.GetDocumentId())
+                .ExecuteCosmosCommand(obj);
+        }
+
+        public async Task<ResourceResponse<Document>> DeleteDocumentAsync(string databaseId, string collectionId, string documentId,
+            RequestOptions requestOptions = null)
+        {
+            var documentUri = UriFactory.CreateDocumentUri(databaseId, collectionId, documentId);
+            return await this.InvokeCosmosOperationAsync(() => DocumentClient.DeleteDocumentAsync(documentUri, requestOptions), documentId)
+                .ExecuteCosmosCommand();
+        }
+
+        public async Task<ResourceResponse<Document>> ReplaceDocumentAsync(string databaseId, string collectionId, Document document,
+            RequestOptions requestOptions = null)
+        {
+            var documentUri = UriFactory.CreateDocumentUri(databaseId, collectionId, document.Id);
+            return await this.InvokeCosmosOperationAsync(() =>
+                    DocumentClient.ReplaceDocumentAsync(documentUri, document, requestOptions), document.GetDocumentId())
+                .ExecuteCosmosCommand();
+        }
+
+        public async Task<CosmosResponse<T>> ReplaceDocumentAsync<T>(string databaseId, string collectionId, T document, RequestOptions requestOptions = null) where T : class
+        {
+            var safeDocument = document.ConvertObjectToDocument();
+            var documentUri = UriFactory.CreateDocumentUri(databaseId, collectionId, safeDocument.Id);
+            return await this.InvokeCosmosOperationAsync(() =>
+                    DocumentClient.ReplaceDocumentAsync(documentUri, safeDocument, requestOptions), document.GetDocumentId())
+                .ExecuteCosmosCommand(document);
+        }
+
+        public async Task<ResourceResponse<Document>> UpsertDocumentAsync(string databaseId, string collectionId, Document document,
+            RequestOptions requestOptions = null)
+        {
+            var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
+            return await this.InvokeCosmosOperationAsync(() =>
+                    DocumentClient.UpsertDocumentAsync(collectionUri, document, requestOptions), document.Id)
+                .ExecuteCosmosCommand();
+        }
+
+        public async Task<CosmosResponse<T>> UpsertDocumentAsync<T>(string databaseId, string collectionId, T document, RequestOptions requestOptions = null) where T : class
+        {
+            var safeDocument = document.ConvertObjectToDocument();
+            var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
+            return await this.InvokeCosmosOperationAsync(() =>
+                    DocumentClient.UpsertDocumentAsync(collectionUri, safeDocument, requestOptions), document.GetDocumentId())
+                .ExecuteCosmosCommand(document);
         }
 
         private IQueryable<T> GetSqlBasedQueryableForType<T>(Uri collectionUri, string sql, 

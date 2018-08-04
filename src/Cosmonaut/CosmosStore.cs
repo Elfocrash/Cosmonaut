@@ -172,9 +172,8 @@ namespace Cosmonaut
 
         public async Task<CosmosResponse<TEntity>> AddAsync(TEntity entity, RequestOptions requestOptions = null)
         {
-            var safeDocument = entity.ConvertObjectToDocument();
-            return await CosmonautClient.CreateDocumentAsync(DatabaseName, CollectionName, safeDocument,
-                GetRequestOptions(requestOptions, entity)).ExecuteCosmosCommand(entity);
+            return await CosmonautClient.CreateDocumentAsync(DatabaseName, CollectionName, entity,
+                GetRequestOptions(requestOptions, entity));
         }
 
         public async Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(params TEntity[] entities)
@@ -201,9 +200,8 @@ namespace Cosmonaut
         {
             entity.ValidateEntityForCosmosDb();
             var documentId = entity.GetDocumentId();
-            var documentUri = UriFactory.CreateDocumentUri(Settings.DatabaseName, CollectionName, documentId);
-            return await this.InvokeCosmosOperationAsync(() => CosmonautClient.DocumentClient.DeleteDocumentAsync(documentUri, GetRequestOptions(requestOptions, entity)), documentId)
-                .ExecuteCosmosCommand(entity);
+            return await CosmonautClient.DeleteDocumentAsync(DatabaseName, CollectionName, documentId,
+                GetRequestOptions(requestOptions, entity)).ExecuteCosmosCommand(entity);
         }
         
         public async Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(params TEntity[] entities)
@@ -219,10 +217,8 @@ namespace Cosmonaut
         public async Task<CosmosResponse<TEntity>> UpdateAsync(TEntity entity, RequestOptions requestOptions = null)
         {
             entity.ValidateEntityForCosmosDb();
-            var documentId = entity.GetDocumentId();
             var document = entity.ConvertObjectToDocument();
-            var documentUri = UriFactory.CreateDocumentUri(Settings.DatabaseName, CollectionName, documentId);
-            return await this.InvokeCosmosOperationAsync(() => CosmonautClient.DocumentClient.ReplaceDocumentAsync(documentUri, document, GetRequestOptions(requestOptions, entity)), documentId)
+            return await CosmonautClient.ReplaceDocumentAsync(DatabaseName, CollectionName, document, GetRequestOptions(requestOptions, entity))
                 .ExecuteCosmosCommand(entity);
         }
 
@@ -239,7 +235,7 @@ namespace Cosmonaut
         public async Task<CosmosResponse<TEntity>> UpsertAsync(TEntity entity, RequestOptions requestOptions = null)
         {
             var document = entity.ConvertObjectToDocument();
-            return await this.InvokeCosmosOperationAsync(() => CosmonautClient.DocumentClient.UpsertDocumentAsync(CollectionLink, document, GetRequestOptions(requestOptions, entity)), entity.GetDocumentId())
+            return await CosmonautClient.UpsertDocumentAsync(DatabaseName, CollectionName, document, GetRequestOptions(requestOptions, entity))
                 .ExecuteCosmosCommand(entity);
         }
 
@@ -255,9 +251,8 @@ namespace Cosmonaut
 
         public async Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id, RequestOptions requestOptions = null)
         {
-                var documentUri = UriFactory.CreateDocumentUri(Settings.DatabaseName, CollectionName, id);
-                return await this.InvokeCosmosOperationAsync(() => CosmonautClient.DocumentClient.DeleteDocumentAsync(documentUri, GetRequestOptions(id, requestOptions)), id)
-                    .ExecuteCosmosCommand<TEntity>();
+            return await this.InvokeCosmosOperationAsync(() => CosmonautClient.DeleteDocumentAsync(DatabaseName, CollectionName, id, GetRequestOptions(id, requestOptions)), id)
+                .ExecuteCosmosCommand<TEntity>();
         }
 
         public async Task<TEntity> FindAsync(string id, RequestOptions requestOptions = null)

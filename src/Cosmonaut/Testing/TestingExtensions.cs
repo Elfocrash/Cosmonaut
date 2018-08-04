@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
@@ -10,7 +11,7 @@ namespace Cosmonaut.Testing
 {
     public static class TestingExtensions
     {
-        public static ResourceResponse<T> ToResourceResponse<T>(this T resource, HttpStatusCode statusCode) where T : Resource, new()
+        public static ResourceResponse<T> ToResourceResponse<T>(this T resource, HttpStatusCode statusCode, IDictionary<string, string> responseHeaders = null) where T : Resource, new()
         {
             var resourceResponse = new ResourceResponse<T>(resource);
             var documentServiceResponseType = Type.GetType("Microsoft.Azure.Documents.DocumentServiceResponse, Microsoft.Azure.DocumentDB.Core, Version=1.9.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
@@ -19,6 +20,13 @@ namespace Cosmonaut.Testing
 
             var headers = new NameValueCollection { { "x-ms-request-charge", "0" } };
 
+            if (responseHeaders != null)
+            {
+                foreach (var responseHeader in responseHeaders)
+                {
+                    headers[responseHeader.Key] = responseHeader.Value;
+                }
+            }
 
             var arguments = new object[] { Stream.Null, headers, statusCode, null };
 

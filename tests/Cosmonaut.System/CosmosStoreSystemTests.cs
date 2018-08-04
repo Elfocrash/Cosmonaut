@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Cosmonaut.Response;
@@ -105,10 +106,10 @@ namespace Cosmonaut.System
             var addedLions = await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list));
             var addedBirds = await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list));
 
-            await ExecuteMultipleAddOperationsForType(() => catStore.RemoveRangeAsync(addedCats.SuccessfulEntities.Select(x=>x.Entity)), addedCats.SuccessfulEntities.Select(x => x.Entity).ToList());
-            await ExecuteMultipleAddOperationsForType(() => dogStore.RemoveRangeAsync(addedDogs.SuccessfulEntities.Select(x => x.Entity)), addedDogs.SuccessfulEntities.Select(x => x.Entity).ToList());
-            await ExecuteMultipleAddOperationsForType(() => lionStore.RemoveRangeAsync(addedLions.SuccessfulEntities.Select(x => x.Entity)), addedLions.SuccessfulEntities.Select(x => x.Entity).ToList());
-            await ExecuteMultipleAddOperationsForType(() => birdStore.RemoveRangeAsync(addedBirds.SuccessfulEntities.Select(x => x.Entity)), addedBirds.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => catStore.RemoveRangeAsync(addedCats.SuccessfulEntities.Select(x=>x.Entity)), HttpStatusCode.NoContent, addedCats.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => dogStore.RemoveRangeAsync(addedDogs.SuccessfulEntities.Select(x => x.Entity)), HttpStatusCode.NoContent, addedDogs.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => lionStore.RemoveRangeAsync(addedLions.SuccessfulEntities.Select(x => x.Entity)), HttpStatusCode.NoContent, addedLions.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => birdStore.RemoveRangeAsync(addedBirds.SuccessfulEntities.Select(x => x.Entity)), HttpStatusCode.NoContent, addedBirds.SuccessfulEntities.Select(x => x.Entity).ToList());
         }
 
         [Fact]
@@ -123,10 +124,10 @@ namespace Cosmonaut.System
             await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list));
             await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list));
 
-            await ExecuteMultipleAddOperationsForType(() => catStore.RemoveAsync(x => true));
-            await ExecuteMultipleAddOperationsForType(() => dogStore.RemoveAsync(x => true));
-            await ExecuteMultipleAddOperationsForType(() => lionStore.RemoveAsync(x => true));
-            await ExecuteMultipleAddOperationsForType(() => birdStore.RemoveAsync(x => true));
+            await ExecuteMultipleAddOperationsForType(() => catStore.RemoveAsync(x => true), HttpStatusCode.NoContent);
+            await ExecuteMultipleAddOperationsForType(() => dogStore.RemoveAsync(x => true), HttpStatusCode.NoContent);
+            await ExecuteMultipleAddOperationsForType(() => lionStore.RemoveAsync(x => true), HttpStatusCode.NoContent);
+            await ExecuteMultipleAddOperationsForType(() => birdStore.RemoveAsync(x => true), HttpStatusCode.NoContent);
         }
 
         [Fact]
@@ -141,10 +142,10 @@ namespace Cosmonaut.System
             var addedLions = await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list));
             var addedBirds = await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list));
 
-            await ExecuteMultipleAddOperationsForType(() => catStore.UpdateRangeAsync(addedCats.SuccessfulEntities.Select(x => x.Entity)), addedCats.SuccessfulEntities.Select(x => x.Entity).ToList());
-            await ExecuteMultipleAddOperationsForType(() => dogStore.UpdateRangeAsync(addedDogs.SuccessfulEntities.Select(x => x.Entity)), addedDogs.SuccessfulEntities.Select(x => x.Entity).ToList());
-            await ExecuteMultipleAddOperationsForType(() => lionStore.UpdateRangeAsync(addedLions.SuccessfulEntities.Select(x => x.Entity)), addedLions.SuccessfulEntities.Select(x => x.Entity).ToList());
-            await ExecuteMultipleAddOperationsForType(() => birdStore.UpdateRangeAsync(addedBirds.SuccessfulEntities.Select(x => x.Entity)), addedBirds.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => catStore.UpdateRangeAsync(addedCats.SuccessfulEntities.Select(x => x.Entity)), HttpStatusCode.OK, addedCats.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => dogStore.UpdateRangeAsync(addedDogs.SuccessfulEntities.Select(x => x.Entity)), HttpStatusCode.OK, addedDogs.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => lionStore.UpdateRangeAsync(addedLions.SuccessfulEntities.Select(x => x.Entity)), HttpStatusCode.OK, addedLions.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => birdStore.UpdateRangeAsync(addedBirds.SuccessfulEntities.Select(x => x.Entity)), HttpStatusCode.OK, addedBirds.SuccessfulEntities.Select(x => x.Entity).ToList());
         }
 
         [Fact]
@@ -159,10 +160,10 @@ namespace Cosmonaut.System
             var addedLions = await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list));
             var addedBird = await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list));
 
-            await ExecuteMultipleAddOperationsForType(() => catStore.UpsertRangeAsync(addedCats.SuccessfulEntities.Select(x => x.Entity)), addedCats.SuccessfulEntities.Select(x => x.Entity).ToList());
-            await ExecuteMultipleAddOperationsForType(() => dogStore.UpsertRangeAsync(addedDogs.SuccessfulEntities.Select(x => x.Entity)), addedDogs.SuccessfulEntities.Select(x => x.Entity).ToList());
-            await ExecuteMultipleAddOperationsForType(() => lionStore.UpsertRangeAsync(addedLions.SuccessfulEntities.Select(x => x.Entity)), addedLions.SuccessfulEntities.Select(x => x.Entity).ToList());
-            await ExecuteMultipleAddOperationsForType(() => birdStore.UpsertRangeAsync(addedBird.SuccessfulEntities.Select(x => x.Entity)), addedBird.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => catStore.UpsertRangeAsync(addedCats.SuccessfulEntities.Select(x => x.Entity)), HttpStatusCode.OK, addedCats.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => dogStore.UpsertRangeAsync(addedDogs.SuccessfulEntities.Select(x => x.Entity)), HttpStatusCode.OK, addedDogs.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => lionStore.UpsertRangeAsync(addedLions.SuccessfulEntities.Select(x => x.Entity)), HttpStatusCode.OK, addedLions.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => birdStore.UpsertRangeAsync(addedBird.SuccessfulEntities.Select(x => x.Entity)), HttpStatusCode.OK, addedBird.SuccessfulEntities.Select(x => x.Entity).ToList());
         }
 
         [Fact]
@@ -215,7 +216,7 @@ namespace Cosmonaut.System
             return addedCats;
         }
 
-        private async Task ExecuteMultipleAddOperationsForType<T>(Func<Task<CosmosMultipleResponse<T>>> operationFunc, List<T> entitiesToAssert = null)
+        private async Task ExecuteMultipleAddOperationsForType<T>(Func<Task<CosmosMultipleResponse<T>>> operationFunc, HttpStatusCode expectedCode, List<T> entitiesToAssert = null)
             where T : Animal, new()
         {
             var addedCats = await operationFunc();
@@ -224,9 +225,18 @@ namespace Cosmonaut.System
             addedCats.SuccessfulEntities.Count.Should().Be(50);
             addedCats.FailedEntities.Count.Should().Be(0);
             addedCats.IsSuccess.Should().BeTrue();
+            addedCats.SuccessfulEntities.ForEach(cat =>
+            {
+                cat.CosmosOperationStatus.Should().Be(CosmosOperationStatus.Success);
+                cat.ResourceResponse.StatusCode.Should().Be(expectedCode);
+            });
+
             if (entitiesToAssert != null)
             {
-                addedCats.SuccessfulEntities.ToList().ForEach(entity => { entitiesToAssert.Should().Contain(entity); });
+                addedCats.SuccessfulEntities.ToList().ForEach(entity =>
+                {
+                    entitiesToAssert.Should().Contain(entity);
+                });
             }
         }
 

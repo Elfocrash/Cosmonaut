@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using System.Net;
 using System.Threading.Tasks;
 using Cosmonaut.Storage;
 using Cosmonaut.Testing;
@@ -43,8 +40,6 @@ namespace Cosmonaut.Unit
             // Arrange
             var databaseName = "test";
             var expectedDatabase = new Database { Id = databaseName };
-            var orderQueriable = new EnumerableQuery<Database>(new List<Database>());
-
             var mockDocumentClient = new Mock<IDocumentClient>();
             mockDocumentClient.Setup(x => x.ReadDatabaseAsync(UriFactory.CreateDatabaseUri(databaseName), It.IsAny<RequestOptions>()))
                 .ReturnsAsync(((Database)null).ToResourceResponse(HttpStatusCode.NotFound));
