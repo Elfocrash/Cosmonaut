@@ -242,8 +242,8 @@ namespace Cosmonaut.System
 
         public void Dispose()
         {
-            _cosmonautClient.DocumentClient.DeleteDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(_databaseId, _collectionName)).GetAwaiter().GetResult();
-            _cosmonautClient.DocumentClient.DeleteDatabaseAsync(UriFactory.CreateDatabaseUri(_databaseId)).GetAwaiter().GetResult();
+            _cosmonautClient.DeleteCollectionAsync(_databaseId, _collectionName).GetAwaiter().GetResult();
+            _cosmonautClient.DeleteDatabaseAsync(_databaseId).GetAwaiter().GetResult();
         }
         
         private void AddCosmosStores(ServiceCollection serviceCollection)

@@ -218,7 +218,7 @@ namespace Cosmonaut
         {
             entity.ValidateEntityForCosmosDb();
             var document = entity.ConvertObjectToDocument();
-            return await CosmonautClient.ReplaceDocumentAsync(DatabaseName, CollectionName, document, GetRequestOptions(requestOptions, entity))
+            return await CosmonautClient.UpdateDocumentAsync(DatabaseName, CollectionName, document, GetRequestOptions(requestOptions, entity))
                 .ExecuteCosmosCommand(entity);
         }
 

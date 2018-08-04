@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Cosmonaut.Diagnostics;
 using Cosmonaut.Response;
@@ -58,10 +59,11 @@ namespace Cosmonaut
                 .ExecuteCosmosQuery();
         }
 
-        public async Task<IEnumerable<Database>> QueryDatabasesAsync(Expression<Func<Database, bool>> predicate = null, FeedOptions feedOptions = null)
+        public async Task<IEnumerable<Database>> QueryDatabasesAsync(Expression<Func<Database, bool>> predicate = null, 
+            FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
             if (predicate == null) predicate = x => true;
-            return await DocumentClient.CreateDatabaseQuery(feedOptions).Where(predicate).ToListAsync();
+            return await DocumentClient.CreateDatabaseQuery(feedOptions).Where(predicate).ToListAsync(cancellationToken);
         }
         
         public async Task<Document> GetDocumentAsync(string databaseId, string collectionId, string documentId, RequestOptions requestOptions = null)
@@ -71,34 +73,37 @@ namespace Cosmonaut
                 .ExecuteCosmosQuery();
         }
         
-        public async Task<IEnumerable<DocumentCollection>> QueryDocumentCollectionsAsync(string databaseId, Expression<Func<DocumentCollection, bool>> predicate = null, FeedOptions feedOptions = null)
+        public async Task<IEnumerable<DocumentCollection>> QueryDocumentCollectionsAsync(string databaseId, 
+            Expression<Func<DocumentCollection, bool>> predicate = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
             if (predicate == null) predicate = x => true;
             var databaseUri = UriFactory.CreateDatabaseUri(databaseId);
-            return await DocumentClient.CreateDocumentCollectionQuery(databaseUri, feedOptions).Where(predicate).ToListAsync();
+            return await DocumentClient.CreateDocumentCollectionQuery(databaseUri, feedOptions).Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<T>> QueryDocumentsAsync<T>(string databaseId, string collectionId, Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null)
+        public async Task<IEnumerable<T>> QueryDocumentsAsync<T>(string databaseId, string collectionId, Expression<Func<T, bool>> predicate = null, 
+            FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
             if (predicate == null) predicate = x => true;
             var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
-            return await DocumentClient.CreateDocumentQuery<T>(collectionUri, feedOptions).Where(predicate).ToGenericListAsync();
+            return await DocumentClient.CreateDocumentQuery<T>(collectionUri, feedOptions).Where(predicate).ToGenericListAsync(cancellationToken);
         }
 
         public async Task<IEnumerable<T>> QueryDocumentsAsync<T>(string databaseId, string collectionId, string sql, object parameters = null,
-            FeedOptions feedOptions = null)
+            FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
             var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
             var sqlParameters = parameters.ConvertToSqlParameterCollection();
             var sqlQuerySpec = sqlParameters != null && sqlParameters.Any() ? new SqlQuerySpec(sql, sqlParameters) : new SqlQuerySpec(sql);
-            return await DocumentClient.CreateDocumentQuery<T>(collectionUri, sqlQuerySpec, feedOptions).ToGenericListAsync();
+            return await DocumentClient.CreateDocumentQuery<T>(collectionUri, sqlQuerySpec, feedOptions).ToGenericListAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<Document>> QueryDocumentsAsync(string databaseId, string collectionId, Expression<Func<Document, bool>> predicate = null, FeedOptions feedOptions = null)
+        public async Task<IEnumerable<Document>> QueryDocumentsAsync(string databaseId, string collectionId, 
+            Expression<Func<Document, bool>> predicate = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
             if (predicate == null) predicate = x => true;
             var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
-            return await DocumentClient.CreateDocumentQuery(collectionUri, feedOptions).Where(predicate).ToGenericListAsync();
+            return await DocumentClient.CreateDocumentQuery(collectionUri, feedOptions).Where(predicate).ToGenericListAsync(cancellationToken);
         }
 
         public async Task<DocumentCollection> GetCollectionAsync(string databaseId, string collectionId, RequestOptions requestOptions = null)
@@ -108,54 +113,43 @@ namespace Cosmonaut
                 .ExecuteCosmosQuery();
         }
         
-        public async Task<Offer> GetOfferForCollectionAsync(string databaseId, string collectionId, FeedOptions feedOptions = null)
+        public async Task<Offer> GetOfferForCollectionAsync(string databaseId, string collectionId, FeedOptions feedOptions = null, 
+            CancellationToken cancellationToken = default)
         {
             var collection = await GetCollectionAsync(databaseId, collectionId);
-            return await DocumentClient.CreateOfferQuery(feedOptions).SingleOrDefaultAsync(x=> x.ResourceLink == collection.SelfLink);
+            return await DocumentClient.CreateOfferQuery(feedOptions).SingleOrDefaultAsync(x=> x.ResourceLink == collection.SelfLink, cancellationToken);
         }
 
-        public async Task<OfferV2> GetOfferV2ForCollectionAsync(string databaseId, string collectionId, FeedOptions feedOptions = null)
+        public async Task<OfferV2> GetOfferV2ForCollectionAsync(string databaseId, string collectionId, FeedOptions feedOptions = null, 
+            CancellationToken cancellationToken = default)
         {
-            return (OfferV2) await GetOfferForCollectionAsync(databaseId, collectionId, feedOptions);
+            return (OfferV2) await GetOfferForCollectionAsync(databaseId, collectionId, feedOptions, cancellationToken);
         }
 
-        public async Task<IEnumerable<Offer>> QueryOffersAsync(Expression<Func<Offer, bool>> predicate = null, FeedOptions feedOptions = null)
-        {
-            if (predicate == null) predicate = x => true;
-            return await DocumentClient.CreateOfferQuery(feedOptions).Where(predicate).ToListAsync();
-        }
-
-        public async Task<IEnumerable<OfferV2>> QueryOffersV2Async(Expression<Func<Offer, bool>> predicate = null, FeedOptions feedOptions = null)
+        public async Task<IEnumerable<Offer>> QueryOffersAsync(Expression<Func<Offer, bool>> predicate = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
             if (predicate == null) predicate = x => true;
-            return (IEnumerable<OfferV2>) await QueryOffersAsync(predicate, feedOptions);
+            return await DocumentClient.CreateOfferQuery(feedOptions).Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<StoredProcedure>> QueryStoredProceduresAsync(string databaseId, string collectionId, Expression<Func<StoredProcedure, bool>> predicate = null, FeedOptions feedOptions = null)
+        public async Task<IEnumerable<OfferV2>> QueryOffersV2Async(Expression<Func<Offer, bool>> predicate = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
+        {
+            if (predicate == null) predicate = x => true;
+            return (IEnumerable<OfferV2>) await QueryOffersAsync(predicate, feedOptions, cancellationToken);
+        }
+
+        public async Task<IEnumerable<StoredProcedure>> QueryStoredProceduresAsync(string databaseId, string collectionId, Expression<Func<StoredProcedure, bool>> predicate = null, 
+            FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
             if (predicate == null) predicate = x => true;
             var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
-            return await DocumentClient.CreateStoredProcedureQuery(collectionUri, feedOptions).Where(predicate).ToListAsync();
+            return await DocumentClient.CreateStoredProcedureQuery(collectionUri, feedOptions).Where(predicate).ToListAsync(cancellationToken);
         }
 
         public async Task<StoredProcedure> GetStoredProcedureAsync(string databaseId, string collectionId, string storedProcedureId, RequestOptions requestOptions = null)
         {
             var storedProcedureUri = UriFactory.CreateStoredProcedureUri(databaseId, collectionId, storedProcedureId);
             return await this.InvokeCosmosOperationAsync(() => DocumentClient.ReadStoredProcedureAsync(storedProcedureUri, requestOptions), storedProcedureId)
-                .ExecuteCosmosQuery();
-        }
-
-        public async Task<IEnumerable<UserDefinedFunction>> QueryUserDefinedFunctionsAsync(string databaseId, string collectionId, Expression<Func<UserDefinedFunction, bool>> predicate = null, FeedOptions feedOptions = null)
-        {
-            if (predicate == null) predicate = x => true;
-            var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
-            return await DocumentClient.CreateUserDefinedFunctionQuery(collectionUri, feedOptions).Where(predicate).ToListAsync();
-        }
-
-        public async Task<UserDefinedFunction> GetUserDefinedFunctionAsync(string databaseId, string collectionId, string udfId, RequestOptions requestOptions = null)
-        {
-            var storedProcedureUri = UriFactory.CreateUserDefinedFunctionUri(databaseId, collectionId, udfId);
-            return await this.InvokeCosmosOperationAsync(() => DocumentClient.ReadUserDefinedFunctionAsync(storedProcedureUri, requestOptions), udfId)
                 .ExecuteCosmosQuery();
         }
 
@@ -214,7 +208,7 @@ namespace Cosmonaut
                 .ExecuteCosmosCommand();
         }
 
-        public async Task<ResourceResponse<Document>> ReplaceDocumentAsync(string databaseId, string collectionId, Document document,
+        public async Task<ResourceResponse<Document>> UpdateDocumentAsync(string databaseId, string collectionId, Document document,
             RequestOptions requestOptions = null)
         {
             var documentUri = UriFactory.CreateDocumentUri(databaseId, collectionId, document.Id);
@@ -223,7 +217,7 @@ namespace Cosmonaut
                 .ExecuteCosmosCommand();
         }
 
-        public async Task<CosmosResponse<T>> ReplaceDocumentAsync<T>(string databaseId, string collectionId, T document, RequestOptions requestOptions = null) where T : class
+        public async Task<CosmosResponse<T>> UpdateDocumentAsync<T>(string databaseId, string collectionId, T document, RequestOptions requestOptions = null) where T : class
         {
             var safeDocument = document.ConvertObjectToDocument();
             var documentUri = UriFactory.CreateDocumentUri(databaseId, collectionId, safeDocument.Id);
@@ -248,6 +242,44 @@ namespace Cosmonaut
             return await this.InvokeCosmosOperationAsync(() =>
                     DocumentClient.UpsertDocumentAsync(collectionUri, safeDocument, requestOptions), document.GetDocumentId())
                 .ExecuteCosmosCommand(document);
+        }
+
+        public async Task<ResourceResponse<Database>> DeleteDatabaseAsync(string databasedId, RequestOptions requestOptions = null)
+        {
+            var databaseUri = UriFactory.CreateDatabaseUri(databasedId);
+            return await this.InvokeCosmosOperationAsync(() => DocumentClient.DeleteDatabaseAsync(databaseUri, requestOptions), databasedId)
+                .ExecuteCosmosCommand();
+        }
+
+        public async Task<ResourceResponse<DocumentCollection>> DeleteCollectionAsync(string databasedId, string collectionId, RequestOptions requestOptions = null)
+        {
+            var collectionUri = UriFactory.CreateDocumentCollectionUri(databasedId, collectionId);
+            return await this.InvokeCosmosOperationAsync(() => DocumentClient.DeleteDocumentCollectionAsync(collectionUri, requestOptions), collectionId)
+                .ExecuteCosmosCommand();
+        }
+
+        public async Task<ResourceResponse<DocumentCollection>> UpdateCollectionAsync(string databasedId, string collectionId, DocumentCollection documentCollection,
+            RequestOptions requestOptions = null)
+        {
+            var collectionUri = UriFactory.CreateDocumentCollectionUri(databasedId, collectionId);
+            return await this.InvokeCosmosOperationAsync(() => DocumentClient.ReplaceDocumentCollectionAsync(collectionUri, documentCollection, requestOptions), collectionId)
+                .ExecuteCosmosCommand();
+        }
+
+        public async Task<StoredProcedureResponse<TValue>> ExecuteStoredProcedureAsync<TValue>(string databasedId, string collectionId, string storedProcedureId,
+            params object[] procedureParams)
+        {
+            var storedProcedureUri = UriFactory.CreateStoredProcedureUri(databasedId, collectionId, storedProcedureId);
+            return await this.InvokeCosmosOperationAsync(
+                () => DocumentClient.ExecuteStoredProcedureAsync<TValue>(storedProcedureUri, procedureParams), storedProcedureId);
+        }
+
+        public async Task<StoredProcedureResponse<TValue>> ExecuteStoredProcedureAsync<TValue>(string databasedId, string collectionId, string storedProcedureId,
+            RequestOptions requestOptions, params object[] procedureParams)
+        {
+            var storedProcedureUri = UriFactory.CreateStoredProcedureUri(databasedId, collectionId, storedProcedureId);
+            return await this.InvokeCosmosOperationAsync(
+                () => DocumentClient.ExecuteStoredProcedureAsync<TValue>(storedProcedureUri, requestOptions, procedureParams), storedProcedureId);
         }
 
         private IQueryable<T> GetSqlBasedQueryableForType<T>(Uri collectionUri, string sql, 

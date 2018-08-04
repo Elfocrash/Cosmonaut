@@ -31,6 +31,17 @@ namespace Cosmonaut.Diagnostics
             return CreateCosmosEventCall(invoker, data, properties, target, name).InvokeAsync(eventCall);
         }
 
+        public static Task<StoredProcedureResponse<TResource>> InvokeCosmosOperationAsync<TResource>(
+            this object invoker,
+            Func<Task<StoredProcedureResponse<TResource>>> eventCall,
+            string data,
+            Dictionary<string, object> properties = null,
+            string target = null,
+            string name = null)
+        {
+            return CreateCosmosEventCall(invoker, data, properties, target, name).InvokeAsync(eventCall);
+        }
+
         public static Task<FeedResponse<TEntity>> InvokeExecuteNextAsync<TEntity>(
             this object invoker,
             Func<Task<FeedResponse<TEntity>>> eventCall,
