@@ -18,8 +18,8 @@ namespace Cosmonaut.System
     {
         private readonly ICosmonautClient _cosmonautClient;
         private readonly Uri _emulatorUri = new Uri("https://localhost:8081");
-        private readonly string _databaseId = "systemtests";
-        private readonly string _collectionName = nameof(CosmosStoreTests);
+        private readonly string _databaseId = $"DB{nameof(CosmosStoreTests)}";
+        private readonly string _collectionName = $"COL{nameof(CosmosStoreTests)}";
         private readonly string _emulatorKey =
             "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
 
