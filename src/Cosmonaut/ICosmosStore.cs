@@ -390,5 +390,7 @@ namespace Cosmonaut
         ///     The name of the database that this CosmosStore is targeting
         /// </summary>
         string DatabaseName { get; }
+
+        ICosmonautClient CosmonautClient { get; }
     }
 }

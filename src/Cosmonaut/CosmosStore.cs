@@ -28,6 +28,8 @@ namespace Cosmonaut
         public string DatabaseName { get; }
 
         public CosmosStoreSettings Settings { get; }
+        
+        public ICosmonautClient CosmonautClient { get; }
 
         private readonly IDatabaseCreator _databaseCreator;
         private readonly ICollectionCreator _collectionCreator;
@@ -320,17 +322,17 @@ namespace Cosmonaut
 
             try
             {
-                var multipleResponse = await _cosmosScaler.UpscaleCollectionIfConfiguredAsSuch(entitiesList, CollectionLink.ToString(), operationFunc);
+                var multipleResponse = await _cosmosScaler.UpscaleCollectionIfConfiguredAsSuch(entitiesList, DatabaseName, CollectionName, operationFunc);
                 var multiOperationEntitiesTasks = entitiesList.Select(operationFunc);
                 var operationResult = await HandleOperationWithRateLimitRetry(multiOperationEntitiesTasks, operationFunc);
                 multipleResponse.SuccessfulEntities.AddRange(operationResult.SuccessfulEntities);
                 multipleResponse.FailedEntities.AddRange(operationResult.FailedEntities);
-                await _cosmosScaler.DownscaleCollectionRequestUnitsToDefault(CollectionLink.ToString());
+                await _cosmosScaler.DownscaleCollectionRequestUnitsToDefault(DatabaseName, CollectionName);
                 return multipleResponse;
             }
             catch (Exception exception)
             {
-                await _cosmosScaler.DownscaleCollectionRequestUnitsToDefault(CollectionLink.ToString());
+                await _cosmosScaler.DownscaleCollectionRequestUnitsToDefault(DatabaseName, CollectionName);
 
                 if (exception is DocumentClientException documentClientException)
                 {
@@ -388,9 +390,5 @@ namespace Cosmonaut
             feedOptions.EnableCrossPartitionQuery = shouldEnablePartitionQuery;
             return feedOptions;
         }
-
-        private Uri CollectionLink => UriFactory.CreateDocumentCollectionUri(DatabaseName, CollectionName);
-
-        internal ICosmonautClient CosmonautClient { get; }
     }
 }
