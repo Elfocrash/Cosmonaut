@@ -16,6 +16,8 @@ Cosmonaut is an object mapper that enables .NET developers to work with a Cosmos
 The idea is pretty simple. You can have one CosmoStore per entity (POCO/dtos etc)
 This entity will be used to create a collection in the cosmosdb and it will offer all the data access for this object
 
+The CosmosStore us making use of the [CosmonautClient](https://github.com/Elfocrash/Cosmonaut/wiki/CosmonautClient).
+
 Registering the CosmosStores in ServiceCollection for DI support
 ```csharp
  var cosmosSettings = new CosmosStoreSettings("<<databaseName>>", 
