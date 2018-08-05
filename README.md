@@ -227,4 +227,4 @@ Example: `AppInsightsTelemetryModule.Instance.Initialize(new TelemetryConfigurat
 ### Restrictions
 Because of the way the internal `id` property of Cosmosdb works, there is a mandatory restriction made.
 You cannot have a property named Id or a property with the attribute `[JsonProperty("id")]` without it being a string.
-A cosmos id need to exist somehow on your entity model. For that reason if it isn't part of your entity you can just implement the `ICosmosEntity` interface or extend the `CosmosEntity` class.
+A cosmos id need to exist somehow on your entity model. For that reason if it isn't part of your entity you can just extend the `CosmosEntity` class.
