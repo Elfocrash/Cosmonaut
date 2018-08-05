@@ -27,8 +27,8 @@ namespace Cosmonaut.System
         {
             _cosmonautClient = new CosmonautClient(_emulatorUri, _emulatorKey, new ConnectionPolicy
             {
-                ConnectionProtocol = Protocol.Tcp,
-                ConnectionMode = ConnectionMode.Direct
+                ConnectionProtocol = Protocol.Https,
+                ConnectionMode = ConnectionMode.Gateway
             });
 
             _cosmonautClient.CreateDatabaseAsync(new Database { Id = _databaseId }).GetAwaiter().GetResult();

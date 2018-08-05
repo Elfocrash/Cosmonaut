@@ -27,8 +27,8 @@ namespace Cosmonaut.System
 
         private readonly ConnectionPolicy _connectionPolicy = new ConnectionPolicy
         {
-            ConnectionProtocol = Protocol.Tcp,
-            ConnectionMode = ConnectionMode.Direct
+            ConnectionProtocol = Protocol.Https,
+            ConnectionMode = ConnectionMode.Gateway
         };
 
         public CosmosStoreTests()
