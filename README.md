@@ -38,7 +38,15 @@ serviceCollection.AddCosmosStore<Book>(options =>
 ICosmosStore<Book> bookStore = new CosmosStore<Book>(cosmosSettings)
 ```
 
-##### Quering for entities
+##### Retrieving an entity by id (and partition key)
+
+```csharp
+var user = await cosmosStore.FindAsync("userId");
+var user = await cosmosStore.FindAsync("userId", "partitionKey");
+var user = await cosmosStore.FindAsync("userId", new RequestOptions());
+```
+
+##### Quering for entities using LINQ
 
 In order to query for entities all you have to do is call the `.Query()` method and then use LINQ to create the query you want.
 It is HIGHLY recommended that you use one of the `Async` extension methods to get the results back, such as `ToListAsync` or `FirstOrDefaultAsync` , when available.
@@ -46,10 +54,16 @@ It is HIGHLY recommended that you use one of the `Async` extension methods to ge
 ```csharp
 var user = await cosmoStore.Query().FirstOrDefaultAsync(x => x.Username == "elfocrash");
 var users = await cosmoStore.Query().Where(x => x.HairColor == HairColor.Black).ToListAsync(cancellationToken);
+```
 
-// or you can use SQL
+##### Quering for entities using SQL
 
+```csharp
+// plain sql query
 var user = await cosmoStore.QueryMultipleAsync("select * from c w.Firstname = 'Smith'");
+
+// or parameterised sql query
+var user = await cosmoStore.QueryMultipleAsync("select * from c w.Firstname = @name", new { name = "Smith" });
 ```
 
 ##### Adding an entity in the entity store
@@ -213,4 +227,4 @@ Example: `AppInsightsTelemetryModule.Instance.Initialize(new TelemetryConfigurat
 ### Restrictions
 Because of the way the internal `id` property of Cosmosdb works, there is a mandatory restriction made.
 You cannot have a property named Id or a property with the attribute `[JsonProperty("id")]` without it being a string.
-A cosmos id need to exist somehow on your entity model. For that reason if it isn't part of your entity you can just implement the `ICosmosEntity` interface or extend the `CosmosEntity` class.
+A cosmos id need to exist somehow on your entity model. For that reason if it isn't part of your entity you can just extend the `CosmosEntity` class.
