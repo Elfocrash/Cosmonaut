@@ -129,6 +129,15 @@ There is currently no way to reliably do transactions with the current CosmosDB 
 
 Every operational call (Add, Update, Upsert, Delete) however returns it's status back alongside the reason it failed, if it failed, and the entity so you can add your own retry logic.
 
+#### Partitioning
+Cosmonaut supports partitions out of the box. You can specify which property you want to be your Partition Key by adding the `[CosmosPartitionKey]` attribute above it.
+
+Unless you really know what you're doing, it is recommended make your `Id` property the Partition Key. This will enable random distribution for your collection.
+
+If you do not set a Partition Key then the collection created will be single partition. Here is a quote from Microsoft about single partition collections: 
+> Single-partition collections have lower price options and the ability to execute queries and perform transactions across all collection data. They have the scalability and storage limits of a single partition (10GB and 10,000 RU/s). You do not have to specify a partition key for these collections. For scenarios that do not need large volumes of storage or throughput, single partition collections are a good fit.
+[link](https://azure.microsoft.com/en-gb/blog/10-things-to-know-about-documentdb-partitioned-collections/)
+
 #### Indexing
 By default CosmosDB is created with the following indexing rules
 
@@ -170,14 +179,13 @@ However you can get around that by setting the `FeedOptions.EnableScanInQuery` t
 
 More about CosmosDB Indexing [here](https://docs.microsoft.com/en-us/azure/cosmos-db/indexing-policies)
 
-#### Partitioning
-Cosmonaut supports partitions out of the box. You can specify which property you want to be your Partition Key by adding the `[CosmosPartitionKey]` attribute above it.
+##### Unit Testing
 
-Unless you really know what you're doing, it is recommended make your `Id` property the Partition Key. This will enable random distribution for your collection.
+The .NET SDK that this library relies upon is really hard to test due to some internal/sealed classes and interfaces. 
+There are several hacky solutions for how you can test some of the methods but Cosmonaut, on top if being covered in tests also provides 2 extensions method for the most difficult things to test.
 
-If you do not set a Partition Key then the collection created will be single partition. Here is a quote from Microsoft about single partition collections: 
-> Single-partition collections have lower price options and the ability to execute queries and perform transactions across all collection data. They have the scalability and storage limits of a single partition (10GB and 10,000 RU/s). You do not have to specify a partition key for these collections. For scenarios that do not need large volumes of storage or throughput, single partition collections are a good fit.
-[link](https://azure.microsoft.com/en-gb/blog/10-things-to-know-about-documentdb-partitioned-collections/)
+* object.ToResourceResponse(HttpStatusCode, IDictionary<string,string> nullable) - Converts an object to a `ResourceResponse` allowing you to set headers as well. That way you can mock the return value of something like `CreateDocumentAsync`
+* object.ToFeedResponse(IDictionary<string,string> nullable) - Converts an `IQueryable<T>` to a `FeedResponse<T>` allowing you to set headers as well. Thay way you cna mock the return value of something like `CreateDocumentQuery`
 
 ##### Known hiccups
 Partitions are great but you should these 3 very important things about them and about the way Cosmonaut will react.
