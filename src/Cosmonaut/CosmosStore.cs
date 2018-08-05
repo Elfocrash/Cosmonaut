@@ -253,7 +253,7 @@ namespace Cosmonaut
 
         public async Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id, RequestOptions requestOptions = null)
         {
-            return await this.InvokeCosmosOperationAsync(() => CosmonautClient.DeleteDocumentAsync(DatabaseName, CollectionName, id, GetRequestOptions(id, requestOptions)), id)
+            return await CosmonautClient.DeleteDocumentAsync(DatabaseName, CollectionName, id, GetRequestOptions(id, requestOptions))
                 .ExecuteCosmosCommand<TEntity>();
         }
 

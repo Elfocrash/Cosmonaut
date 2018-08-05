@@ -6,7 +6,6 @@ using Cosmonaut.Extensions;
 using Cosmonaut.Response;
 using Cosmonaut.Testing;
 using FluentAssertions;
-using FluentAssertions.Common;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Moq;

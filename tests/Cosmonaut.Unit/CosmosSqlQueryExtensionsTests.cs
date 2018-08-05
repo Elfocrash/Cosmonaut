@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using Cosmonaut.Exceptions;
 using Cosmonaut.Extensions;
 using FluentAssertions;
-using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Linq;
-using Moq;
 using Xunit;
 
 namespace Cosmonaut.Unit

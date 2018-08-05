@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Cosmonaut.ApplicationInsights;
 using Cosmonaut.Extensions;
-using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.DependencyInjection;
 

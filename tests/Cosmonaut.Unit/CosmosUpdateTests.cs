@@ -8,7 +8,6 @@ using FluentAssertions;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Moq;
-using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace Cosmonaut.Unit

@@ -60,7 +60,7 @@ namespace Cosmonaut.Extensions
             if (partitionKeyProperty.Count > 1)
                 throw new MultiplePartitionKeysException(type);
 
-            return partitionKeyProperty.Count == 0 ? null : partitionKeyProperty.Single().GetValue(entity).ToString();
+            return partitionKeyProperty.Count == 0 ? null : partitionKeyProperty.Single().GetValue(entity)?.ToString();
         }
 
         internal static bool HasPartitionKey(this Type type)
@@ -100,7 +100,7 @@ namespace Cosmonaut.Extensions
 
         private static void CheckIfPropertyHasMultpleIdAttributes(PropertyInfo idProperty)
         {
-            if (!idProperty.GetCustomAttributes<JsonPropertyAttribute>().Any(x =>
+            if (!idProperty.GetCustomAttributes<JsonPropertyAttribute>().Any(x => !string.IsNullOrEmpty(x?.PropertyName) &&
                 x.PropertyName.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase)))
                 throw new MultipleCosmosIdsException(
                     "An entity can only have one cosmos db id. Either rename the Id property or remove the [JsonAttribute(\"id\")].");
@@ -115,13 +115,13 @@ namespace Cosmonaut.Extensions
         {
             return entity.GetType().GetInterfaces().Count(x => x.GetProperties()
                 .Any(prop => prop.GetCustomAttributes<JsonPropertyAttribute>()
-                    .Any(attr => attr.PropertyName.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase))));
+                    .Any(attr => !string.IsNullOrEmpty(attr?.PropertyName) && attr.PropertyName.Equals(CosmosConstants.CosmosId))));
         }
 
         private static int GetCountOfJsonPropertiesWithNameId(PropertyInfo[] propertyInfos)
         {
             return propertyInfos.Count(x => x.GetCustomAttributes<JsonPropertyAttribute>()
-                .Any(attr => attr.PropertyName.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase)));
+                .Any(attr => !string.IsNullOrEmpty(attr?.PropertyName) && attr.PropertyName.Equals(CosmosConstants.CosmosId)));
         }
 
         internal static bool HasJsonPropertyAttributeId(this JsonPropertyAttribute porentialJsonPropertyAttribute)
@@ -136,7 +136,11 @@ namespace Cosmonaut.Extensions
             var propertyInfos = entity.GetType().GetProperties();
 
             var propertyWithJsonPropertyId =
-                propertyInfos.SingleOrDefault(x => x.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName == CosmosConstants.CosmosId);
+                propertyInfos.SingleOrDefault(x =>
+                {
+                    var attr = x?.GetCustomAttribute<JsonPropertyAttribute>();
+                    return !string.IsNullOrEmpty(attr?.PropertyName) && attr.PropertyName.Equals(CosmosConstants.CosmosId);
+                });
 
             if (propertyWithJsonPropertyId != null)
             {
