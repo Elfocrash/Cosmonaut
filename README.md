@@ -125,6 +125,23 @@ Once you set this up you can add individual CosmosStores with shared collections
 
 Something worths noting is that because you will use this to share objects partitioning will be virtually impossible. For that reason the `id` will be used as a partition key by default as it is the only property that will be definately shared between all objects.
 
+#### CosmonautClient
+
+The CosmonautClient is the main wrapper around the DocumentClient that the SDK exposes.
+It is not supposed to support an alternative method for every function of the DocumentClient but only for the "important" ones.
+ 
+It adds several features on top the DocumentClient such as:
+
+* Event Logging with the option for Application Insights logging.
+* Automatic retrying when you get 429s.
+* Returning null instead of NotFound exception when a document is not found.
+* Async Query methods for Databases/Collections/Documents/Offers/Entities
+* SQL querying method with object parameters (like Dapper)
+
+It is used for every operation that the CosmosStore will do.
+It will also expose it's DocumentClient in case you want to do something else that the CosmonautClient doesn't have a method for.
+
+
 #### Transactions
 
 There is currently no way to reliably do transactions with the current CosmosDB SDK. Because Cosmonaut is a wrapper around the CosmosDB SDK it doesn't support them either. However there are plans for investigating potential other ways to achieve transactional operations such as server side stored procedures that Cosmonaut could provision and call.
