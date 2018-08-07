@@ -103,6 +103,12 @@ await cosmoStore.RemoveAsync(entity);// Removes the specific entity
 await cosmoStore.RemoveByIdAsync("<<anId>>");// Removes an entity with the specified ID
 ```
 
+### Restrictions
+Because of the way the internal `id` property of Cosmosdb works, there is a mandatory restriction made.
+You cannot have a property named Id or a property with the attribute `[JsonProperty("id")]` without it being a string.
+A cosmos id need to exist somehow on your entity model. For that reason if it isn't part of your entity you can just extend the `CosmosEntity` class.
+It is **HIGHLY RECOMMENDED** that you decorate your `Id` property with the `[JsonProperty("id")]` attribute, especially if you want to query based on the `Id`. This doesn't apply to direct reads or classes that extend `CosmosEntity`.
+
 #### Collection sharing
 Cosmonaut is all about making the integration with CosmosDB easy as well as making things like cost optimisation part of the library.
 
@@ -140,7 +146,6 @@ It adds several features on top the DocumentClient such as:
 
 It is used for every operation that the CosmosStore will do.
 It will also expose it's DocumentClient in case you want to do something else that the CosmonautClient doesn't have a method for.
-
 
 #### Transactions
 
@@ -249,9 +254,3 @@ Example: `AppInsightsTelemetryModule.Instance.Initialize(new TelemetryConfigurat
 | UpdateRangeAsync |1129ms|
 | UpsertRangeAsync |1034ms|
 | RemoveRangeAsync | 899ms |
-
-
-### Restrictions
-Because of the way the internal `id` property of Cosmosdb works, there is a mandatory restriction made.
-You cannot have a property named Id or a property with the attribute `[JsonProperty("id")]` without it being a string.
-A cosmos id need to exist somehow on your entity model. For that reason if it isn't part of your entity you can just extend the `CosmosEntity` class.
