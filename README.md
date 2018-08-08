@@ -105,9 +105,35 @@ await cosmoStore.RemoveByIdAsync("<<anId>>");// Removes an entity with the speci
 
 ### Restrictions
 Because of the way the internal `id` property of Cosmosdb works, there is a mandatory restriction made.
-You cannot have a property named Id or a property with the attribute `[JsonProperty("id")]` without it being a string.
-A cosmos id need to exist somehow on your entity model. For that reason if it isn't part of your entity you can just extend the `CosmosEntity` class.
-It is **HIGHLY RECOMMENDED** that you decorate your `Id` property with the `[JsonProperty("id")]` attribute, especially if you want to query based on the `Id`. This doesn't apply to direct reads or classes that extend `CosmosEntity`.
+A CosmosStore `Entity` must have some sort of `Id` property which is marked with the `[JsonProperty("id")]` attribute or
+you can extend the `CosmosEntity` class which already has an Id field with this attribute.
+This `Id` property can either be the Id of the object, if the model has one or it can be an extra field you added just for the use of Cosmonaut.
+
+Here are two examples:
+
+Your object has an Id of it's own so you just add the `[JsonProperty("id")]` attribute above it.
+```csharp
+public class Car
+{
+    [JsonProperty("id")]
+    public string Id { get; set; }
+    
+    public string Name { get; set; }
+}
+```
+
+Your object doesn't have an Id of it's own so you just create a property add the `[JsonProperty("id")]` attribute above it.
+```csharp
+public class Human
+{
+    public string FirstName { get; set; }
+    
+    public string LastName { get; set; }
+    
+    [JsonProperty("id")]
+    public string CosmosId { get; set; }
+}
+```
 
 #### Collection sharing
 Cosmonaut is all about making the integration with CosmosDB easy as well as making things like cost optimisation part of the library.
