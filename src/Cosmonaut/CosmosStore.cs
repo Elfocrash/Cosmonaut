@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Cosmonaut.Diagnostics;
 using Cosmonaut.Extensions;
 using Cosmonaut.Operations;
 using Cosmonaut.Response;
@@ -300,8 +301,6 @@ namespace Cosmonaut
         
         private void InitialiseCosmosStore()
         {
-            typeof(TEntity).EnsureThatEntityHasJsonPropertyId<TEntity>();
-
             IsShared = typeof(TEntity).UsesSharedCollection();
 
             if(string.IsNullOrEmpty(CollectionName))
