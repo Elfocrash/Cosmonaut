@@ -16,8 +16,6 @@ Cosmonaut is an object mapper that enables .NET developers to work with a Cosmos
 The idea is pretty simple. You can have one CosmoStore per entity (POCO/dtos etc)
 This entity will be used to create a collection in the cosmosdb and it will offer all the data access for this object
 
-The CosmosStore us making use of the [CosmonautClient](https://github.com/Elfocrash/Cosmonaut/wiki/CosmonautClient).
-
 Registering the CosmosStores in ServiceCollection for DI support
 ```csharp
  var cosmosSettings = new CosmosStoreSettings("<<databaseName>>", 
@@ -103,12 +101,6 @@ await cosmoStore.RemoveAsync(entity);// Removes the specific entity
 await cosmoStore.RemoveByIdAsync("<<anId>>");// Removes an entity with the specified ID
 ```
 
-### Restrictions
-Because of the way the internal `id` property of Cosmosdb works, there is a mandatory restriction made.
-You cannot have a property named Id or a property with the attribute `[JsonProperty("id")]` without it being a string.
-A cosmos id need to exist somehow on your entity model. For that reason if it isn't part of your entity you can just extend the `CosmosEntity` class.
-It is **HIGHLY RECOMMENDED** that you decorate your `Id` property with the `[JsonProperty("id")]` attribute, especially if you want to query based on the `Id`. This doesn't apply to direct reads or classes that extend `CosmosEntity`.
-
 #### Collection sharing
 Cosmonaut is all about making the integration with CosmosDB easy as well as making things like cost optimisation part of the library.
 
@@ -131,36 +123,11 @@ Once you set this up you can add individual CosmosStores with shared collections
 
 Something worths noting is that because you will use this to share objects partitioning will be virtually impossible. For that reason the `id` will be used as a partition key by default as it is the only property that will be definately shared between all objects.
 
-#### CosmonautClient
-
-The CosmonautClient is the main wrapper around the DocumentClient that the SDK exposes.
-It is not supposed to support an alternative method for every function of the DocumentClient but only for the "important" ones.
- 
-It adds several features on top the DocumentClient such as:
-
-* Event Logging with the option for Application Insights logging.
-* Automatic retrying when you get 429s.
-* Returning null instead of NotFound exception when a document is not found.
-* Async Query methods for Databases/Collections/Documents/Offers/Entities
-* SQL querying method with object parameters (like Dapper)
-
-It is used for every operation that the CosmosStore will do.
-It will also expose it's DocumentClient in case you want to do something else that the CosmonautClient doesn't have a method for.
-
 #### Transactions
 
 There is currently no way to reliably do transactions with the current CosmosDB SDK. Because Cosmonaut is a wrapper around the CosmosDB SDK it doesn't support them either. However there are plans for investigating potential other ways to achieve transactional operations such as server side stored procedures that Cosmonaut could provision and call.
 
 Every operational call (Add, Update, Upsert, Delete) however returns it's status back alongside the reason it failed, if it failed, and the entity so you can add your own retry logic.
-
-#### Partitioning
-Cosmonaut supports partitions out of the box. You can specify which property you want to be your Partition Key by adding the `[CosmosPartitionKey]` attribute above it.
-
-Unless you really know what you're doing, it is recommended make your `Id` property the Partition Key. This will enable random distribution for your collection.
-
-If you do not set a Partition Key then the collection created will be single partition. Here is a quote from Microsoft about single partition collections: 
-> Single-partition collections have lower price options and the ability to execute queries and perform transactions across all collection data. They have the scalability and storage limits of a single partition (10GB and 10,000 RU/s). You do not have to specify a partition key for these collections. For scenarios that do not need large volumes of storage or throughput, single partition collections are a good fit.
-[link](https://azure.microsoft.com/en-gb/blog/10-things-to-know-about-documentdb-partitioned-collections/)
 
 #### Indexing
 By default CosmosDB is created with the following indexing rules
@@ -203,13 +170,14 @@ However you can get around that by setting the `FeedOptions.EnableScanInQuery` t
 
 More about CosmosDB Indexing [here](https://docs.microsoft.com/en-us/azure/cosmos-db/indexing-policies)
 
-##### Unit Testing
+#### Partitioning
+Cosmonaut supports partitions out of the box. You can specify which property you want to be your Partition Key by adding the `[CosmosPartitionKey]` attribute above it.
 
-The .NET SDK that this library relies upon is really hard to test due to some internal/sealed classes and interfaces. 
-There are several hacky solutions for how you can test some of the methods but Cosmonaut, on top if being covered in tests also provides 2 extensions method for the most difficult things to test.
+Unless you really know what you're doing, it is recommended make your `Id` property the Partition Key. This will enable random distribution for your collection.
 
-* object.ToResourceResponse(HttpStatusCode, IDictionary<string,string> nullable) - Converts an object to a `ResourceResponse` allowing you to set headers as well. That way you can mock the return value of something like `CreateDocumentAsync`
-* object.ToFeedResponse(IDictionary<string,string> nullable) - Converts an `IQueryable<T>` to a `FeedResponse<T>` allowing you to set headers as well. Thay way you cna mock the return value of something like `CreateDocumentQuery`
+If you do not set a Partition Key then the collection created will be single partition. Here is a quote from Microsoft about single partition collections: 
+> Single-partition collections have lower price options and the ability to execute queries and perform transactions across all collection data. They have the scalability and storage limits of a single partition (10GB and 10,000 RU/s). You do not have to specify a partition key for these collections. For scenarios that do not need large volumes of storage or throughput, single partition collections are a good fit.
+[link](https://azure.microsoft.com/en-gb/blog/10-things-to-know-about-documentdb-partitioned-collections/)
 
 ##### Known hiccups
 Partitions are great but you should these 3 very important things about them and about the way Cosmonaut will react.
@@ -254,3 +222,9 @@ Example: `AppInsightsTelemetryModule.Instance.Initialize(new TelemetryConfigurat
 | UpdateRangeAsync |1129ms|
 | UpsertRangeAsync |1034ms|
 | RemoveRangeAsync | 899ms |
+
+
+### Restrictions
+Because of the way the internal `id` property of Cosmosdb works, there is a mandatory restriction made.
+You cannot have a property named Id or a property with the attribute `[JsonProperty("id")]` without it being a string.
+A cosmos id need to exist somehow on your entity model. For that reason if it isn't part of your entity you can just extend the `CosmosEntity` class.
