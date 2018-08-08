@@ -89,13 +89,31 @@ namespace Cosmonaut.Extensions
 
             if (idProperty != null && containsJsonAttributeIdCount == 1)
             {
-                CheckIfPropertyHasMultpleIdAttributes(idProperty);
+                if (idProperty.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName != CosmosConstants.CosmosId)
+                    CheckIfPropertyHasMultpleIdAttributes(idProperty);
             }
 
             if (idProperty != null && idProperty.GetValue(entity) == null)
             {
                 idProperty.SetValue(entity, Guid.NewGuid().ToString());
             }
+        }
+
+        internal static void EnsureThatEntityHasJsonPropertyId<TEntity>(this Type type)
+        {
+            if (type == typeof(object))
+                return;
+
+            if (type.GetProperties()
+                .Any(x => x.GetCustomAttributes<JsonPropertyAttribute>()
+                    .Any(attr => !string.IsNullOrEmpty(attr.PropertyName)
+                                 && attr.PropertyName.Equals(CosmosConstants.CosmosId))))
+                return;
+
+            if (type.BaseType != null)
+                type.BaseType.EnsureThatEntityHasJsonPropertyId<TEntity>();
+
+            throw new CosmosIdWithoutAttributeException<TEntity>();
         }
 
         private static void CheckIfPropertyHasMultpleIdAttributes(PropertyInfo idProperty)
@@ -108,14 +126,7 @@ namespace Cosmonaut.Extensions
 
         private static int GetCountOfJsonPropertiesWithNameIdForObject<TEntity>(TEntity entity, PropertyInfo[] propertyInfos) where TEntity : class
         {
-            return GetCountOfJsonPropertiesWithNameId(propertyInfos) + GetCountOfJsonPropertyWithNameIdInInterfaces(entity);
-        }
-
-        private static int GetCountOfJsonPropertyWithNameIdInInterfaces<TEntity>(TEntity entity) where TEntity : class
-        {
-            return entity.GetType().GetInterfaces().Count(x => x.GetProperties()
-                .Any(prop => prop.GetCustomAttributes<JsonPropertyAttribute>()
-                    .Any(attr => !string.IsNullOrEmpty(attr?.PropertyName) && attr.PropertyName.Equals(CosmosConstants.CosmosId))));
+            return GetCountOfJsonPropertiesWithNameId(propertyInfos);
         }
 
         private static int GetCountOfJsonPropertiesWithNameId(PropertyInfo[] propertyInfos)

@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Cosmonaut.Console
 {
@@ -36,6 +38,10 @@ namespace Cosmonaut.Console
             {
                 settings.ConnectionPolicy = connectionPolicy;
                 settings.DefaultCollectionThroughput = 5000;
+                settings.JsonSerializerSettings = new JsonSerializerSettings
+                {
+                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                };
             }, "pewpew");
 
             serviceCollection.AddCosmosStore<Car>(cosmosSettings);
@@ -86,7 +92,7 @@ namespace Cosmonaut.Console
             {
                 cars.Add(new Car
                 {
-                    Id = Guid.NewGuid().ToString(),
+                    CosmosId = Guid.NewGuid().ToString(),
                     ModelName = "Car " + i,
                 });
             }
@@ -101,8 +107,8 @@ namespace Cosmonaut.Console
             watch.Restart();
             //await Task.Delay(3000);
 
-            var aCarId = addedCars.SuccessfulEntities.First().Entity.Id;
-            var firstAddedCar = await carStore.QueryMultipleAsync("select * from c where c.id = @id", new { id= aCarId });
+            var aCarId = addedCars.SuccessfulEntities.First().Entity.CosmosId;
+            var firstAddedCar = await carStore.Query().FirstOrDefaultAsync(x => x.CosmosId == aCarId);
             var allTheCars = await carStore.QueryMultipleAsync<Car>("select * from c");
 
             var addedRetrieved = await booksStore.Query().ToListAsync();

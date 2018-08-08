@@ -5,6 +5,7 @@ namespace Cosmonaut.Unit
 {
     public class Dummy
     {
+        [JsonProperty("id")]
         public string Id { get; set; }
 
         public string Name { get; set; }
@@ -13,6 +14,7 @@ namespace Cosmonaut.Unit
     [CosmosCollection("dummies")]
     public class DummyWithThroughput
     {
+        [JsonProperty("id")]
         public string Id { get; set; }
 
         public string Name { get; set; }
