@@ -123,6 +123,13 @@ Once you set this up you can add individual CosmosStores with shared collections
 
 Something worths noting is that because you will use this to share objects partitioning will be virtually impossible. For that reason the `id` will be used as a partition key by default as it is the only property that will be definately shared between all objects.
 
+### Restrictions
+Because of the way the internal `id` property of Cosmosdb works, there is a mandatory restriction made.
+You cannot have a property named Id or a property with the attribute `[JsonProperty("id")]` without it being a string.
+A cosmos id need to exist somehow on your entity model. For that reason if it isn't part of your entity you can just extend the `CosmosEntity` class.
+
+It is **HIGHLY RECOMMENDED** that you decorate your Id property with the `[JsonProperty("id")]` attribute to prevent any unexpected behaviour.
+
 #### Transactions
 
 There is currently no way to reliably do transactions with the current CosmosDB SDK. Because Cosmonaut is a wrapper around the CosmosDB SDK it doesn't support them either. However there are plans for investigating potential other ways to achieve transactional operations such as server side stored procedures that Cosmonaut could provision and call.
@@ -222,9 +229,3 @@ Example: `AppInsightsTelemetryModule.Instance.Initialize(new TelemetryConfigurat
 | UpdateRangeAsync |1129ms|
 | UpsertRangeAsync |1034ms|
 | RemoveRangeAsync | 899ms |
-
-
-### Restrictions
-Because of the way the internal `id` property of Cosmosdb works, there is a mandatory restriction made.
-You cannot have a property named Id or a property with the attribute `[JsonProperty("id")]` without it being a string.
-A cosmos id need to exist somehow on your entity model. For that reason if it isn't part of your entity you can just extend the `CosmosEntity` class.
