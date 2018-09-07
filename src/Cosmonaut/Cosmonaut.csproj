@@ -12,9 +12,10 @@
     <RepositoryUrl>https://github.com/Elfocrash/Cosmonaut</RepositoryUrl>
     <PackageTags>cosmosdb documentdb azure cosmos entitystore entity db orm</PackageTags>
     <PackageReleaseNotes>Please report any issues on Github.</PackageReleaseNotes>
-    <Version>2.0.0</Version>
+    <Version>2.0.4</Version>
     <NeutralLanguage></NeutralLanguage>
     <Company>Nick Chapsas</Company>
+    <PackageIconUrl>https://raw.githubusercontent.com/Elfocrash/Cosmonaut/develop/logo.png</PackageIconUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

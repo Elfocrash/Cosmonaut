@@ -262,7 +262,7 @@ namespace Cosmonaut
             var document = await CosmonautClient.GetDocumentAsync(DatabaseName, CollectionName, id,
                 GetRequestOptions(id, requestOptions));
             
-            return JsonConvert.DeserializeObject<TEntity>(document.ToString());
+            return document != null ? JsonConvert.DeserializeObject<TEntity>(document.ToString()) : null;
         }
 
         public async Task<TEntity> FindAsync(string id, string partitionKeyValue)
