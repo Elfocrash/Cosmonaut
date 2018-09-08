@@ -17,7 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{1900E4D6
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{E50F9511-8F2F-4753-8D4B-B0CAD4E5D573}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cosmonaut.System", "tests\Cosmonaut.System\Cosmonaut.System.csproj", "{87BB5EC9-0781-476E-8336-C3288ABCB591}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut.System", "tests\Cosmonaut.System\Cosmonaut.System.csproj", "{87BB5EC9-0781-476E-8336-C3288ABCB591}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

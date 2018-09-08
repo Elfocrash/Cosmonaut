@@ -21,7 +21,7 @@ namespace Cosmonaut.Unit
         }
 
         [Fact]
-        public async Task ToListAsyncReturnsList()
+        public async Task ToListAsync_ReturnsList()
         {
             // Arrange
             var dummies = new List<Dummy>

@@ -106,15 +106,9 @@ namespace Cosmonaut.Unit
                 .Setup(_ => _.ExecuteNextAsync<T>(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(response);
 
-            var provider = new Mock<IQueryProvider>();
-            provider
-                .Setup(_ => _.CreateQuery<T>(It.IsAny<Expression>()))
-                .Returns(mockDocumentQuery.Object);
-
             mockDocumentClient.Setup(x => x.CreateDocumentQuery<T>(It.IsAny<Uri>(), It.Is<SqlQuerySpec>(query => query.QueryText == sql),
                     It.IsAny<FeedOptions>()))
                 .Returns(mockDocumentQuery.Object);
-            
 
             var entityStore = new CosmosStore<Dummy>(new CosmonautClient(mockDocumentClient.Object), "databaseName");
             return entityStore;
