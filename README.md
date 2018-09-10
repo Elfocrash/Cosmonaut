@@ -27,15 +27,23 @@ serviceCollection.AddCosmosStore<Book>(cosmosSettings);
 //or just by using the Action extension
 
 serviceCollection.AddCosmosStore<Book>(options =>
-            {
-                options.DatabaseName = "<<databaseName>>";
-                options.AuthKey = "<<authkey>>";
-                options.EndpointUrl = new Uri("<<cosmosUri>>");
-            });
+{
+    options.DatabaseName = "<<databaseName>>";
+    options.AuthKey = "<<authkey>>";
+    options.EndpointUrl = new Uri("<<cosmosUri>>");
+});
 
 //or just initialise the object
 
 ICosmosStore<Book> bookStore = new CosmosStore<Book>(cosmosSettings)
+```
+
+To use the `AddCosmosStore` extension methods you need to install the `Cosmonaut.Extensions.Microsoft.DependencyInjection` package.
+
+```
+Install-Package Cosmonaut.Extensions.Microsoft.DependencyInjection
+or
+dotnet add package Cosmonaut.Extensions.Microsoft.DependencyInjection
 ```
 
 ##### Retrieving an entity by id (and partition key)
