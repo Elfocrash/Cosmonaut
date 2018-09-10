@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
+using Cosmonaut.Extensions.Microsoft.DependencyInjection;
 using Cosmonaut.Operations;
 using Cosmonaut.Response;
 using Cosmonaut.System.Models;

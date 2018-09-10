@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Version>2.1.0</Version>
+    <Authors>Nick Chapsas</Authors>
+    <Company>Nick Chapsas</Company>
+    <Product>Cosmonaut.Extensions.Microsoft.DependencyInjection</Product>
+    <PackageId>Cosmonaut.Extensions.Microsoft.DependencyInjection</PackageId>
+    <Description>Microsoft Dependency Injection extension methods</Description>
+    <PackageLicenseUrl>https://github.com/Elfocrash/Cosmonaut/blob/develop/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/Elfocrash/Cosmonaut</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/Elfocrash/Cosmonaut/develop/logo.png</PackageIconUrl>
+    <RepositoryUrl>https://github.com/Elfocrash/Cosmonaut</RepositoryUrl>
+    <PackageTags>cosmosdb documentdb azure cosmos entitystore entity db orm</PackageTags>
+    <PackageReleaseNotes>Please report any issues on Github.</PackageReleaseNotes>
+    <Copyright>Copyright 2018 - Nick Chapsas</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Cosmonaut" Version="2.1.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.1.1" />
+  </ItemGroup>
+
+</Project>

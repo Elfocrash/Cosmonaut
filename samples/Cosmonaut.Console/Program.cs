@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
+using Cosmonaut.Extensions.Microsoft.DependencyInjection;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -71,7 +72,7 @@ namespace Cosmonaut.Console
 
 
             var books = new List<Book>();
-            for (int i = 0; i < 50; i++)
+            for (int i = 0; i < 250; i++)
             {
                 books.Add(new Book
                 {
@@ -82,7 +83,7 @@ namespace Cosmonaut.Console
             }
 
             var cars = new List<Car>();
-            for (int i = 0; i < 50; i++)
+            for (int i = 0; i < 250; i++)
             {
                 cars.Add(new Car
                 {

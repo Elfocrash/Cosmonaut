@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using Cosmonaut.Exceptions;
 using Microsoft.Azure.Documents;
@@ -41,7 +42,7 @@ namespace Cosmonaut.Extensions
             if (obj == null)
                 return sqlParameterCollection;
 
-            foreach (var propertyInfo in obj.GetType().GetProperties())
+            foreach (var propertyInfo in obj.GetType().GetTypeInfo().GetProperties())
             {
                 var propertyName = propertyInfo.Name.StartsWith("@") ? propertyInfo.Name : $"@{propertyInfo.Name}";
                 var propertyValue = propertyInfo.GetValue(obj);

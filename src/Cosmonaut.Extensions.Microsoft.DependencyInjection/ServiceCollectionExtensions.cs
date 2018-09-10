@@ -1,9 +1,9 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Cosmonaut.Extensions
+namespace Cosmonaut.Extensions.Microsoft.DependencyInjection
 {
-    public static class CosmonautServiceCollectionExtensions
+    public static class ServiceCollectionExtensions
     {
         public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services, CosmosStoreSettings settings, string overriddenCollectionName = "") where TEntity : class
         {

@@ -31,11 +31,12 @@ namespace Cosmonaut.Testing
 
             var arguments = new object[] { Stream.Null, headers, statusCode, null };
 
-            var documentServiceResponse = Activator.CreateInstance(documentServiceResponseType ?? throw new InvalidOperationException(), flags, null, arguments, null);
+            var documentServiceResponse =
+                documentServiceResponseType.GetTypeInfo().GetConstructors(flags)[0].Invoke(arguments);
 
-            var responseField = typeof(ResourceResponse<T>).GetField("response", BindingFlags.NonPublic | BindingFlags.Instance);
+            var responseField = typeof(ResourceResponse<T>).GetTypeInfo().GetField("response", BindingFlags.NonPublic | BindingFlags.Instance);
 
-            if (responseField != null) responseField.SetValue(resourceResponse, documentServiceResponse);
+            responseField?.SetValue(resourceResponse, documentServiceResponse);
 
             return resourceResponse;
         }
@@ -67,7 +68,7 @@ namespace Cosmonaut.Testing
             {
                 var t = feedResponseType.MakeGenericType(typeof(T));
 
-                var feedResponse = Activator.CreateInstance(t, flags, null, arguments, null);
+                var feedResponse = t.GetTypeInfo().GetConstructors(flags)[0].Invoke(arguments);
 
                 return (FeedResponse<T>)feedResponse;
             }

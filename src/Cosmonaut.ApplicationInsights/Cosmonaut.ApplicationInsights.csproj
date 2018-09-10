@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard1.6</TargetFramework>
     <Authors>Nick Chapsas</Authors>
     <Description>ApplicationInsights support for Cosmonaut</Description>
     <Copyright>Copyright 2018 - Nick Chapsas</Copyright>
@@ -9,14 +9,14 @@
     <PackageProjectUrl>https://github.com/Elfocrash/Cosmonaut</PackageProjectUrl>
     <PackageTags>cosmosdb azure cosmos entitystore entity db orm</PackageTags>
     <RepositoryUrl>https://github.com/Elfocrash/Cosmonaut</RepositoryUrl>
+    <Version>2.1.0</Version>
+    <PackageReleaseNotes>Please report any issues on Github.</PackageReleaseNotes>
+    <PackageIconUrl>https://raw.githubusercontent.com/Elfocrash/Cosmonaut/develop/logo.png</PackageIconUrl>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Cosmonaut" Version="2.1.0" />
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.6.4" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Cosmonaut\Cosmonaut.csproj" />
   </ItemGroup>
 
 </Project>

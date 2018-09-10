@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Cosmonaut.ApplicationInsights\Cosmonaut.ApplicationInsights.csproj" />
+    <ProjectReference Include="..\..\src\Cosmonaut.Extensions.Microsoft.DependencyInjection\Cosmonaut.Extensions.Microsoft.DependencyInjection.csproj" />
     <ProjectReference Include="..\..\src\Cosmonaut\Cosmonaut.csproj" />
   </ItemGroup>
 
