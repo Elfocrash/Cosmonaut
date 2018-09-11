@@ -2,6 +2,8 @@
 
 # Cosmonaut
 
+![](https://raw.githubusercontent.com/Elfocrash/Cosmonaut/develop/logo.png)
+
 > The word was derived from "kosmos" (Ancient Greek: κόσμος) which means world/universe and "nautes" (Ancient Greek: ναῦς) which means sailor/navigator
 
 Cosmonaut is an object mapper that enables .NET developers to work with a CosmosDB using .NET objects. It eliminates the need for most of the data-access code that developers usually need to write.
@@ -239,3 +241,5 @@ If you already have initialised `TelemetryConfiguration` for your application th
 | UpdateRangeAsync |1129ms|
 | UpsertRangeAsync |1034ms|
 | RemoveRangeAsync | 899ms |
+
+
