@@ -37,7 +37,7 @@ namespace Cosmonaut.Console
             {
                 settings.ConnectionPolicy = connectionPolicy;
                 settings.DefaultCollectionThroughput = 5000;
-            }, "pewpew");
+            });
 
             serviceCollection.AddCosmosStore<Car>(cosmosSettings);
 
@@ -45,8 +45,7 @@ namespace Cosmonaut.Console
 
             var booksStore = provider.GetService<ICosmosStore<Book>>();
             var carStore = provider.GetService<ICosmosStore<Car>>();
-
-
+            
             System.Console.WriteLine($"Started");
 
             var database = await cosmonautClient.GetDatabaseAsync("localtest");
@@ -72,7 +71,7 @@ namespace Cosmonaut.Console
 
 
             var books = new List<Book>();
-            for (int i = 0; i < 250; i++)
+            for (int i = 0; i < 20; i++)
             {
                 books.Add(new Book
                 {
@@ -83,17 +82,18 @@ namespace Cosmonaut.Console
             }
 
             var cars = new List<Car>();
-            for (int i = 0; i < 250; i++)
+            for (int i = 0; i < 20; i++)
             {
                 cars.Add(new Car
                 {
                     Id = Guid.NewGuid().ToString(),
-                    ModelName = "Car " + i,
+                    Name = "Car " + i,
                 });
             }
 
             var watch = new Stopwatch();
             watch.Start();
+
             var addedCars = await carStore.AddRangeAsync(cars);
 
             var addedBooks = await booksStore.AddRangeAsync(books);

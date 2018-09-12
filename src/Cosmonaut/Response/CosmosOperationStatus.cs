@@ -1,11 +1,9 @@
 ﻿namespace Cosmonaut.Response
 {
-    public enum CosmosOperationStatus
+    internal enum CosmosOperationStatus
     {
         Success,
-        ResourceNotFound,
-        ResourceWithIdAlreadyExists,
         RequestRateIsLarge,
-        Exception
+        ResourceNotFound
     }
 }

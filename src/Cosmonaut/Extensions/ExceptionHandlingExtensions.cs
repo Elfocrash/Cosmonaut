@@ -15,24 +15,19 @@ namespace Cosmonaut.Extensions
                     return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.ResourceNotFound);
                 case (HttpStatusCode) CosmosConstants.TooManyRequestsStatusCode:
                     return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.RequestRateIsLarge);
-                case HttpStatusCode.Conflict:
-                    return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.ResourceWithIdAlreadyExists);
             }
 
             throw exception;
         }
 
-        internal static CosmosResponse<TEntity> ToCosmosResponse<TEntity>(this Exception exception) where TEntity : class
+        internal static CosmosResponse<TEntity> ToCosmosResponse<TEntity>(this DocumentClientException exception) where TEntity : class
         {
             return ToCosmosResponse<TEntity>(exception, null);
         }
 
-        internal static CosmosResponse<TEntity> ToCosmosResponse<TEntity>(this Exception exception, TEntity entity) where TEntity : class
+        internal static CosmosResponse<TEntity> ToCosmosResponse<TEntity>(this DocumentClientException exception, TEntity entity) where TEntity : class
         {
-            if (exception is DocumentClientException documentClientException)
-                return DocumentClientExceptionToCosmosResponse(documentClientException, entity);
-
-            throw exception;
+            return DocumentClientExceptionToCosmosResponse(exception, entity);
         }
     }
 }

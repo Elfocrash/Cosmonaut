@@ -322,28 +322,23 @@ namespace Cosmonaut
             try
             {
                 var multipleResponse = await _cosmosScaler.UpscaleCollectionIfConfiguredAsSuch(entitiesList, DatabaseName, CollectionName, operationFunc);
-                var multiOperationEntitiesTasks = entitiesList.Select(operationFunc);
+                var multiOperationEntitiesTasks = entitiesList.Select(operationFunc).ToArray();
                 var operationResult = await HandleOperationWithRateLimitRetry(multiOperationEntitiesTasks, operationFunc);
                 multipleResponse.SuccessfulEntities.AddRange(operationResult.SuccessfulEntities);
                 multipleResponse.FailedEntities.AddRange(operationResult.FailedEntities);
                 await _cosmosScaler.DownscaleCollectionRequestUnitsToDefault(DatabaseName, CollectionName);
                 return multipleResponse;
             }
-            catch (Exception exception)
+            catch (Exception)
             {
                 await _cosmosScaler.DownscaleCollectionRequestUnitsToDefault(DatabaseName, CollectionName);
-
-                if (exception is DocumentClientException documentClientException)
-                {
-                    return new CosmosMultipleResponse<TEntity>(documentClientException);
-                }
                 throw;
             }
         }
 
         private RequestOptions GetRequestOptions(RequestOptions requestOptions, TEntity entity)
         {
-            var partitionKeyValue = entity.GetPartitionKeyValueForEntity(IsShared);
+            var partitionKeyValue = entity.GetPartitionKeyValueForEntity();
             if (requestOptions == null)
             {
                 return partitionKeyValue != null ? new RequestOptions
@@ -358,7 +353,7 @@ namespace Cosmonaut
 
         private RequestOptions GetRequestOptions(string id, RequestOptions requestOptions)
         {
-            var partitionKeyDefinition = typeof(TEntity).GetPartitionKeyForEntity();
+            var partitionKeyDefinition = typeof(TEntity).GetPartitionKeyDefinitionForEntity();
             var partitionKeyIsId = IsShared || (partitionKeyDefinition?.Paths?.SingleOrDefault()?.Equals($"/{CosmosConstants.CosmosId}") ?? false);
             if (requestOptions == null && partitionKeyIsId)
             {

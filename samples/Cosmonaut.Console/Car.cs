@@ -7,7 +7,8 @@ namespace Cosmonaut.Console
     {
         public string Id { get; set; }
         
-        public string ModelName { get; set; }
+        [CosmosPartitionKey]
+        public string Name { get; set; }
 
         public string CosmosEntityName { get; set; }
     }
