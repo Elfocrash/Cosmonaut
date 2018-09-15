@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Cosmonaut.Diagnostics;
 using Cosmonaut.Extensions;
 using Cosmonaut.Operations;
 using Cosmonaut.Response;
@@ -262,7 +261,7 @@ namespace Cosmonaut
             var document = await CosmonautClient.GetDocumentAsync(DatabaseName, CollectionName, id,
                 GetRequestOptions(id, requestOptions));
             
-            return JsonConvert.DeserializeObject<TEntity>(document.ToString());
+            return document != null ? JsonConvert.DeserializeObject<TEntity>(document.ToString()) : null;
         }
 
         public async Task<TEntity> FindAsync(string id, string partitionKeyValue)
@@ -323,28 +322,23 @@ namespace Cosmonaut
             try
             {
                 var multipleResponse = await _cosmosScaler.UpscaleCollectionIfConfiguredAsSuch(entitiesList, DatabaseName, CollectionName, operationFunc);
-                var multiOperationEntitiesTasks = entitiesList.Select(operationFunc);
+                var multiOperationEntitiesTasks = entitiesList.Select(operationFunc).ToArray();
                 var operationResult = await HandleOperationWithRateLimitRetry(multiOperationEntitiesTasks, operationFunc);
                 multipleResponse.SuccessfulEntities.AddRange(operationResult.SuccessfulEntities);
                 multipleResponse.FailedEntities.AddRange(operationResult.FailedEntities);
                 await _cosmosScaler.DownscaleCollectionRequestUnitsToDefault(DatabaseName, CollectionName);
                 return multipleResponse;
             }
-            catch (Exception exception)
+            catch (Exception)
             {
                 await _cosmosScaler.DownscaleCollectionRequestUnitsToDefault(DatabaseName, CollectionName);
-
-                if (exception is DocumentClientException documentClientException)
-                {
-                    return new CosmosMultipleResponse<TEntity>(documentClientException);
-                }
                 throw;
             }
         }
 
         private RequestOptions GetRequestOptions(RequestOptions requestOptions, TEntity entity)
         {
-            var partitionKeyValue = entity.GetPartitionKeyValueForEntity(IsShared);
+            var partitionKeyValue = entity.GetPartitionKeyValueForEntity();
             if (requestOptions == null)
             {
                 return partitionKeyValue != null ? new RequestOptions
@@ -359,7 +353,7 @@ namespace Cosmonaut
 
         private RequestOptions GetRequestOptions(string id, RequestOptions requestOptions)
         {
-            var partitionKeyDefinition = typeof(TEntity).GetPartitionKeyForEntity();
+            var partitionKeyDefinition = typeof(TEntity).GetPartitionKeyDefinitionForEntity();
             var partitionKeyIsId = IsShared || (partitionKeyDefinition?.Paths?.SingleOrDefault()?.Equals($"/{CosmosConstants.CosmosId}") ?? false);
             if (requestOptions == null && partitionKeyIsId)
             {

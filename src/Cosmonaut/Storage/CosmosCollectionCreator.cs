@@ -26,8 +26,6 @@ namespace Cosmonaut.Storage
             int collectionThroughput,
             IndexingPolicy indexingPolicy = null) where TEntity : class
         {
-            var isSharedCollection = typeof(TEntity).UsesSharedCollection();
-
             var collectionResource = await _cosmonautClient.GetCollectionAsync(databaseId, collectionId);
 
             if (collectionResource != null)
@@ -38,8 +36,7 @@ namespace Cosmonaut.Storage
                 Id = collectionId
             };
 
-            SetPartitionKeyIfCollectionIsNotShared(typeof(TEntity), isSharedCollection, newCollection);
-            SetPartitionKeyAsIdIfCollectionIsShared(isSharedCollection, newCollection);
+            SetPartitionKeyDefinitionForCollection(typeof(TEntity), newCollection);
 
             if (indexingPolicy != null)
                 newCollection.IndexingPolicy = indexingPolicy;
@@ -52,18 +49,9 @@ namespace Cosmonaut.Storage
             return newCollection != null;
         }
 
-        private static void SetPartitionKeyAsIdIfCollectionIsShared(bool isSharedCollection, DocumentCollection collection)
+        private static void SetPartitionKeyDefinitionForCollection(Type entityType, DocumentCollection collection)
         {
-            if (isSharedCollection)
-            {
-                collection.PartitionKey = DocumentHelpers.GetPartitionKeyDefinition(CosmosConstants.CosmosId);
-            }
-        }
-
-        private static void SetPartitionKeyIfCollectionIsNotShared(Type entityType, bool isSharedCollection, DocumentCollection collection)
-        {
-            if (isSharedCollection) return;
-            var partitionKey = entityType.GetPartitionKeyForEntity();
+            var partitionKey = entityType.GetPartitionKeyDefinitionForEntity();
 
             if (partitionKey != null)
                 collection.PartitionKey = partitionKey;

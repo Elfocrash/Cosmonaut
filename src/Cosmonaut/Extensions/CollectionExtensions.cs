@@ -11,7 +11,7 @@ namespace Cosmonaut.Extensions
     {
         internal static string GetCollectionName(this Type entityType)
         {
-            var collectionNameAttribute = entityType.GetCustomAttribute<CosmosCollectionAttribute>();
+            var collectionNameAttribute = entityType.GetTypeInfo().GetCustomAttribute<CosmosCollectionAttribute>();
 
             var collectionName = collectionNameAttribute?.Name;
 
@@ -20,7 +20,7 @@ namespace Cosmonaut.Extensions
 
         internal static string GetSharedCollectionEntityName(this Type entityType)
         {
-            var collectionNameAttribute = entityType.GetCustomAttribute<SharedCosmosCollectionAttribute>();
+            var collectionNameAttribute = entityType.GetTypeInfo().GetCustomAttribute<SharedCosmosCollectionAttribute>();
 
             var collectionName = collectionNameAttribute?.EntityName;
 
@@ -29,7 +29,7 @@ namespace Cosmonaut.Extensions
 
         internal static string GetSharedCollectionName(this Type entityType)
         {
-            var collectionNameAttribute = entityType.GetCustomAttribute<SharedCosmosCollectionAttribute>();
+            var collectionNameAttribute = entityType.GetTypeInfo().GetCustomAttribute<SharedCosmosCollectionAttribute>();
 
             var collectionName = collectionNameAttribute?.SharedCollectionName;
 
@@ -41,8 +41,8 @@ namespace Cosmonaut.Extensions
 
         internal static bool UsesSharedCollection(this Type entityType)
         {
-            var hasSharedCosmosCollectionAttribute = entityType.GetCustomAttribute<SharedCosmosCollectionAttribute>() != null;
-            var implementsSharedCosmosEntity = entityType.GetInterfaces().Contains(typeof(ISharedCosmosEntity));
+            var hasSharedCosmosCollectionAttribute = entityType.GetTypeInfo().GetCustomAttribute<SharedCosmosCollectionAttribute>() != null;
+            var implementsSharedCosmosEntity = entityType.GetTypeInfo().GetInterfaces().Contains(typeof(ISharedCosmosEntity));
 
             if (hasSharedCosmosCollectionAttribute && !implementsSharedCosmosEntity)
                 throw new SharedEntityDoesNotImplementExcepction(entityType);

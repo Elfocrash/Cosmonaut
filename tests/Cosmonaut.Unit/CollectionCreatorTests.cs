@@ -23,8 +23,7 @@ namespace Cosmonaut.Unit
         {
             _mockDocumentClient = MockHelpers.GetMockDocumentClient();
         }
-
-
+        
         [Fact]
         public async Task EnsureCreatedCreatesCollectionIfMissing()
         {

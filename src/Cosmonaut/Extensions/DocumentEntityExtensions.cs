@@ -10,9 +10,9 @@ namespace Cosmonaut.Extensions
 {
     public static class DocumentEntityExtensions
     {
-        internal static PartitionKeyDefinition GetPartitionKeyForEntity(this Type type)
+        internal static PartitionKeyDefinition GetPartitionKeyDefinitionForEntity(this Type type)
         {
-            var partitionKeyProperties = type.GetProperties()
+            var partitionKeyProperties = type.GetTypeInfo().GetProperties()
                 .Where(x => x.GetCustomAttribute<CosmosPartitionKeyAttribute>() != null).ToList();
 
             if (partitionKeyProperties.Count > 1)
@@ -41,19 +41,16 @@ namespace Cosmonaut.Extensions
                    || partitionKeyProperty.Name.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase);
         }
 
-        internal static PartitionKey GetPartitionKeyValueForEntity<TEntity>(this TEntity entity, bool isShared) where TEntity : class
+        internal static PartitionKey GetPartitionKeyValueForEntity<TEntity>(this TEntity entity) where TEntity : class
         {
-            var partitionKeyValue = entity.GetPartitionKeyValueAsStringForEntity(isShared);
-            return !string.IsNullOrEmpty(partitionKeyValue) ? new PartitionKey(entity.GetPartitionKeyValueAsStringForEntity(isShared)) : null;
+            var partitionKeyValue = entity.GetPartitionKeyValueAsStringForEntity();
+            return !string.IsNullOrEmpty(partitionKeyValue) ? new PartitionKey(partitionKeyValue) : null;
         }
 
-        internal static string GetPartitionKeyValueAsStringForEntity<TEntity>(this TEntity entity, bool isShared) where TEntity : class
+        internal static string GetPartitionKeyValueAsStringForEntity<TEntity>(this TEntity entity) where TEntity : class
         {
-            if (isShared)
-                return entity.GetDocumentId();
-
             var type = entity.GetType();
-            var partitionKeyProperty = type.GetProperties()
+            var partitionKeyProperty = type.GetTypeInfo().GetProperties()
                 .Where(x => x.GetCustomAttribute<CosmosPartitionKeyAttribute>() != null)
                 .ToList();
 
@@ -65,7 +62,7 @@ namespace Cosmonaut.Extensions
 
         internal static bool HasPartitionKey(this Type type)
         {
-            var partitionKeyProperty = type.GetProperties()
+            var partitionKeyProperty = type.GetTypeInfo().GetProperties()
                 .Where(x => x.GetCustomAttribute<CosmosPartitionKeyAttribute>() != null).ToList();
 
             if (partitionKeyProperty.Count > 1)
@@ -76,7 +73,7 @@ namespace Cosmonaut.Extensions
 
         internal static void ValidateEntityForCosmosDb<TEntity>(this TEntity entity) where TEntity : class
         {
-            var propertyInfos = entity.GetType().GetProperties();
+            var propertyInfos = entity.GetType().GetTypeInfo().GetProperties();
 
             var containsJsonAttributeIdCount = GetCountOfJsonPropertiesWithNameIdForObject(entity, propertyInfos);
 
@@ -113,7 +110,7 @@ namespace Cosmonaut.Extensions
 
         private static int GetCountOfJsonPropertyWithNameIdInInterfaces<TEntity>(TEntity entity) where TEntity : class
         {
-            return entity.GetType().GetInterfaces().Count(x => x.GetProperties()
+            return entity.GetType().GetTypeInfo().GetInterfaces().Count(x => x.GetTypeInfo().GetProperties()
                 .Any(prop => prop.GetCustomAttributes<JsonPropertyAttribute>()
                     .Any(attr => !string.IsNullOrEmpty(attr?.PropertyName) && attr.PropertyName.Equals(CosmosConstants.CosmosId))));
         }
@@ -133,7 +130,7 @@ namespace Cosmonaut.Extensions
 
         internal static string GetDocumentId<TEntity>(this TEntity entity) where TEntity : class
         {
-            var propertyInfos = entity.GetType().GetProperties();
+            var propertyInfos = entity.GetType().GetTypeInfo().GetProperties();
 
             var propertyWithJsonPropertyId =
                 propertyInfos.SingleOrDefault(x =>

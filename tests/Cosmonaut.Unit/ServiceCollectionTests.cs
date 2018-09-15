@@ -1,5 +1,5 @@
 ﻿using System.Net;
-using Cosmonaut.Extensions;
+using Cosmonaut.Extensions.Microsoft.DependencyInjection;
 using Cosmonaut.Testing;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;

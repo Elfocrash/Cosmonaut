@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
+using Cosmonaut.Extensions.Microsoft.DependencyInjection;
 using Cosmonaut.Operations;
 using Cosmonaut.Response;
 using Cosmonaut.System.Models;
@@ -83,16 +84,9 @@ namespace Cosmonaut.System
                 });
             }
 
-            var addedResults = await cosmosStore.AddRangeAsync(cats);
+            var addedResults = new Action(() => cosmosStore.AddRangeAsync(cats).GetAwaiter().GetResult());
 
-            addedResults.Exception.Should().BeNull();
-            addedResults.SuccessfulEntities.Count.Should().Be(0);
-            addedResults.FailedEntities.Count.Should().Be(10);
-            addedResults.IsSuccess.Should().BeFalse();
-            addedResults.FailedEntities.ToList().ForEach(entity =>
-                {
-                    entity.CosmosOperationStatus.Should().Be(CosmosOperationStatus.ResourceWithIdAlreadyExists);
-                });
+            addedResults.Should().Throw<AggregateException>();
         }
         
         [Fact]
@@ -297,7 +291,6 @@ namespace Cosmonaut.System
 
             var addedCats = await operationFunc(items);
 
-            addedCats.Exception.Should().BeNull();
             addedCats.SuccessfulEntities.Count.Should().Be(itemCount);
             addedCats.FailedEntities.Count.Should().Be(0);
             addedCats.IsSuccess.Should().BeTrue();
@@ -311,7 +304,6 @@ namespace Cosmonaut.System
         {
             var addedCats = await operationFunc();
 
-            addedCats.Exception.Should().BeNull();
             addedCats.SuccessfulEntities.Count.Should().Be(50);
             addedCats.FailedEntities.Count.Should().Be(0);
             addedCats.IsSuccess.Should().BeTrue();
@@ -338,9 +330,10 @@ namespace Cosmonaut.System
         
         private void AddCosmosStores(ServiceCollection serviceCollection)
         {
-            serviceCollection.AddCosmosStore<Cat>(_databaseId, _emulatorUri, _emulatorKey,
-                settings => { settings.ConnectionPolicy = _connectionPolicy; }, _collectionName);
-            serviceCollection.AddCosmosStore<Dog>(_databaseId, _emulatorUri, _emulatorKey,
+            serviceCollection
+                .AddCosmosStore<Cat>(_databaseId, _emulatorUri, _emulatorKey,
+                settings => { settings.ConnectionPolicy = _connectionPolicy; }, _collectionName)
+                .AddCosmosStore<Dog>(_databaseId, _emulatorUri, _emulatorKey,
                     settings => { settings.ConnectionPolicy = _connectionPolicy; })
                 .AddCosmosStore<Lion>(_databaseId, _emulatorUri, _emulatorKey,
                     settings => { settings.ConnectionPolicy = _connectionPolicy; })

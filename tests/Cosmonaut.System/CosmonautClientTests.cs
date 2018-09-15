@@ -222,7 +222,6 @@ namespace Cosmonaut.System
             updated.Entity.Should().BeEquivalentTo(cat);
             updated.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.OK);
             updated.ResourceResponse.Resource.GetPropertyValue<string>("Name").Should().Be("MEGAKITTY");
-            updated.Exception.Should().BeNull();
             updated.CosmosOperationStatus.Should().Be(CosmosOperationStatus.Success);
         }
 
@@ -260,7 +259,6 @@ namespace Cosmonaut.System
             updated.Entity.Should().BeEquivalentTo(cat);
             updated.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.OK);
             updated.ResourceResponse.Resource.GetPropertyValue<string>("Name").Should().Be("MEGAKITTY");
-            updated.Exception.Should().BeNull();
             updated.CosmosOperationStatus.Should().Be(CosmosOperationStatus.Success);
         }
 
@@ -294,7 +292,6 @@ namespace Cosmonaut.System
             // Assert
             updated.IsSuccess.Should().BeFalse();
             updated.Entity.Should().BeEquivalentTo(cat);
-            updated.Exception.Should().BeNull();
             updated.CosmosOperationStatus.Should().Be(CosmosOperationStatus.ResourceNotFound);
             updated.ResourceResponse.Should().BeNull();
         }
@@ -330,7 +327,6 @@ namespace Cosmonaut.System
             updated.Entity.Should().BeEquivalentTo(cat);
             updated.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.Created);
             updated.ResourceResponse.Resource.GetPropertyValue<string>("Name").Should().Be("MEGAKITTY");
-            updated.Exception.Should().BeNull();
             updated.CosmosOperationStatus.Should().Be(CosmosOperationStatus.Success);
         }
 

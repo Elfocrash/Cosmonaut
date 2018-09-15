@@ -2,6 +2,8 @@
 
 # Cosmonaut
 
+![](https://raw.githubusercontent.com/Elfocrash/Cosmonaut/develop/logo.png)
+
 > The word was derived from "kosmos" (Ancient Greek: κόσμος) which means world/universe and "nautes" (Ancient Greek: ναῦς) which means sailor/navigator
 
 Cosmonaut is an object mapper that enables .NET developers to work with a CosmosDB using .NET objects. It eliminates the need for most of the data-access code that developers usually need to write.
@@ -27,15 +29,23 @@ serviceCollection.AddCosmosStore<Book>(cosmosSettings);
 //or just by using the Action extension
 
 serviceCollection.AddCosmosStore<Book>(options =>
-            {
-                options.DatabaseName = "<<databaseName>>";
-                options.AuthKey = "<<authkey>>";
-                options.EndpointUrl = new Uri("<<cosmosUri>>");
-            });
+{
+    options.DatabaseName = "<<databaseName>>";
+    options.AuthKey = "<<authkey>>";
+    options.EndpointUrl = new Uri("<<cosmosUri>>");
+});
 
 //or just initialise the object
 
 ICosmosStore<Book> bookStore = new CosmosStore<Book>(cosmosSettings)
+```
+
+To use the `AddCosmosStore` extension methods you need to install the `Cosmonaut.Extensions.Microsoft.DependencyInjection` package.
+
+```
+Install-Package Cosmonaut.Extensions.Microsoft.DependencyInjection
+or
+dotnet add package Cosmonaut.Extensions.Microsoft.DependencyInjection
 ```
 
 ##### Retrieving an entity by id (and partition key)
@@ -121,12 +131,10 @@ The `CosmosEntityName` will be used to make the object identifiable for Cosmosna
 
 Once you set this up you can add individual CosmosStores with shared collections.
 
-Something worths noting is that because you will use this to share objects partitioning will be virtually impossible. For that reason the `id` will be used as a partition key by default as it is the only property that will be definately shared between all objects.
-
 ### Restrictions
 Because of the way the internal `id` property of Cosmosdb works, there is a mandatory restriction made.
 You cannot have a property named Id or a property with the attribute `[JsonProperty("id")]` without it being a string.
-A cosmos id need to exist somehow on your entity model. For that reason if it isn't part of your entity you can just extend the `CosmosEntity` class.
+A cosmos id needs to exist somehow on your entity model. For that reason if it isn't part of your entity you can just extend the `CosmosEntity` class.
 
 It is **HIGHLY RECOMMENDED** that you decorate your Id property with the `[JsonProperty("id")]` attribute to prevent any unexpected behaviour.
 
@@ -217,6 +225,8 @@ By using this package you are able to log the events as dependencies in [Applica
 
 Just initialise the AppInsightsTelemetryModule in your Startup or setup pipeline like this.
 Example: `AppInsightsTelemetryModule.Instance.Initialize(new TelemetryConfiguration("InstrumentationKey"))`
+
+If you already have initialised `TelemetryConfiguration` for your application then use `TelemetryConfiguration.Active` instead of `new TelemetryConfiguration` because if you don't there will be no association between the dependency calls and the parent request.
 
 #### Benchmarks
 
