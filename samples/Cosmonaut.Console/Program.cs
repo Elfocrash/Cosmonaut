@@ -71,7 +71,7 @@ namespace Cosmonaut.Console
 
 
             var books = new List<Book>();
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 30; i++)
             {
                 books.Add(new Book
                 {
@@ -82,7 +82,7 @@ namespace Cosmonaut.Console
             }
 
             var cars = new List<Car>();
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 30; i++)
             {
                 cars.Add(new Car
                 {
@@ -106,7 +106,12 @@ namespace Cosmonaut.Console
             var firstAddedCar = await carStore.QueryMultipleAsync("select * from c where c.id = @id", new { id= aCarId });
             var allTheCars = await carStore.QueryMultipleAsync<Car>("select * from c");
 
-            var addedRetrieved = await booksStore.Query().ToListAsync();
+            var addedRetrieved = await booksStore.Query().OrderBy(x => x.Name).ToListAsync();
+
+            var firstPage = await booksStore.Query().WithPagination(1, 10).OrderBy(x=>x.Name).ToListAsync();
+            var secondPage = await booksStore.Query().WithPagination(2, 10).OrderBy(x => x.Name).ToPagedListAsync();
+            var thirdPage = await booksStore.Query().WithPagination(secondPage.NextPageToken, 10).OrderBy(x => x.Name).ToListAsync();
+            var fourthPage = await booksStore.Query().WithPagination(4, 10).OrderBy(x => x.Name).ToListAsync();
 
             System.Console.WriteLine($"Retrieved {addedRetrieved.Count} documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();

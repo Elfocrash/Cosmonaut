@@ -5,6 +5,8 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Cosmonaut.Diagnostics;
+using Cosmonaut.Response;
+using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.Documents.Linq;
 
 namespace Cosmonaut.Extensions
@@ -16,6 +18,13 @@ namespace Cosmonaut.Extensions
             CancellationToken cancellationToken = default) where TEntity : class
         {
             return await GetListFromQueryable(queryable, cancellationToken);
+        }
+
+        public static async Task<CosmosPagedResults<TEntity>> ToPagedListAsync<TEntity>(
+            this IQueryable<TEntity> queryable,
+            CancellationToken cancellationToken = default) where TEntity : class
+        {
+            return await GetPagedListFromQueryable(queryable, cancellationToken);
         }
 
         public static async Task<int> CountAsync<TEntity>(
@@ -129,9 +138,25 @@ namespace Cosmonaut.Extensions
         private static async Task<List<T>> GetListFromQueryable<T>(IQueryable<T> queryable,
             CancellationToken cancellationToken)
         {
-            var query = queryable.AsDocumentQuery();
-            var results = await GetResultsFromQueryToList(query, cancellationToken);
-            return results;
+            var feedOptions = queryable.GetFeedOptionsForQueryable();
+            if (feedOptions?.RequestContinuation == null)
+            {
+                var query = queryable.AsDocumentQuery();
+                return await GetResultsFromQueryToList(query, cancellationToken);
+            }
+
+            return await GetPaginatedResultsFromQueryable(queryable, cancellationToken, feedOptions);
+        }
+        
+        private static async Task<CosmosPagedResults<T>> GetPagedListFromQueryable<T>(IQueryable<T> queryable,
+            CancellationToken cancellationToken)
+        {
+            var feedOptions = queryable.GetFeedOptionsForQueryable();
+            if (feedOptions?.RequestContinuation == null)
+                return new CosmosPagedResults<T>(await GetListFromQueryable(queryable, cancellationToken),
+                    string.Empty);
+
+            return await GetPaginatedResultsFromQueryable(queryable, cancellationToken, feedOptions);
         }
 
         private static async Task<List<T>> GetResultsFromQueryToList<T>(IDocumentQuery<T> query, CancellationToken cancellationToken)
@@ -143,6 +168,58 @@ namespace Cosmonaut.Extensions
                 results.AddRange(items);
             }
             return results;
+        }
+
+        private static async Task<CosmosPagedResults<T>> GetPagedResultsFromQueryToList<T>(IDocumentQuery<T> query, int pageNumber, int? pageSize, CancellationToken cancellationToken)
+        {
+            var results = new List<T>();
+            var documentsSkipped = 0;
+            var nextPageToken = string.Empty;
+            var continuationTokens = new List<string>();
+            while (query.HasMoreResults)
+            {
+                if (results.Count == pageSize)
+                    break;
+
+                var items = await query.InvokeExecuteNextAsync(() => query.ExecuteNextAsync<T>(cancellationToken), query.ToString()).ExecuteCosmosCommand();
+                nextPageToken = items.ResponseContinuation;
+
+                if (!string.IsNullOrEmpty(nextPageToken))
+                {
+                    continuationTokens.Add(nextPageToken);
+                }
+                
+                foreach (var item in items)
+                {
+                    if (documentsSkipped < ((pageNumber - 1) * pageSize))
+                    {
+                        documentsSkipped++;
+                        continue;
+                    }
+
+                    results.Add(item);
+
+                    if (results.Count == pageSize)
+                        break;
+                }
+            }
+            return new CosmosPagedResults<T>(results, nextPageToken, continuationTokens);
+        }
+        
+        private static async Task<CosmosPagedResults<T>> GetPaginatedResultsFromQueryable<T>(IQueryable<T> queryable, CancellationToken cancellationToken,
+            FeedOptions feedOptions)
+        {
+            var usesSkipTakePagination =
+                feedOptions.RequestContinuation.StartsWith(nameof(PaginationExtensions.WithPagination));
+
+            var pageNumber = usesSkipTakePagination
+                ? int.Parse(feedOptions.RequestContinuation.Replace($"{nameof(PaginationExtensions.WithPagination)}/",
+                    string.Empty))
+                : 1;
+            feedOptions.RequestContinuation = null;
+            queryable.SetFeedOptionsForQueryable(feedOptions);
+            return await GetPagedResultsFromQueryToList(queryable.AsDocumentQuery(), pageNumber, feedOptions.MaxItemCount,
+                cancellationToken);
         }
     }
 }

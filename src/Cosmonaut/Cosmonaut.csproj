@@ -29,6 +29,7 @@
   <ItemGroup>
     <PackageReference Include="Humanizer.Core.uk" Version="2.4.2" />
     <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="1.9.1" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup>
