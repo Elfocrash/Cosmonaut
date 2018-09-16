@@ -183,6 +183,8 @@ will throw an error. Changing the Hash to Range will work.
 
 However you can get around that by setting the `FeedOptions.EnableScanInQuery` to `true` for this `Query()`
 
+Same goes for ordering. If you use `OrderBy` on a string property you need to have this property's path set up as `Range` and precision `-1`.
+
 More about CosmosDB Indexing [here](https://docs.microsoft.com/en-us/azure/cosmos-db/indexing-policies)
 
 #### Partitioning
