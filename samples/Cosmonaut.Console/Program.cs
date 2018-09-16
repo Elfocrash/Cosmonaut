@@ -109,9 +109,13 @@ namespace Cosmonaut.Console
             var addedRetrieved = await booksStore.Query().OrderBy(x => x.Name).ToListAsync();
 
             var firstPage = await booksStore.Query().WithPagination(1, 10).OrderBy(x=>x.Name).ToListAsync();
-            var secondPage = await booksStore.Query().WithPagination(2, 10).OrderBy(x => x.Name).ToPagedListAsync();
+            var secondPage = await booksStore.Query().WithPagination(1, 10).OrderBy(x => x.Name).ToPagedListAsync();
             var thirdPage = await booksStore.Query().WithPagination(secondPage.NextPageToken, 10).OrderBy(x => x.Name).ToListAsync();
             var fourthPage = await booksStore.Query().WithPagination(4, 10).OrderBy(x => x.Name).ToListAsync();
+
+            var sqlPaged = await cosmonautClient.Query<Book>("localtest", "shared",
+                "select * from c where c.CosmosEntityName = 'books' order by c.Name", null, new FeedOptions{EnableCrossPartitionQuery = true})
+                .WithPagination(2, 10).ToListAsync();
 
             System.Console.WriteLine($"Retrieved {addedRetrieved.Count} documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();

@@ -9,11 +9,26 @@ namespace Cosmonaut.Extensions
     {
         public static IQueryable<T> WithPagination<T>(this IQueryable<T> queryable, int pageNumber, int pageSize)
         {
+            if (pageNumber <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(pageNumber), "Page number must be a positive number.");
+            }
+
+            if (pageSize <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be a positive number.");
+            }
+
             return GetQueryableWithPaginationSettings(queryable, $"{nameof(WithPagination)}/{pageNumber}", pageSize);
         }
 
         public static IQueryable<T> WithPagination<T>(this IQueryable<T> queryable, string continuationToken, int pageSize)
         {
+            if (pageSize <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be a positive number.");
+            }
+
             return GetQueryableWithPaginationSettings(queryable, continuationToken, pageSize);
         }
 
@@ -23,6 +38,9 @@ namespace Cosmonaut.Extensions
                 return queryable;
 
             var feedOptions = queryable.GetFeedOptionsForQueryable();
+
+            if (feedOptions == null) return queryable;
+
             feedOptions.MaxItemCount = pageSize;
             feedOptions.RequestContinuation = continuationInfo;
             queryable.SetFeedOptionsForQueryable(feedOptions);
