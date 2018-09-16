@@ -7,6 +7,12 @@ namespace Cosmonaut.Extensions
 {
     public static class PaginationExtensions
     {
+        /// <summary>
+        /// Adds pagination for your CosmosDB query. This is an inefficient and expensive form of pagination because it goes
+        /// though all the documents to get to the page you want. The usage of WithPagination with the ContinuationToken is recommended. 
+        /// Read more at https://github.com/Elfocrash/Cosmonaut
+        /// </summary>
+        /// <returns>A specific page of the results that your query matches.</returns>
         public static IQueryable<T> WithPagination<T>(this IQueryable<T> queryable, int pageNumber, int pageSize)
         {
             if (pageNumber <= 0)
@@ -22,6 +28,11 @@ namespace Cosmonaut.Extensions
             return GetQueryableWithPaginationSettings(queryable, $"{nameof(WithPagination)}/{pageNumber}", pageSize);
         }
 
+        /// <summary>
+        /// Adds pagination for your CosmosDB query. This is an efficient and cheap form of pagination because it doesn't go 
+        /// though all the documents to get to the page you want. Read more at https://github.com/Elfocrash/Cosmonaut
+        /// </summary>
+        /// <returns>A specific page of the results that your query matches.</returns>
         public static IQueryable<T> WithPagination<T>(this IQueryable<T> queryable, string continuationToken, int pageSize)
         {
             if (pageSize <= 0)

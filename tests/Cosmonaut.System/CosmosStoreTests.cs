@@ -9,6 +9,7 @@ using Cosmonaut.Operations;
 using Cosmonaut.Response;
 using Cosmonaut.System.Models;
 using FluentAssertions;
+using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -281,6 +282,54 @@ namespace Cosmonaut.System
             postScaleOffer.Content.OfferThroughput.Should().Be(400);
         }
 
+        [Fact]
+        public async Task WhenPaginatedQueryExecutesWithSkipTake_ThenPaginatedResultsAreReturnedCorrectly()
+        {
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var addedCats = (await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 30))
+                .SuccessfulEntities.Select(x=>x.Entity).OrderBy(x=>x.Name).ToList();
+
+            var firstPage = await catStore.Query().WithPagination(1, 10).OrderBy(x=>x.Name).ToListAsync();
+            var secondPage = await catStore.Query().WithPagination(2, 10).OrderBy(x => x.Name).ToListAsync();
+            var thirdPage = await catStore.Query().WithPagination(3, 10).OrderBy(x => x.Name).ToListAsync();
+            var fourthPage = await catStore.Query().WithPagination(4, 10).OrderBy(x => x.Name).ToListAsync();
+
+            firstPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(10));
+            secondPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(10).Take(10));
+            thirdPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(20).Take(10));
+            fourthPage.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task WhenPaginatedQueryExecutesWithContinuationToken_ThenPaginatedResultsAreReturnedCorrectly()
+        {
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var addedCats = (await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 30))
+                .SuccessfulEntities.Select(x => x.Entity).OrderBy(x => x.Name).ToList();
+
+            var firstPage = await catStore.Query().WithPagination(1, 10).OrderBy(x => x.Name).ToPagedListAsync();
+            var secondPage = await catStore.Query().WithPagination(firstPage.NextPageToken, 10).OrderBy(x => x.Name).ToPagedListAsync();
+            var thirdPage = await catStore.Query().WithPagination(secondPage.NextPageToken, 10).OrderBy(x => x.Name).ToPagedListAsync();
+            var fourthPage = await catStore.Query().WithPagination(4, 10).OrderBy(x => x.Name).ToPagedListAsync();
+            var emptyTokenPage = await catStore.Query().WithPagination(string.Empty, 10).OrderBy(x => x.Name).ToPagedListAsync();
+
+            firstPage.HasNextPage.Should().BeTrue();
+            firstPage.NextPageToken.Should().NotBeNullOrEmpty();
+            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(10));
+            secondPage.HasNextPage.Should().BeTrue();
+            secondPage.NextPageToken.Should().NotBeNullOrEmpty();
+            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(10).Take(10));
+            thirdPage.HasNextPage.Should().BeFalse();
+            thirdPage.NextPageToken.Should().BeNullOrEmpty();
+            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(20).Take(10));
+            fourthPage.Results.Should().BeEmpty();
+            fourthPage.NextPageToken.Should().BeNullOrEmpty();
+            fourthPage.HasNextPage.Should().BeFalse();
+            emptyTokenPage.HasNextPage.Should().BeTrue();
+            emptyTokenPage.NextPageToken.Should().NotBeNullOrEmpty();
+            emptyTokenPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(10));
+        }
+
         private async Task<CosmosMultipleResponse<T>> ExecuteMultipleAddOperationsForType<T>(
             Func<IEnumerable<T>, Task<CosmosMultipleResponse<T>>> operationFunc, int itemCount = 50) 
             where T : Animal, new()
@@ -332,13 +381,29 @@ namespace Cosmonaut.System
         {
             serviceCollection
                 .AddCosmosStore<Cat>(_databaseId, _emulatorUri, _emulatorKey,
-                settings => { settings.ConnectionPolicy = _connectionPolicy; }, _collectionName)
+                    settings =>
+                    {
+                        settings.ConnectionPolicy = _connectionPolicy;
+                        settings.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.Number, -1), new RangeIndex(DataType.String, -1));
+                    }, _collectionName)
                 .AddCosmosStore<Dog>(_databaseId, _emulatorUri, _emulatorKey,
-                    settings => { settings.ConnectionPolicy = _connectionPolicy; })
+                    settings =>
+                    {
+                        settings.ConnectionPolicy = _connectionPolicy;
+                        settings.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.Number, -1), new RangeIndex(DataType.String, -1));
+                    })
                 .AddCosmosStore<Lion>(_databaseId, _emulatorUri, _emulatorKey,
-                    settings => { settings.ConnectionPolicy = _connectionPolicy; })
+                    settings =>
+                    {
+                        settings.ConnectionPolicy = _connectionPolicy;
+                        settings.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.Number, -1), new RangeIndex(DataType.String, -1));
+                    })
                 .AddCosmosStore<Bird>(_databaseId, _emulatorUri, _emulatorKey,
-                    settings => { settings.ConnectionPolicy = _connectionPolicy; });
+                    settings =>
+                    {
+                        settings.ConnectionPolicy = _connectionPolicy;
+                        settings.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.Number, -1), new RangeIndex(DataType.String, -1));
+                    });
         }
     }
 }

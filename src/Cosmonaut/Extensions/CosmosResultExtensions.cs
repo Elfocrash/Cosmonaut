@@ -170,12 +170,11 @@ namespace Cosmonaut.Extensions
             return results;
         }
 
-        private static async Task<CosmosPagedResults<T>> GetPagedResultsFromQueryToList<T>(IDocumentQuery<T> query, int pageNumber, int? pageSize, CancellationToken cancellationToken)
+        private static async Task<CosmosPagedResults<T>> GetSkipTakePagedResultsFromQueryToList<T>(IDocumentQuery<T> query, int pageNumber, int? pageSize, CancellationToken cancellationToken)
         {
             var results = new List<T>();
             var documentsSkipped = 0;
             var nextPageToken = string.Empty;
-            var continuationTokens = new List<string>();
             while (query.HasMoreResults)
             {
                 if (results.Count == pageSize)
@@ -183,11 +182,6 @@ namespace Cosmonaut.Extensions
 
                 var items = await query.InvokeExecuteNextAsync(() => query.ExecuteNextAsync<T>(cancellationToken), query.ToString()).ExecuteCosmosCommand();
                 nextPageToken = items.ResponseContinuation;
-
-                if (!string.IsNullOrEmpty(nextPageToken))
-                {
-                    continuationTokens.Add(nextPageToken);
-                }
                 
                 foreach (var item in items)
                 {
@@ -203,22 +197,47 @@ namespace Cosmonaut.Extensions
                         break;
                 }
             }
-            return new CosmosPagedResults<T>(results, nextPageToken, continuationTokens);
+            return new CosmosPagedResults<T>(results, nextPageToken);
         }
-        
+
+        private static async Task<CosmosPagedResults<T>> GetTokenPagedResultsFromQueryToList<T>(IDocumentQuery<T> query, int? pageSize, CancellationToken cancellationToken)
+        {
+            var results = new List<T>();
+            var nextPageToken = string.Empty;
+            while (query.HasMoreResults)
+            {
+                if (results.Count == pageSize)
+                    break;
+
+                var items = await query.InvokeExecuteNextAsync(() => query.ExecuteNextAsync<T>(cancellationToken), query.ToString()).ExecuteCosmosCommand();
+                nextPageToken = items.ResponseContinuation;
+
+                foreach (var item in items)
+                {
+                    results.Add(item);
+
+                    if (results.Count == pageSize)
+                        break;
+                }
+            }
+            return new CosmosPagedResults<T>(results, nextPageToken);
+        }
+
         private static async Task<CosmosPagedResults<T>> GetPaginatedResultsFromQueryable<T>(IQueryable<T> queryable, CancellationToken cancellationToken,
             FeedOptions feedOptions)
         {
             var usesSkipTakePagination =
                 feedOptions.RequestContinuation.StartsWith(nameof(PaginationExtensions.WithPagination));
 
-            var pageNumber = usesSkipTakePagination
-                ? int.Parse(feedOptions.RequestContinuation.Replace($"{nameof(PaginationExtensions.WithPagination)}/",
-                    string.Empty))
-                : 1;
+            if (!usesSkipTakePagination)
+                return await GetTokenPagedResultsFromQueryToList(queryable.AsDocumentQuery(), feedOptions.MaxItemCount,
+                    cancellationToken);
+
+            var pageNumber = int.Parse(feedOptions.RequestContinuation.Replace(
+                $"{nameof(PaginationExtensions.WithPagination)}/", string.Empty));
             feedOptions.RequestContinuation = null;
             queryable.SetFeedOptionsForQueryable(feedOptions);
-            return await GetPagedResultsFromQueryToList(queryable.AsDocumentQuery(), pageNumber, feedOptions.MaxItemCount,
+            return await GetSkipTakePagedResultsFromQueryToList(queryable.AsDocumentQuery(), pageNumber, feedOptions.MaxItemCount,
                 cancellationToken);
         }
     }

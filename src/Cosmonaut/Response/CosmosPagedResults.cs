@@ -10,17 +10,10 @@ namespace Cosmonaut.Response
             Results = results;
             NextPageToken = nextPageToken;
         }
-
-        internal CosmosPagedResults(List<T> results, string nextPageToken, List<string> continuationTokens) : this(results, nextPageToken)
-        {
-            ContinuationTokens = continuationTokens;
-        }
-
+        
         public List<T> Results { get; }
 
         public string NextPageToken { get; }
-
-        public List<string> ContinuationTokens { get; } = new List<string>();
 
         public bool HasNextPage => !string.IsNullOrEmpty(NextPageToken);
 
