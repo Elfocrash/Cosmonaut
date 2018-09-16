@@ -10,9 +10,9 @@
     <PackageLicenseUrl>https://github.com/Elfocrash/Cosmonaut/blob/develop/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/Elfocrash/Cosmonaut</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Elfocrash/Cosmonaut</RepositoryUrl>
-    <PackageTags>cosmosdb documentdb azure cosmos entitystore entity db orm</PackageTags>
+    <PackageTags>azure entitystore entity db orm microsoft cosmos cosmosdb documentdb docdb nosql azureofficial dotnetcore netcore netstandard</PackageTags>
     <PackageReleaseNotes>Please report any issues on Github.</PackageReleaseNotes>
-    <Version>2.2.0</Version>
+    <Version>2.3.0</Version>
     <NeutralLanguage></NeutralLanguage>
     <Company>Nick Chapsas</Company>
     <PackageIconUrl>https://raw.githubusercontent.com/Elfocrash/Cosmonaut/develop/logo.png</PackageIconUrl>
@@ -29,7 +29,6 @@
   <ItemGroup>
     <PackageReference Include="Humanizer.Core.uk" Version="2.4.2" />
     <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="1.9.1" />
-    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup>
