@@ -24,8 +24,8 @@ namespace Cosmonaut.Console
             var cosmosSettings = new CosmosStoreSettings("localtest", 
                 "https://localhost:8081", 
                 "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
-                , connectionPolicy
-                , defaultCollectionThroughput: 5000);
+                , connectionPolicy, new IndexingPolicy(new RangeIndex(DataType.Number, -1), new RangeIndex(DataType.String, -1))
+                , 5000);
 
             var cosmonautClient = new CosmonautClient("https://localhost:8081",
                 "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==");
@@ -38,6 +38,8 @@ namespace Cosmonaut.Console
             {
                 settings.ConnectionPolicy = connectionPolicy;
                 settings.DefaultCollectionThroughput = 5000;
+                settings.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.Number, -1),
+                    new RangeIndex(DataType.String, -1));
             });
 
             serviceCollection.AddCosmosStore<Car>(cosmosSettings);
@@ -48,14 +50,11 @@ namespace Cosmonaut.Console
             var carStore = provider.GetService<ICosmosStore<Car>>();
             
             System.Console.WriteLine($"Started");
-            
+
             var database = await cosmonautClient.GetDatabaseAsync("localtest");
             System.Console.WriteLine($"Retrieved database with id {database.Id}");
 
             var collection = await cosmonautClient.GetCollectionAsync("localtest", "shared");
-            if (collection == null)
-                collection = await cosmonautClient.CreateCollectionAsync("localtest", new DocumentCollection {Id = "shared"});
-
             System.Console.WriteLine($"Retrieved collection with id {collection.Id}");
 
             var offer = await cosmonautClient.GetOfferForCollectionAsync("localtest", "shared");
@@ -75,7 +74,7 @@ namespace Cosmonaut.Console
 
 
             var books = new List<Book>();
-            for (int i = 0; i < 30; i++)
+            for (int i = 0; i < 25; i++)
             {
                 books.Add(new Book
                 {
@@ -86,7 +85,7 @@ namespace Cosmonaut.Console
             }
 
             var cars = new List<Car>();
-            for (int i = 0; i < 30; i++)
+            for (int i = 0; i < 25; i++)
             {
                 cars.Add(new Car
                 {
@@ -107,15 +106,25 @@ namespace Cosmonaut.Console
             //await Task.Delay(3000);
 
             var aCarId = addedCars.SuccessfulEntities.First().Entity.Id;
+
+
             var firstAddedCar = await carStore.QueryMultipleAsync("select * from c where c.id = @id", new { id = aCarId });
             var allTheCars = await carStore.QueryMultipleAsync<Car>("select * from c");
 
+            var carPageOne = await carStore.Query("select * from c order by c.Name asc").WithPagination(1, 5).ToPagedListAsync();
+            var carPageTwo = await carStore.Query("select * from c order by c.Name asc").WithPagination(carPageOne.NextPageToken, 5).ToPagedListAsync();
+            var carPageThree = await carPageTwo.GetNextPageAsync();
+            var carPageFour = await carPageThree.GetNextPageAsync();
+
             var addedRetrieved = await booksStore.Query().OrderBy(x => x.Name).ToListAsync();
 
-            var firstPage = await booksStore.Query().WithPagination(1, 10).OrderBy(x => x.Name).ToListAsync();
-            var secondPage = await booksStore.Query().WithPagination(2, 10).OrderBy(x => x.Name).ToPagedListAsync();
-            var thirdPage = await booksStore.Query().WithPagination(secondPage.NextPageToken, 10).OrderBy(x => x.Name).ToPagedListAsync();
-            var fourthPage = await booksStore.Query().WithPagination(4, 10).OrderBy(x => x.Name).ToListAsync();
+            var firstPage = await booksStore.Query().WithPagination(1, 10).OrderBy(x => x.Name).ToPagedListAsync();
+            var secondPage = await firstPage.GetNextPageAsync();
+            var thirdPage = await secondPage.GetNextPageAsync();
+            var fourthPage = await secondPage.GetNextPageAsync();
+
+            //var thirdPage = await booksStore.Query().WithPagination(secondPage.NextPageToken, 10).OrderBy(x => x.Name).ToPagedListAsync();
+            //var fourthPage = await booksStore.Query().WithPagination(4, 10).OrderBy(x => x.Name).ToListAsync();
 
             var sqlPaged = await cosmonautClient.Query<Book>("localtest", "shared",
                 "select * from c where c.CosmosEntityName = 'books' order by c.Name", null, new FeedOptions { EnableCrossPartitionQuery = true })
@@ -136,7 +145,7 @@ namespace Cosmonaut.Console
             System.Console.WriteLine($"Removed {removed.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
             watch.Reset();
             watch.Stop();
-            
+
             System.Console.ReadKey();
         }
     }

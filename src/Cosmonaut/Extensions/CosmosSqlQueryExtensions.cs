@@ -30,7 +30,18 @@ namespace Cosmonaut.Extensions
             var hasExistingWhereClause = sql.IndexOf(" where ", StringComparison.OrdinalIgnoreCase) >= 0;
 
             if (!hasExistingWhereClause)
-                return $"{sql} where {identifier}.{nameof(ISharedCosmosEntity.CosmosEntityName)} = '{cosmosEntityNameValue}'";
+            {
+                var whereClause = $"where {identifier}.{nameof(ISharedCosmosEntity.CosmosEntityName)} = '{cosmosEntityNameValue}'";
+
+                var hasOrderBy = sql.IndexOf(" order by ", StringComparison.OrdinalIgnoreCase) >= 0;
+
+                if(!hasOrderBy)
+                    return $"{sql} {whereClause}";
+
+                var splitSql = sql.Split(new [] { " order by " }, StringSplitOptions.None);
+
+                return $"{splitSql[0]} {whereClause} order by {splitSql[1]}";
+            }
             
             return GetQueryWithExistingWhereClauseInjectedWithSharedCollection(sql, identifier, cosmosEntityNameValue);
         }

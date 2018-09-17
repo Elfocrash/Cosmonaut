@@ -20,6 +20,16 @@ namespace Cosmonaut
         IQueryable<TEntity> Query(FeedOptions feedOptions = null);
 
         /// <summary>
+        ///     Returns an IQueryable that matches the expression provided. You can use ToListAsync to enumerate it or add WithPagination for
+        ///     pagination support.
+        /// </summary>
+        /// <param name="sql">The sql query for this operation.</param>
+        /// <param name="parameters">The sql parameters to replace if any</param>
+        /// <param name="feedOptions">The feed options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
+        IQueryable<TEntity> Query(string sql, object parameters = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
         ///     Returns a single item that matches the expression provided.
         /// </summary>
         /// <param name="sql">The sql query for this operation.</param>
