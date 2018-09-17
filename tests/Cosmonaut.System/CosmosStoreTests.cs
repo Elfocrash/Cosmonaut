@@ -286,18 +286,54 @@ namespace Cosmonaut.System
         public async Task WhenPaginatedQueryExecutesWithSkipTake_ThenPaginatedResultsAreReturnedCorrectly()
         {
             var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
-            var addedCats = (await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 30))
+            var addedCats = (await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 15))
                 .SuccessfulEntities.Select(x=>x.Entity).OrderBy(x=>x.Name).ToList();
 
-            var firstPage = await catStore.Query().WithPagination(1, 10).OrderBy(x=>x.Name).ToListAsync();
-            var secondPage = await catStore.Query().WithPagination(2, 10).OrderBy(x => x.Name).ToListAsync();
-            var thirdPage = await catStore.Query().WithPagination(3, 10).OrderBy(x => x.Name).ToListAsync();
-            var fourthPage = await catStore.Query().WithPagination(4, 10).OrderBy(x => x.Name).ToListAsync();
+            var firstPage = await catStore.Query().WithPagination(1, 5).OrderBy(x=>x.Name).ToListAsync();
+            var secondPage = await catStore.Query().WithPagination(2, 5).OrderBy(x => x.Name).ToListAsync();
+            var thirdPage = await catStore.Query().WithPagination(3, 5).OrderBy(x => x.Name).ToListAsync();
+            var fourthPage = await catStore.Query().WithPagination(4, 5).OrderBy(x => x.Name).ToListAsync();
 
-            firstPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(10));
-            secondPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(10).Take(10));
-            thirdPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(20).Take(10));
+            firstPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(5));
+            secondPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(5).Take(5));
+            thirdPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(10).Take(5));
             fourthPage.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task WhenPaginatedQueryExecutesWithNextPageAsync_ThenPaginatedResultsAreReturnedCorrectly()
+        {
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var addedCats = (await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 15))
+                .SuccessfulEntities.Select(x => x.Entity).OrderBy(x => x.Name).ToList();
+
+            var firstPage = await catStore.Query().WithPagination(1, 5).OrderBy(x => x.Name).ToPagedListAsync();
+            var secondPage = await firstPage.GetNextPageAsync();
+            var thirdPage = await secondPage.GetNextPageAsync();
+            var fourthPage = await thirdPage.GetNextPageAsync();
+
+            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(5));
+            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(5).Take(5));
+            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(10).Take(5));
+            fourthPage.Results.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task WhenPaginatedQueryAndFeedOptionsExecutesWithNextPageAsync_ThenPaginatedResultsAreReturnedCorrectly()
+        {
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var addedCats = (await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 15))
+                .SuccessfulEntities.Select(x => x.Entity).OrderBy(x => x.Name).ToList();
+
+            var firstPage = await catStore.Query(new FeedOptions{ RequestContinuation = "SomethingBad", MaxItemCount = 666}).WithPagination(1, 5).OrderBy(x => x.Name).ToPagedListAsync();
+            var secondPage = await firstPage.GetNextPageAsync();
+            var thirdPage = await secondPage.GetNextPageAsync();
+            var fourthPage = await thirdPage.GetNextPageAsync();
+
+            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(5));
+            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(5).Take(5));
+            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(10).Take(5));
+            fourthPage.Results.Should().BeEmpty();
         }
 
         [Fact]

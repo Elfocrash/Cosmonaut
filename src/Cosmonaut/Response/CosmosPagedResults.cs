@@ -40,7 +40,7 @@ namespace Cosmonaut.Response
             if(!HasNextPage)
                 return new CosmosPagedResults<T>(new List<T>(), PageSize, string.Empty);
 
-            if(PageSize == 0)
+            if(PageSize <= 0)
                 return new CosmosPagedResults<T>(new List<T>(), PageSize, string.Empty);
 
             return await Queryable.WithPagination(NextPageToken, PageSize).ToPagedListAsync();
@@ -48,7 +48,7 @@ namespace Cosmonaut.Response
         
         public static implicit operator List<T>(CosmosPagedResults<T> results)
         {
-            return results.Results.ToList();
+            return results.Results;
         }
     }
 }

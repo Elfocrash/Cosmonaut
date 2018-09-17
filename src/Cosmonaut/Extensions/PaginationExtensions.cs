@@ -48,10 +48,7 @@ namespace Cosmonaut.Extensions
             if (!queryable.GetType().Name.Equals("DocumentQuery`1"))
                 return queryable;
 
-            var feedOptions = queryable.GetFeedOptionsForQueryable();
-
-            if (feedOptions == null) return queryable;
-
+            var feedOptions = queryable.GetFeedOptionsForQueryable() ?? new FeedOptions();
             feedOptions.MaxItemCount = pageSize;
             feedOptions.RequestContinuation = continuationInfo;
             queryable.SetFeedOptionsForQueryable(feedOptions);
