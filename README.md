@@ -6,7 +6,7 @@
 
 > The word was derived from "kosmos" (Ancient Greek: κόσμος) which means world/universe and "nautes" (Ancient Greek: ναῦς) which means sailor/navigator
 
-Cosmonaut is an object mapper that enables .NET developers to work with a CosmosDB using .NET objects. It eliminates the need for most of the data-access code that developers usually need to write.
+Cosmonaut is an object mapper that enables .NET developers to work with CosmosDB. It eliminates the need for most of the data-access code that developers usually need to write.
 
 ### Getting started
 
@@ -164,6 +164,12 @@ You cannot have a property named Id or a property with the attribute `[JsonPrope
 A cosmos id needs to exist somehow on your entity model. For that reason if it isn't part of your entity you can just extend the `CosmosEntity` class.
 
 It is **HIGHLY RECOMMENDED** that you decorate your Id property with the `[JsonProperty("id")]` attribute to prevent any unexpected behaviour.
+
+#### CosmonautClient
+
+Cosmonaut has it's own version of a `DocumentClient` called `CosmonautClient`. The difference is that the `CosmonautClient` interface is more user friendly and it looks more like something you would use in a real life scenario. It won't throw not found exceptions if an item is not found but it will return `null` instead. It will also retry automatically when you get 429s (too many requests).
+
+It also has support for logging and monitoring as you are going to see in the logging section of this page.
 
 #### Transactions
 
