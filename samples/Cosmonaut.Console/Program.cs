@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Cosmonaut.Extensions.Microsoft.DependencyInjection;
+using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -47,11 +48,14 @@ namespace Cosmonaut.Console
             var carStore = provider.GetService<ICosmosStore<Car>>();
             
             System.Console.WriteLine($"Started");
-
+            
             var database = await cosmonautClient.GetDatabaseAsync("localtest");
             System.Console.WriteLine($"Retrieved database with id {database.Id}");
 
             var collection = await cosmonautClient.GetCollectionAsync("localtest", "shared");
+            if (collection == null)
+                collection = await cosmonautClient.CreateCollectionAsync("localtest", new DocumentCollection {Id = "shared"});
+
             System.Console.WriteLine($"Retrieved collection with id {collection.Id}");
 
             var offer = await cosmonautClient.GetOfferForCollectionAsync("localtest", "shared");
@@ -97,24 +101,24 @@ namespace Cosmonaut.Console
             var addedCars = await carStore.AddRangeAsync(cars);
 
             var addedBooks = await booksStore.AddRangeAsync(books);
-            
+
             System.Console.WriteLine($"Added {addedCars.SuccessfulEntities.Count + addedBooks.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
             //await Task.Delay(3000);
 
             var aCarId = addedCars.SuccessfulEntities.First().Entity.Id;
-            var firstAddedCar = await carStore.QueryMultipleAsync("select * from c where c.id = @id", new { id= aCarId });
+            var firstAddedCar = await carStore.QueryMultipleAsync("select * from c where c.id = @id", new { id = aCarId });
             var allTheCars = await carStore.QueryMultipleAsync<Car>("select * from c");
 
             var addedRetrieved = await booksStore.Query().OrderBy(x => x.Name).ToListAsync();
 
-            var firstPage = await booksStore.Query().WithPagination(1, 10).OrderBy(x=>x.Name).ToListAsync();
+            var firstPage = await booksStore.Query().WithPagination(1, 10).OrderBy(x => x.Name).ToListAsync();
             var secondPage = await booksStore.Query().WithPagination(2, 10).OrderBy(x => x.Name).ToPagedListAsync();
             var thirdPage = await booksStore.Query().WithPagination(secondPage.NextPageToken, 10).OrderBy(x => x.Name).ToPagedListAsync();
             var fourthPage = await booksStore.Query().WithPagination(4, 10).OrderBy(x => x.Name).ToListAsync();
 
             var sqlPaged = await cosmonautClient.Query<Book>("localtest", "shared",
-                "select * from c where c.CosmosEntityName = 'books' order by c.Name", null, new FeedOptions{EnableCrossPartitionQuery = true})
+                "select * from c where c.CosmosEntityName = 'books' order by c.Name", null, new FeedOptions { EnableCrossPartitionQuery = true })
                 .WithPagination(2, 10).ToListAsync();
 
             System.Console.WriteLine($"Retrieved {addedRetrieved.Count} documents in {watch.ElapsedMilliseconds}ms");
@@ -132,7 +136,7 @@ namespace Cosmonaut.Console
             System.Console.WriteLine($"Removed {removed.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
             watch.Reset();
             watch.Stop();
-
+            
             System.Console.ReadKey();
         }
     }

@@ -2,8 +2,7 @@
 
 namespace Cosmonaut.Console
 {
-    [SharedCosmosCollection("shared", "books")]
-    public class Book : ISharedCosmosEntity
+    public class Book
     {
         [CosmosPartitionKey]
         public string Name { get; set; }
@@ -11,7 +10,5 @@ namespace Cosmonaut.Console
         public string AnotherRandomProp { get; set; }
         
         public string Id { get; set; }
-
-        public string CosmosEntityName { get; set; }
     }
 }
