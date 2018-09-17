@@ -35,8 +35,4 @@
     <Folder Include="Properties\PublishProfiles\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="Cosmonaut.csproj" />
-  </ItemGroup>
-
 </Project>
