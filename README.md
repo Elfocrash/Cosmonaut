@@ -28,11 +28,12 @@ serviceCollection.AddCosmosStore<Book>(cosmosSettings);
 
 //or just by using the Action extension
 
-serviceCollection.AddCosmosStore<Book>(options =>
+serviceCollection.AddCosmosStore<Book>("<<databaseName>>", "<<cosmosUri>>"), "<<authkey>>", settings =>
 {
-    options.DatabaseName = "<<databaseName>>";
-    options.AuthKey = "<<authkey>>";
-    options.EndpointUrl = new Uri("<<cosmosUri>>");
+    settings.ConnectionPolicy = connectionPolicy;
+    settings.DefaultCollectionThroughput = 5000;
+    settings.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.Number, -1),
+        new RangeIndex(DataType.String, -1));
 });
 
 //or just initialise the object
@@ -89,7 +90,8 @@ Both of there methods work by adding the `.WithPagination()` method after you us
 var firstPage = await booksStore.Query().WithPagination(1, 10).OrderBy(x=>x.Name).ToListAsync();
 var secondPage = await booksStore.Query().WithPagination(2, 10).OrderBy(x => x.Name).ToPagedListAsync();
 var thirdPage = await booksStore.Query().WithPagination(secondPage.NextPageToken, 10).OrderBy(x => x.Name).ToPagedListAsync();
-var fourthPage = await booksStore.Query().WithPagination(4, 10).OrderBy(x => x.Name).ToListAsync();
+var fourthPage = await thirdPage.GetNextPageAsync();
+var fifthPage = await booksStore.Query().WithPagination(5, 10).OrderBy(x => x.Name).ToListAsync();
 ```
 
 `ToListAsync()` on a paged query will just return the results. `ToPagedListAsync()` on the other hand will return a `CosmosPagedResults` object. This object contains the results but also a boolean indicating whether there are more pages after the one you just got but also the continuation token you need to use to get the next page.
