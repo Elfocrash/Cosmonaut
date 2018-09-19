@@ -6,7 +6,7 @@
 
 > The word was derived from "kosmos" (Ancient Greek: κόσμος) which means world/universe and "nautes" (Ancient Greek: ναῦς) which means sailor/navigator
 
-Cosmonaut is an object mapper that enables .NET developers to work with CosmosDB. It eliminates the need for most of the data-access code that developers usually need to write.
+Cosmonaut is a supercharged SDK with object mapping capabilities that enables .NET developers to work with CosmosDB. It eliminates the need for most of the data-access code that developers usually need to write.
 
 ### Getting started
 
