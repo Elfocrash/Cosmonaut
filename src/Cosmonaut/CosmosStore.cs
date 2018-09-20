@@ -361,7 +361,7 @@ namespace Cosmonaut
         private RequestOptions GetRequestOptions(string id, RequestOptions requestOptions)
         {
             var partitionKeyDefinition = typeof(TEntity).GetPartitionKeyDefinitionForEntity();
-            var partitionKeyIsId = IsShared || (partitionKeyDefinition?.Paths?.SingleOrDefault()?.Equals($"/{CosmosConstants.CosmosId}") ?? false);
+            var partitionKeyIsId = partitionKeyDefinition?.Paths?.SingleOrDefault()?.Equals($"/{CosmosConstants.CosmosId}") ?? false;
             if (requestOptions == null && partitionKeyIsId)
             {
                 return new RequestOptions
@@ -378,7 +378,7 @@ namespace Cosmonaut
 
         private FeedOptions GetFeedOptionsForQuery(FeedOptions feedOptions)
         {
-            var shouldEnablePartitionQuery = (typeof(TEntity).HasPartitionKey() || IsShared) && feedOptions?.PartitionKey == null;
+            var shouldEnablePartitionQuery = typeof(TEntity).HasPartitionKey() && feedOptions?.PartitionKey == null;
 
             if (feedOptions == null)
             {

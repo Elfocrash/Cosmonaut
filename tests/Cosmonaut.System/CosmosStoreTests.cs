@@ -12,6 +12,7 @@ using FluentAssertions;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace Cosmonaut.System
@@ -191,6 +192,33 @@ namespace Cosmonaut.System
                 config.Excluding(x => x.CosmosEntityName);
                 return config;
             });
+        }
+
+        [Fact]
+        public async Task WhenValidEntitiesAreAdded_ThenTheyCanBeFoundAsync()
+        {
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
+            var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            var birdStore = _serviceProvider.GetService<ICosmosStore<Bird>>();
+            var alpacaStore = _serviceProvider.GetService<ICosmosStore<Alpaca>>();
+            var addedCats = await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 1);
+            var addedDogs = await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list), 1);
+            var addedLions = await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list), 1);
+            var addedBirds = await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list), 1);
+            var addedAlpacas = await ExecuteMultipleAddOperationsForType<Alpaca>(list => alpacaStore.AddRangeAsync(list), 1);
+
+            var catFound = await catStore.FindAsync(addedCats.SuccessfulEntities.Single().Entity.CatId, addedCats.SuccessfulEntities.Single().Entity.CatId);
+            var dogFound = await dogStore.FindAsync(addedDogs.SuccessfulEntities.Single().Entity.Id);
+            var lionFound = await lionStore.FindAsync(addedLions.SuccessfulEntities.Single().Entity.Id, addedLions.SuccessfulEntities.Single().Entity.Id);
+            var birdFound = await birdStore.FindAsync(addedBirds.SuccessfulEntities.Single().Entity.Id, addedBirds.SuccessfulEntities.Single().Entity.Id);
+            var alpacaFound = await alpacaStore.FindAsync(addedAlpacas.SuccessfulEntities.Single().Entity.Id);
+
+            catFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Cat>(addedCats.SuccessfulEntities.Single().ResourceResponse.Resource.ToString()));
+            dogFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Dog>(addedDogs.SuccessfulEntities.Single().ResourceResponse.Resource.ToString()));
+            lionFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Lion>(addedLions.SuccessfulEntities.Single().ResourceResponse.Resource.ToString()));
+            birdFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Bird>(addedBirds.SuccessfulEntities.Single().ResourceResponse.Resource.ToString()));
+            alpacaFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Alpaca>(addedAlpacas.SuccessfulEntities.Single().ResourceResponse.Resource.ToString()));
         }
 
         [Fact]
@@ -435,6 +463,12 @@ namespace Cosmonaut.System
                         settings.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.Number, -1), new RangeIndex(DataType.String, -1));
                     })
                 .AddCosmosStore<Bird>(_databaseId, _emulatorUri, _emulatorKey,
+                    settings =>
+                    {
+                        settings.ConnectionPolicy = _connectionPolicy;
+                        settings.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.Number, -1), new RangeIndex(DataType.String, -1));
+                    })
+                .AddCosmosStore<Alpaca>(_databaseId, _emulatorUri, _emulatorKey,
                     settings =>
                     {
                         settings.ConnectionPolicy = _connectionPolicy;
