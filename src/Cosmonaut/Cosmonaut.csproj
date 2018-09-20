@@ -31,14 +31,4 @@
     <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="1.9.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Properties\PublishProfiles\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="System.Diagnostics.Process">
-      <HintPath>..\..\..\..\..\..\..\..\Program Files\dotnet\shared\Microsoft.NETCore.App\2.0.0\System.Diagnostics.Process.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>
