@@ -161,7 +161,7 @@ namespace Cosmonaut
         {
             var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
             var queryable = CosmonautClient.Query<T>(DatabaseName, CollectionName, collectionSharingFriendlySql, parameters, GetFeedOptionsForQuery(feedOptions));
-            return await queryable.SingleOrDefaultGenericAsync(cancellationToken);
+            return await queryable.SingleOrDefaultAsync(cancellationToken);
         }
         
         public async Task<IEnumerable<TEntity>> QueryMultipleAsync(string sql, object parameters = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)

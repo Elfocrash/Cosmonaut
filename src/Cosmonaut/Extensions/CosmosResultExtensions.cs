@@ -47,7 +47,7 @@ namespace Cosmonaut.Extensions
             this IQueryable<TEntity> queryable, 
             CancellationToken cancellationToken = default)
         {
-            return (await GetListFromQueryable(queryable, cancellationToken)).FirstOrDefault();
+            return (await GetSingleOrFirstFromQueryable(queryable, cancellationToken)).FirstOrDefault();
         }
 
         public static async Task<TEntity> FirstOrDefaultAsync<TEntity>(
@@ -63,7 +63,7 @@ namespace Cosmonaut.Extensions
             this IQueryable<TEntity> queryable, 
             CancellationToken cancellationToken = default)
         {
-            return (await GetListFromQueryable(queryable, cancellationToken)).First();
+            return (await GetSingleOrFirstFromQueryable(queryable, cancellationToken)).First();
         }
 
         public static async Task<TEntity> FirstAsync<TEntity>(
@@ -79,7 +79,7 @@ namespace Cosmonaut.Extensions
             this IQueryable<TEntity> queryable, 
             CancellationToken cancellationToken = default)
         {
-            return (await GetListFromQueryable(queryable, cancellationToken)).SingleOrDefault();
+            return (await GetSingleOrFirstFromQueryable(queryable, cancellationToken)).SingleOrDefault();
         }
 
         public static async Task<TEntity> SingleOrDefaultAsync<TEntity>(
@@ -95,7 +95,7 @@ namespace Cosmonaut.Extensions
             this IQueryable<TEntity> queryable, 
             CancellationToken cancellationToken = default)
         {
-            return (await GetListFromQueryable(queryable, cancellationToken)).Single();
+            return (await GetSingleOrFirstFromQueryable(queryable, cancellationToken)).Single();
         }
 
         public static async Task<TEntity> SingleAsync<TEntity>(
@@ -121,13 +121,6 @@ namespace Cosmonaut.Extensions
             return await queryable.InvokeCosmosCallAsync(() => DocumentQueryable.MinAsync(queryable, cancellationToken), queryable.ToString());
         }
 
-        internal static async Task<T> SingleOrDefaultGenericAsync<T>(
-            this IQueryable<T> queryable,
-            CancellationToken cancellationToken = default)
-        {
-            return (await GetListFromQueryable(queryable, cancellationToken)).SingleOrDefault();
-        }
-
         private static async Task<List<T>> GetListFromQueryable<T>(IQueryable<T> queryable,
             CancellationToken cancellationToken)
         {
@@ -135,12 +128,25 @@ namespace Cosmonaut.Extensions
             if (feedOptions?.RequestContinuation == null)
             {
                 var query = queryable.AsDocumentQuery();
-                return await GetResultsFromQueryToList(query, cancellationToken);
+                return await GetResultsFromQueryToList(query, false, cancellationToken);
             }
 
             return await GetPaginatedResultsFromQueryable(queryable, cancellationToken, feedOptions);
         }
-        
+
+        private static async Task<List<T>> GetSingleOrFirstFromQueryable<T>(IQueryable<T> queryable,
+            CancellationToken cancellationToken)
+        {
+            var feedOptions = queryable.GetFeedOptionsForQueryable();
+            if (feedOptions?.RequestContinuation == null)
+            {
+                var query = queryable.AsDocumentQuery();
+                return await GetResultsFromQueryToList(query, true, cancellationToken);
+            }
+
+            return await GetPaginatedResultsFromQueryable(queryable, cancellationToken, feedOptions);
+        }
+
         private static async Task<CosmosPagedResults<T>> GetPagedListFromQueryable<T>(IQueryable<T> queryable,
             CancellationToken cancellationToken)
         {
@@ -152,13 +158,15 @@ namespace Cosmonaut.Extensions
             return await GetPaginatedResultsFromQueryable(queryable, cancellationToken, feedOptions);
         }
 
-        private static async Task<List<T>> GetResultsFromQueryToList<T>(IDocumentQuery<T> query, CancellationToken cancellationToken)
+        private static async Task<List<T>> GetResultsFromQueryToList<T>(IDocumentQuery<T> query, bool stopOnAny, CancellationToken cancellationToken)
         {
             var results = new List<T>();
             while (query.HasMoreResults)
             {
                 var items = await query.InvokeExecuteNextAsync(() => query.ExecuteNextAsync<T>(cancellationToken), query.ToString()).ExecuteCosmosCommand();
                 results.AddRange(items);
+                if (stopOnAny && results.Any())
+                    return results;
             }
             return results;
         }
