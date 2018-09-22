@@ -98,7 +98,7 @@ var fifthPage = await booksStore.Query().WithPagination(5, 10).OrderBy(x => x.Na
 
 ##### Pagination recommendations
 
-Because page number + page size pagination goes though all the documents untill it gets to the requested page, it's potentially slow and expensive.
+Because page number + page size pagination goes though all the documents until it gets to the requested page, it's potentially slow and expensive.
 The recommended approach would be to use the page number + page size approach once for the first page and get the results using the `.ToPagedListAsync()` method. This method will return the next continuation token and it will also tell you if there are more pages for this query. Then use the continuation token alternative of `WithPagination` to continue from your last query.
 
 Keep in mind that this approach means that you have to keep state on the client for the next query, but that's what you'd do if you where using previous/next buttons anyway.
