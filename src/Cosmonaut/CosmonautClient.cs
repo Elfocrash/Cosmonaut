@@ -121,7 +121,7 @@ namespace Cosmonaut
             if (collection == null)
                 return null;
 
-            return await DocumentClient.CreateOfferQuery(feedOptions).SingleOrDefaultAsync(x=> x.ResourceLink == collection.SelfLink, cancellationToken);
+            return await DocumentClient.CreateOfferQuery(feedOptions).SingleOrDefaultAsync(x => x.ResourceLink == collection.SelfLink, cancellationToken);
         }
 
         public async Task<OfferV2> GetOfferV2ForCollectionAsync(string databaseId, string collectionId, FeedOptions feedOptions = null, 

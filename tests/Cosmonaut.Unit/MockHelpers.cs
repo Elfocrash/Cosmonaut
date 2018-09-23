@@ -30,26 +30,61 @@ namespace Cosmonaut.Unit
             };
             collection.SetPropertyValue("resource", "docs");
             collection.SetPropertyValue("_self", "docs");
-            var mockOffer = new Mock<Offer>();
-            mockOffer.Object.SetPropertyValue("resource", "docs");
-            mockOffer.Object.SetResourceTimestamp(DateTime.UtcNow);
+            var offer = new Offer();
+            offer.SetPropertyValue("resource", "docs");
+            offer.SetResourceTimestamp(DateTime.UtcNow);
             mockDocumentClient.Setup(x => x.AuthKey).Returns(new SecureString());
             mockDocumentClient.Setup(x => x.ServiceEndpoint).Returns(new Uri("http://test.com"));
             mockDocumentClient.Setup(x => x.ReadDatabaseAsync(UriFactory.CreateDatabaseUri(databaseName), null))
                 .ReturnsAsync(database.ToResourceResponse(HttpStatusCode.OK));
             mockDocumentClient.Setup(x => x.ReadDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(databaseName, collectionName), null))
                 .ReturnsAsync(collection.ToResourceResponse(HttpStatusCode.OK));
-            mockDocumentClient.Setup(x => x.CreateDatabaseQuery(null))
+            mockDocumentClient.Setup(x => x.CreateDatabaseQuery(It.IsAny<FeedOptions>()))
                 .Returns(new EnumerableQuery<Database>(new List<Database> { database }));
             mockDocumentClient.Setup(x => x.CreateDocumentCollectionQuery(It.IsAny<string>(), null))
                 .Returns(new EnumerableQuery<DocumentCollection>(new List<DocumentCollection> { collection }));
-            var offerV2 = new OfferV2(mockOffer.Object, 400);
+
+            mockDocumentClient = SetupOfferForClient(offer, collection, mockDocumentClient);
+
+            return mockDocumentClient;
+        }
+
+        private static Mock<IDocumentClient> SetupOfferForClient(Offer offer, DocumentCollection collection, Mock<IDocumentClient> mockDocumentClient)
+        {
+            var offerV2 = new OfferV2(offer, 400);
             offerV2.SetResourceTimestamp(DateTime.UtcNow);
-            mockDocumentClient.Setup(x => x.CreateOfferQuery(null)).Returns(
-                new EnumerableQuery<OfferV2>(new List<OfferV2>
-                {
-                    offerV2
-                }));
+
+            var offers = new List<Offer> {offerV2};
+
+            Expression<Func<Offer, bool>> predicate = x => x.ResourceLink == collection.SelfLink;
+
+            var dataSource = offers.AsQueryable();
+            var expected = dataSource.Where(predicate);
+
+            ResponseSetup(expected, dataSource, ref mockDocumentClient);
+            FeedResponse<Offer> response = expected.ToFeedResponse();
+
+            var mockDocumentQuery = new Mock<IFakeDocumentQuery<Offer>>();
+            mockDocumentQuery
+                .SetupSequence(_ => _.HasMoreResults)
+                .Returns(true)
+                .Returns(false);
+
+            mockDocumentQuery
+                .Setup(_ => _.ExecuteNextAsync<Offer>(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(response);
+
+            var provider = new Mock<IQueryProvider>();
+            provider
+                .Setup(_ => _.CreateQuery<Offer>(It.IsAny<Expression>()))
+                .Returns(mockDocumentQuery.Object);
+            mockDocumentQuery.As<IQueryable<Offer>>().Setup(x => x.Provider).Returns(provider.Object);
+            mockDocumentQuery.As<IQueryable<Offer>>().Setup(x => x.Expression).Returns(dataSource.Expression);
+            mockDocumentQuery.As<IQueryable<Offer>>().Setup(x => x.ElementType).Returns(dataSource.ElementType);
+            mockDocumentQuery.As<IQueryable<Offer>>().Setup(x => x.GetEnumerator()).Returns(dataSource.GetEnumerator);
+
+            mockDocumentClient.Setup(x => x.CreateOfferQuery(It.IsAny<FeedOptions>()))
+                .Returns(mockDocumentQuery.Object);
             return mockDocumentClient;
         }
 
@@ -60,36 +95,32 @@ namespace Cosmonaut.Unit
 
         private static readonly DateTime UnixStartTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
-        public static CosmosStore<Dummy> ResponseSetup(IQueryable<Dummy> expected, IQueryable<Dummy> dataSource, ref Mock<IDocumentClient> mockDocumentClient)
+        public static void ResponseSetup<T>(IQueryable<T> expected, IQueryable<T> dataSource, ref Mock<IDocumentClient> mockDocumentClient) where T : class
         {
-            FeedResponse<Dummy> response = expected.ToFeedResponse();
+            FeedResponse<T> response = expected.ToFeedResponse();
 
-            var mockDocumentQuery = new Mock<IFakeDocumentQuery<Dummy>>();
+            var mockDocumentQuery = new Mock<IFakeDocumentQuery<T>>();
             mockDocumentQuery
                 .SetupSequence(_ => _.HasMoreResults)
                 .Returns(true)
                 .Returns(false);
 
             mockDocumentQuery
-                .Setup(_ => _.ExecuteNextAsync<Dummy>(It.IsAny<CancellationToken>()))
+                .Setup(_ => _.ExecuteNextAsync<T>(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(response);
 
             var provider = new Mock<IQueryProvider>();
             provider
-                .Setup(_ => _.CreateQuery<Dummy>(It.IsAny<Expression>()))
+                .Setup(_ => _.CreateQuery<T>(It.IsAny<Expression>()))
                 .Returns(mockDocumentQuery.Object);
-            mockDocumentQuery.As<IQueryable<Dummy>>().Setup(x => x.Provider).Returns(provider.Object);
-            mockDocumentQuery.As<IQueryable<Dummy>>().Setup(x => x.Expression).Returns(dataSource.Expression);
-            mockDocumentQuery.As<IQueryable<Dummy>>().Setup(x => x.ElementType).Returns(dataSource.ElementType);
-            mockDocumentQuery.As<IQueryable<Dummy>>().Setup(x => x.GetEnumerator()).Returns(dataSource.GetEnumerator);
-
-
-            mockDocumentClient.Setup(x => x.CreateDocumentQuery<Dummy>(It.IsAny<Uri>(),
+            mockDocumentQuery.As<IQueryable<T>>().Setup(x => x.Provider).Returns(provider.Object);
+            mockDocumentQuery.As<IQueryable<T>>().Setup(x => x.Expression).Returns(dataSource.Expression);
+            mockDocumentQuery.As<IQueryable<T>>().Setup(x => x.ElementType).Returns(dataSource.ElementType);
+            mockDocumentQuery.As<IQueryable<T>>().Setup(x => x.GetEnumerator()).Returns(dataSource.GetEnumerator);
+            
+            mockDocumentClient.Setup(x => x.CreateDocumentQuery<T>(It.IsAny<Uri>(),
                     It.IsAny<FeedOptions>()))
                 .Returns(mockDocumentQuery.Object);
-
-            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(mockDocumentClient.Object), "databaseName");
-            return entityStore;
         }
         
         public static CosmosStore<Dummy> ResponseSetupForQuery<T>(string sql, SqlParameterCollection parameters, IQueryable<T> expected, IQueryable<Dummy> dataSource, ref Mock<IDocumentClient> mockDocumentClient)

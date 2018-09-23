@@ -43,7 +43,8 @@ namespace Cosmonaut.Unit
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Where(predicate);
 
-            var entityStore = MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
+            MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
 
             // Act
             var result = await entityStore.Query().Where(predicate).ToListAsync();
@@ -233,7 +234,8 @@ namespace Cosmonaut.Unit
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Where(predicate);
 
-            var entityStore = MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
+            MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
 
             // Act
             var result = await entityStore.Query().FirstOrDefaultAsync(predicate);
@@ -266,7 +268,8 @@ namespace Cosmonaut.Unit
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Where(predicate);
 
-            var entityStore = MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
+            MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
 
             // Act
             var result = await entityStore.Query().FirstAsync(predicate);
@@ -299,7 +302,8 @@ namespace Cosmonaut.Unit
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Where(predicate);
 
-            var entityStore = MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
+            MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
 
             // Act
             var result = await entityStore.Query().SingleOrDefaultAsync(predicate);
@@ -332,7 +336,8 @@ namespace Cosmonaut.Unit
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Where(predicate);
 
-            var entityStore = MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
+            MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
 
             // Act
             var result = await entityStore.Query().SingleAsync(predicate);
@@ -365,7 +370,8 @@ namespace Cosmonaut.Unit
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Where(predicate);
 
-            var entityStore = MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
+            MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
 
             // Act
             var result = new Action(() => entityStore.Query().SingleAsync(predicate).GetAwaiter().GetResult());
@@ -384,7 +390,8 @@ namespace Cosmonaut.Unit
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Where(predicate);
 
-            var entityStore = MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
+            MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
 
             // Act
             var result = new Action(() => entityStore.Query().SingleAsync(predicate).GetAwaiter().GetResult());
@@ -403,7 +410,8 @@ namespace Cosmonaut.Unit
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Where(predicate);
 
-            var entityStore = MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
+            MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
 
             // Act
             var result = new Action(() => entityStore.Query().FirstAsync(predicate).GetAwaiter().GetResult());
@@ -422,7 +430,8 @@ namespace Cosmonaut.Unit
             var dataSource = dummies.AsQueryable();
             var expected = dataSource.Where(predicate);
 
-            var entityStore = MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
+            MockHelpers.ResponseSetup(expected, dataSource, ref _mockDocumentClient);
+            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
 
             // Act
             var result = await entityStore.Query().FirstOrDefaultAsync(predicate);
