@@ -117,6 +117,10 @@ namespace Cosmonaut
             CancellationToken cancellationToken = default)
         {
             var collection = await GetCollectionAsync(databaseId, collectionId);
+
+            if (collection == null)
+                return null;
+
             return await DocumentClient.CreateOfferQuery(feedOptions).SingleOrDefaultAsync(x=> x.ResourceLink == collection.SelfLink, cancellationToken);
         }
 

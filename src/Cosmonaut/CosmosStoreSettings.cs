@@ -13,11 +13,11 @@ namespace Cosmonaut
 
         public Uri EndpointUrl { get; }
 
-        public ConnectionPolicy ConnectionPolicy { get; set; } = null;
+        public ConnectionPolicy ConnectionPolicy { get; set; }
 
         public ConsistencyLevel? ConsistencyLevel { get; set; } = null;
 
-        public IndexingPolicy IndexingPolicy { get; set; } = null;
+        public IndexingPolicy IndexingPolicy { get; set; }
 
         public int DefaultCollectionThroughput { get; set; } =  CosmosConstants.MinimumCosmosThroughput;
 

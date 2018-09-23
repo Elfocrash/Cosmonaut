@@ -69,31 +69,6 @@ namespace Cosmonaut
         {
         }
 
-        [Obsolete("This constructor will be dropped. Use the constructor the uses ICosmonautClient.")]
-        public CosmosStore(IDocumentClient documentClient,
-            string databaseName,
-            string authKey,
-            string endpoint) : this(documentClient, databaseName, authKey, endpoint, string.Empty,
-            new CosmosDatabaseCreator(documentClient),
-            new CosmosCollectionCreator(documentClient))
-        {
-        }
-
-        [Obsolete("This constructor will be dropped. Use the constructor the uses ICosmonautClient.")]
-        public CosmosStore(IDocumentClient documentClient,
-            string databaseName,
-            string authKey,
-            string endpoint,
-            string overriddenCollectionName) : this(documentClient,
-            databaseName,
-            authKey,
-            endpoint,
-            overriddenCollectionName,
-            new CosmosDatabaseCreator(documentClient),
-            new CosmosCollectionCreator(documentClient))
-        {
-        }
-
         internal CosmosStore(ICosmonautClient cosmonautClient,
             string databaseName,
             string overriddenCollectionName,
@@ -109,28 +84,6 @@ namespace Cosmonaut
             if (string.IsNullOrEmpty(Settings.DatabaseName)) throw new ArgumentNullException(nameof(Settings.DatabaseName));
             _collectionCreator = collectionCreator ?? new CosmosCollectionCreator(CosmonautClient);
             _databaseCreator = databaseCreator ?? new CosmosDatabaseCreator(CosmonautClient);
-            _cosmosScaler = new CosmosScaler<TEntity>(this);
-            InitialiseCosmosStore();
-        }
-
-        internal CosmosStore(IDocumentClient documentClient,
-            string databaseName,
-            string authKey,
-            string endpoint,
-            string overriddenCollectionName,
-            IDatabaseCreator databaseCreator = null,
-            ICollectionCreator collectionCreator = null,
-            bool scaleable = false)
-        {
-            CollectionName = overriddenCollectionName;
-            DatabaseName = databaseName;
-            if(documentClient == null) throw new ArgumentNullException(nameof(documentClient));
-            var cosmonautClient = new CosmonautClient(documentClient);
-            Settings = new CosmosStoreSettings(databaseName, endpoint, authKey, documentClient.ConnectionPolicy,
-                scaleCollectionRUsAutomatically: scaleable);
-            if (string.IsNullOrEmpty(Settings.DatabaseName)) throw new ArgumentNullException(nameof(Settings.DatabaseName));
-            _collectionCreator = collectionCreator ?? new CosmosCollectionCreator(cosmonautClient);
-            _databaseCreator = databaseCreator ?? new CosmosDatabaseCreator(cosmonautClient);
             _cosmosScaler = new CosmosScaler<TEntity>(this);
             InitialiseCosmosStore();
         }
@@ -312,7 +265,8 @@ namespace Cosmonaut
             if(string.IsNullOrEmpty(CollectionName))
                 CollectionName = IsShared ? typeof(TEntity).GetSharedCollectionName() : typeof(TEntity).GetCollectionName();
 
-            CollectionThrouput = typeof(TEntity).GetCollectionThroughputForEntity(Settings.DefaultCollectionThroughput);
+            Settings.DefaultCollectionThroughput = CollectionThrouput = CosmonautClient.GetOfferV2ForCollectionAsync(DatabaseName, CollectionName).ConfigureAwait(false).GetAwaiter()
+                .GetResult()?.Content?.OfferThroughput ?? typeof(TEntity).GetCollectionThroughputForEntity(Settings.DefaultCollectionThroughput);
 
             _databaseCreator.EnsureCreatedAsync(DatabaseName).ConfigureAwait(false).GetAwaiter().GetResult();
             _collectionCreator.EnsureCreatedAsync<TEntity>(DatabaseName, CollectionName, CollectionThrouput, Settings.IndexingPolicy)
