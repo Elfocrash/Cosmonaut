@@ -379,7 +379,7 @@ namespace Cosmonaut
         /// <param name="id">The id of the document/entity.</param>
         /// <param name="partitionKeyValue">The partition key value.</param>
         /// <returns>The entity that matches the id and partition key. Returns null if the entity is not found.</returns>
-        Task<TEntity> FindAsync(string id, string partitionKeyValue);
+        Task<TEntity> FindAsync(string id, object partitionKeyValue);
 
         /// <summary>
         ///     The settings that were used to initialise this CosmosStore

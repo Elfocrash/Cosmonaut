@@ -224,9 +224,9 @@ namespace Cosmonaut
             return document != null ? JsonConvert.DeserializeObject<TEntity>(document.ToString()) : null;
         }
 
-        public async Task<TEntity> FindAsync(string id, string partitionKeyValue)
+        public async Task<TEntity> FindAsync(string id, object partitionKeyValue)
         {
-            var requestOptions = !string.IsNullOrEmpty(partitionKeyValue)
+            var requestOptions = partitionKeyValue != null
                 ? new RequestOptions { PartitionKey = new PartitionKey(partitionKeyValue) }
                 : null;
             return await FindAsync(id, requestOptions);
