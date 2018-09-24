@@ -45,7 +45,7 @@ namespace Cosmonaut.Unit
             settings.AuthKey.Should().Be("key");
             settings.ConnectionPolicy.Should().BeNull();
             settings.ConsistencyLevel.Should().BeNull();
-            settings.IndexingPolicy.Should().Should().Be(CosmosConstants.DefaultIndexingPolicy);
+            settings.IndexingPolicy.Should().Be(CosmosConstants.DefaultIndexingPolicy);
             settings.DefaultCollectionThroughput.Should().Be(CosmosConstants.MinimumCosmosThroughput);
             settings.MaximumUpscaleRequestUnits.Should().Be(CosmosConstants.DefaultMaximumUpscaleThroughput);
         }
