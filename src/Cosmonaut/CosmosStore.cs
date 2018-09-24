@@ -131,20 +131,21 @@ namespace Cosmonaut
             return await queryable.ToListAsync(cancellationToken);
         }
 
-        public async Task<CosmosResponse<TEntity>> AddAsync(TEntity entity, RequestOptions requestOptions = null)
+        public async Task<CosmosResponse<TEntity>> AddAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
             return await CosmonautClient.CreateDocumentAsync(DatabaseName, CollectionName, entity,
-                GetRequestOptions(requestOptions, entity));
+                GetRequestOptions(requestOptions, entity), cancellationToken);
         }
 
+        [Obsolete("Use the IEnumerable method instead")]
         public async Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(params TEntity[] entities)
         {
             return await AddRangeAsync((IEnumerable<TEntity>)entities);
         }
 
-        public async Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(IEnumerable<TEntity> entities, RequestOptions requestOptions = null)
+        public async Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(IEnumerable<TEntity> entities, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
-            return await ExecuteMultiOperationAsync(entities, x => AddAsync(x, requestOptions));
+            return await ExecuteMultiOperationAsync(entities, x => AddAsync(x, requestOptions, cancellationToken));
         }
         
         public async Task<CosmosMultipleResponse<TEntity>> RemoveAsync(
@@ -154,82 +155,85 @@ namespace Cosmonaut
             CancellationToken cancellationToken = default)
         {
             var entitiesToRemove = await Query(GetFeedOptionsForQuery(feedOptions)).Where(predicate).ToListAsync(cancellationToken);
-            return await RemoveRangeAsync(entitiesToRemove, requestOptions);
+            return await RemoveRangeAsync(entitiesToRemove, requestOptions, cancellationToken);
         }
 
-        public async Task<CosmosResponse<TEntity>> RemoveAsync(TEntity entity, RequestOptions requestOptions = null)
+        public async Task<CosmosResponse<TEntity>> RemoveAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
             entity.ValidateEntityForCosmosDb();
             var documentId = entity.GetDocumentId();
             return await CosmonautClient.DeleteDocumentAsync(DatabaseName, CollectionName, documentId,
-                GetRequestOptions(requestOptions, entity)).ExecuteCosmosCommand(entity);
+                GetRequestOptions(requestOptions, entity), cancellationToken).ExecuteCosmosCommand(entity);
         }
-        
+
+        [Obsolete("Use the IEnumerable method instead")]
         public async Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(params TEntity[] entities)
         {
             return await RemoveRangeAsync((IEnumerable<TEntity>)entities);
         }
 
-        public async Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(IEnumerable<TEntity> entities, RequestOptions requestOptions = null)
+        public async Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(IEnumerable<TEntity> entities, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
-            return await ExecuteMultiOperationAsync(entities, x => RemoveAsync(x, requestOptions));
+            return await ExecuteMultiOperationAsync(entities, x => RemoveAsync(x, requestOptions, cancellationToken));
         }
 
-        public async Task<CosmosResponse<TEntity>> UpdateAsync(TEntity entity, RequestOptions requestOptions = null)
+        public async Task<CosmosResponse<TEntity>> UpdateAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
             entity.ValidateEntityForCosmosDb();
             var document = entity.ConvertObjectToDocument();
-            return await CosmonautClient.UpdateDocumentAsync(DatabaseName, CollectionName, document, GetRequestOptions(requestOptions, entity))
+            return await CosmonautClient.UpdateDocumentAsync(DatabaseName, CollectionName, document, GetRequestOptions(requestOptions, entity), cancellationToken)
                 .ExecuteCosmosCommand(entity);
         }
 
+        [Obsolete("Use the IEnumerable method instead")]
         public async Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(params TEntity[] entities)
         {
             return await UpdateRangeAsync((IEnumerable<TEntity>)entities);
         }
 
-        public async Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(IEnumerable<TEntity> entities, RequestOptions requestOptions = null)
+        public async Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(IEnumerable<TEntity> entities, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
-            return await ExecuteMultiOperationAsync(entities, x => UpdateAsync(x, requestOptions));
+            return await ExecuteMultiOperationAsync(entities, x => UpdateAsync(x, requestOptions, cancellationToken));
         }
 
-        public async Task<CosmosResponse<TEntity>> UpsertAsync(TEntity entity, RequestOptions requestOptions = null)
+        public async Task<CosmosResponse<TEntity>> UpsertAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
             var document = entity.ConvertObjectToDocument();
-            return await CosmonautClient.UpsertDocumentAsync(DatabaseName, CollectionName, document, GetRequestOptions(requestOptions, entity))
+            return await CosmonautClient.UpsertDocumentAsync(DatabaseName, CollectionName, document, GetRequestOptions(requestOptions, entity), cancellationToken)
                 .ExecuteCosmosCommand(entity);
         }
 
-        public async Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(IEnumerable<TEntity> entities, RequestOptions requestOptions = null)
+        public async Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(IEnumerable<TEntity> entities, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
-            return await ExecuteMultiOperationAsync(entities, x => UpsertAsync(x, requestOptions));
+            return await ExecuteMultiOperationAsync(entities, x => UpsertAsync(x, requestOptions, cancellationToken));
         }
 
+        [Obsolete("Use the IEnumerable method instead")]
         public async Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(params TEntity[] entities)
         {
             return await UpsertRangeAsync((IEnumerable<TEntity>)entities);
         }
 
-        public async Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id, RequestOptions requestOptions = null)
+        public async Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
-            return await CosmonautClient.DeleteDocumentAsync(DatabaseName, CollectionName, id, GetRequestOptions(id, requestOptions))
+            return await CosmonautClient.DeleteDocumentAsync(DatabaseName, CollectionName, id, GetRequestOptions(id, requestOptions), cancellationToken)
                 .ExecuteCosmosCommand<TEntity>();
         }
 
-        public async Task<TEntity> FindAsync(string id, RequestOptions requestOptions = null)
+        public async Task<TEntity> FindAsync(string id, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
             var document = await CosmonautClient.GetDocumentAsync(DatabaseName, CollectionName, id,
-                GetRequestOptions(id, requestOptions));
+                GetRequestOptions(id, requestOptions), cancellationToken);
             
             return document != null ? JsonConvert.DeserializeObject<TEntity>(document.ToString()) : null;
         }
 
-        public async Task<TEntity> FindAsync(string id, object partitionKeyValue)
+        public async Task<TEntity> FindAsync(string id, object partitionKeyValue, CancellationToken cancellationToken = default)
         {
             var requestOptions = partitionKeyValue != null
                 ? new RequestOptions { PartitionKey = new PartitionKey(partitionKeyValue) }
                 : null;
-            return await FindAsync(id, requestOptions);
+            return await FindAsync(id, requestOptions, cancellationToken);
         }
 
         private static async Task<CosmosMultipleResponse<TEntity>> HandleOperationWithRateLimitRetry(

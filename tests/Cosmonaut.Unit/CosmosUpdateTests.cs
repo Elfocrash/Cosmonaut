@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Cosmonaut.Testing;
@@ -36,7 +37,7 @@ namespace Cosmonaut.Unit
             var document = addedDummy.ConvertObjectToDocument();
             var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
             document.SetPropertyValue(nameof(addedDummy.Name), expectedName);
-            _mockDocumentClient.Setup(x => x.ReplaceDocumentAsync(It.IsAny<Uri>(), document.ItIsSameDocument(), It.IsAny<RequestOptions>())).ReturnsAsync(resourceResponse);
+            _mockDocumentClient.Setup(x => x.ReplaceDocumentAsync(It.IsAny<Uri>(), document.ItIsSameDocument(), It.IsAny<RequestOptions>(), CancellationToken.None)).ReturnsAsync(resourceResponse);
 
             var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
 
@@ -63,7 +64,7 @@ namespace Cosmonaut.Unit
             var document = addedDummy.ConvertObjectToDocument();
             var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
             document.SetPropertyValue(nameof(addedDummy.Name), "newTest");
-            _mockDocumentClient.Setup(x => x.ReplaceDocumentAsync(It.IsAny<Uri>(), document.ItIsSameDocument(), It.IsAny<RequestOptions>()))
+            _mockDocumentClient.Setup(x => x.ReplaceDocumentAsync(It.IsAny<Uri>(), document.ItIsSameDocument(), It.IsAny<RequestOptions>(), CancellationToken.None))
                 .ReturnsAsync(resourceResponse);
             
             var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
@@ -92,7 +93,7 @@ namespace Cosmonaut.Unit
             var document = addedDummy.ConvertObjectToDocument();
             var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
             document.SetPropertyValue(nameof(addedDummy.Name), "newTest");
-            _mockDocumentClient.Setup(x => x.UpsertDocumentAsync(It.IsAny<Uri>(), document.ItIsSameDocument(), It.IsAny<RequestOptions>(), false))
+            _mockDocumentClient.Setup(x => x.UpsertDocumentAsync(It.IsAny<Uri>(), document.ItIsSameDocument(), It.IsAny<RequestOptions>(), false, CancellationToken.None))
                 .ReturnsAsync(resourceResponse);
 
             var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
@@ -119,7 +120,7 @@ namespace Cosmonaut.Unit
             var document = addedDummy.ConvertObjectToDocument();
             var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
             document.SetPropertyValue(nameof(addedDummy.Name), "newTest");
-            _mockDocumentClient.Setup(x => x.UpsertDocumentAsync(It.IsAny<Uri>(), document.ItIsSameDocument(), It.IsAny<RequestOptions>(), false))
+            _mockDocumentClient.Setup(x => x.UpsertDocumentAsync(It.IsAny<Uri>(), document.ItIsSameDocument(), It.IsAny<RequestOptions>(), false, CancellationToken.None))
                 .ReturnsAsync(resourceResponse);
 
             var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");

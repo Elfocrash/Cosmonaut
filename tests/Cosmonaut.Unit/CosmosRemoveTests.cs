@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Cosmonaut.Response;
@@ -37,7 +38,7 @@ namespace Cosmonaut.Unit
             var document = dummy.ConvertObjectToDocument();
             var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
 
-            _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>()))
+            _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>(), CancellationToken.None))
                 .ReturnsAsync(resourceResponse);
             var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
 
@@ -65,7 +66,7 @@ namespace Cosmonaut.Unit
             };
             var document = toRemove.ConvertObjectToDocument();
             var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
-            _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>()))
+            _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>(), CancellationToken.None))
                 .ReturnsAsync(resourceResponse);
             var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
 
@@ -95,7 +96,7 @@ namespace Cosmonaut.Unit
 
             var document = dummy.ConvertObjectToDocument();
             var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
-            _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>()))
+            _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>(), CancellationToken.None))
                 .ReturnsAsync(resourceResponse);
             var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
 

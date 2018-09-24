@@ -17,7 +17,7 @@ namespace Cosmonaut
 
         public ConsistencyLevel? ConsistencyLevel { get; set; } = null;
 
-        public IndexingPolicy IndexingPolicy { get; set; }
+        public IndexingPolicy IndexingPolicy { get; set; } = CosmosConstants.DefaultIndexingPolicy;
 
         public int DefaultCollectionThroughput { get; set; } =  CosmosConstants.MinimumCosmosThroughput;
 
@@ -82,7 +82,7 @@ namespace Cosmonaut
             DefaultCollectionThroughput = defaultCollectionThroughput;
             ScaleCollectionRUsAutomatically = scaleCollectionRUsAutomatically;
             MaximumUpscaleRequestUnits = maximumUpscaleRequestUnits;
-            IndexingPolicy = indexingPolicy;
+            IndexingPolicy = indexingPolicy ?? CosmosConstants.DefaultIndexingPolicy;
         }
     }
 }

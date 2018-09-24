@@ -24,8 +24,8 @@ namespace Cosmonaut.Console
             var cosmosSettings = new CosmosStoreSettings("localtest", 
                 "https://localhost:8081", 
                 "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
-                , connectionPolicy, new IndexingPolicy(new RangeIndex(DataType.Number, -1), new RangeIndex(DataType.String, -1))
-                , 5000);
+                , connectionPolicy
+                , defaultCollectionThroughput: 5000);
 
             var cosmonautClient = new CosmonautClient("https://localhost:8081",
                 "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==");
@@ -38,8 +38,6 @@ namespace Cosmonaut.Console
             {
                 settings.ConnectionPolicy = connectionPolicy;
                 settings.DefaultCollectionThroughput = 5000;
-                settings.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.Number, -1),
-                    new RangeIndex(DataType.String, -1));
             });
 
             serviceCollection.AddCosmosStore<Car>(cosmosSettings);
