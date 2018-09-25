@@ -194,9 +194,13 @@ By default CosmosDB is created with the following indexing rules
                     "precision": -1
                 },
                 {
-                    "kind": "Hash",
+                    "kind": "Range",
                     "dataType": "String",
-                    "precision": 3
+                    "precision": -1
+                }
+                {
+                    "kind": "Spatial",
+                    "dataType": "Point"
                 }
             ]
         }
