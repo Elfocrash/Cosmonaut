@@ -70,7 +70,6 @@ namespace Cosmonaut.Console
             var carsRemoved = await carStore.RemoveAsync(x => true);
             System.Console.WriteLine($"Removed {carsRemoved.SuccessfulEntities.Count} cars from the database.");
 
-
             var books = new List<Book>();
             for (int i = 0; i < 25; i++)
             {

@@ -15,7 +15,7 @@ namespace Cosmonaut.Testing
         public static ResourceResponse<T> ToResourceResponse<T>(this T resource, HttpStatusCode statusCode, IDictionary<string, string> responseHeaders = null) where T : Resource, new()
         {
             var resourceResponse = new ResourceResponse<T>(resource);
-            var documentServiceResponseType = Type.GetType("Microsoft.Azure.Documents.DocumentServiceResponse, Microsoft.Azure.DocumentDB.Core, Version=2.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
+            var documentServiceResponseType = Type.GetType("Microsoft.Azure.Documents.DocumentServiceResponse, Microsoft.Azure.DocumentDB.Core, Version=2.1.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
 
             var flags = BindingFlags.NonPublic | BindingFlags.Instance;
 
@@ -29,7 +29,7 @@ namespace Cosmonaut.Testing
                 }
             }
 
-            var headersDictionaryType = Type.GetType("Microsoft.Azure.Documents.Collections.DictionaryNameValueCollection, Microsoft.Azure.DocumentDB.Core, Version=2.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
+            var headersDictionaryType = Type.GetType("Microsoft.Azure.Documents.Collections.DictionaryNameValueCollection, Microsoft.Azure.DocumentDB.Core, Version=2.1.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
 
             var headersDictionaryInstance = Activator.CreateInstance(headersDictionaryType, headers);
 
@@ -47,7 +47,7 @@ namespace Cosmonaut.Testing
 
         public static FeedResponse<T> ToFeedResponse<T>(this IQueryable<T> resource, IDictionary<string, string> responseHeaders = null)
         {
-            var feedResponseType = Type.GetType("Microsoft.Azure.Documents.Client.FeedResponse`1, Microsoft.Azure.DocumentDB.Core, Version=2.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
+            var feedResponseType = Type.GetType("Microsoft.Azure.Documents.Client.FeedResponse`1, Microsoft.Azure.DocumentDB.Core, Version=2.1.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
 
             var flags = BindingFlags.NonPublic | BindingFlags.Instance;
 
@@ -65,7 +65,7 @@ namespace Cosmonaut.Testing
                 }
             }
 
-            var headersDictionaryType = Type.GetType("Microsoft.Azure.Documents.Collections.DictionaryNameValueCollection, Microsoft.Azure.DocumentDB.Core, Version=2.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
+            var headersDictionaryType = Type.GetType("Microsoft.Azure.Documents.Collections.DictionaryNameValueCollection, Microsoft.Azure.DocumentDB.Core, Version=2.1.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
 
             var headersDictionaryInstance = Activator.CreateInstance(headersDictionaryType, headers);
 
