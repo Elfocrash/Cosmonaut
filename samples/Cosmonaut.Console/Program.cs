@@ -40,6 +40,9 @@ namespace Cosmonaut.Console
                 settings.DefaultCollectionThroughput = 5000;
             });
 
+            serviceCollection.AddCosmosStore<Person>(cosmosSettings);
+            serviceCollection.AddCosmosStore<EntityWithoutPropertyWithIdName>(cosmosSettings);
+            
             serviceCollection.AddCosmosStore<Car>(cosmosSettings);
 
             var provider = serviceCollection.BuildServiceProvider();
