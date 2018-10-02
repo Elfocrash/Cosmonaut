@@ -14,38 +14,38 @@ namespace Cosmonaut.NetCore2WebApi.Controllers
 {
     public class SampleController : Controller
     {
-        private readonly ICosmosStore<Person> _personsCosmosStore;
+        private readonly ICosmosStore<Person> _peopleCosmosStore;
 
-        public SampleController(ICosmosStore<Person> personsCosmosStore)
+        public SampleController(ICosmosStore<Person> peopleCosmosStore)
         {
-            _personsCosmosStore = personsCosmosStore;
+            _peopleCosmosStore = peopleCosmosStore;
         }
 
-        [HttpGet("/api/persons")]
-        public async Task<IActionResult> GetAllPaged([FromQuery] int pageSize, [FromQuery] string continuationToken,
-            CancellationToken cancellationToken)
+        [HttpGet("/api/people")]
+        public async Task<IActionResult> GetAllPaged([FromQuery] string continuationToken,
+            CancellationToken cancellationToken, [FromQuery] int pageSize = 10)
         {
-            if (pageSize > 50)
+            if (pageSize > 50 || pageSize <= 0)
             {
-                return BadRequest("Page Size too big! Must be < 50");
+                return BadRequest("Page Size Invalid! Must be 0 < pageSize < 50");
             }
 
             if (continuationToken == null || continuationToken.Trim().Length == 0)
             {
-                var initialPage = await _personsCosmosStore.Query().OrderBy(person => person.Name)
-                    .WithPagination(0, pageSize).ToPagedListAsync(cancellationToken: cancellationToken);
+                var initialPage = await _peopleCosmosStore.Query().OrderBy(person => person.Name)
+                    .WithPagination(1, pageSize).ToPagedListAsync(cancellationToken: cancellationToken);
 
                 return Ok(initialPage);
             }
             
-            var page = await _personsCosmosStore.Query().OrderBy(person => person.Name)
+            var page = await _peopleCosmosStore.Query().OrderBy(person => person.Name)
                 .WithPagination(continuationToken, pageSize).ToPagedListAsync(cancellationToken: cancellationToken);
 
             return Ok(page);
         }
 
-        [HttpGet("/api/persons/{id:Guid}")]
-        public async Task<IActionResult> ReadById(Guid id, CancellationToken cancellationToken)
+        [HttpGet("/api/people/{id:Guid}")]
+        public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
         {
             if (id == Guid.Empty)
             {
@@ -53,7 +53,7 @@ namespace Cosmonaut.NetCore2WebApi.Controllers
             }
 
             var person =
-                await _personsCosmosStore.FindAsync(id.ToString(), cancellationToken: cancellationToken);
+                await _peopleCosmosStore.FindAsync(id.ToString(), cancellationToken: cancellationToken);
 
             if (person == null)
             {
@@ -69,7 +69,7 @@ namespace Cosmonaut.NetCore2WebApi.Controllers
             return Ok(response);
         }
 
-        [HttpPost("/api/persons")]
+        [HttpPost("/api/people")]
         public async Task<IActionResult> Create([FromBody] CreatePersonRequest request,
             CancellationToken cancellationToken)
         {
@@ -78,7 +78,7 @@ namespace Cosmonaut.NetCore2WebApi.Controllers
                 Name = request.Name
             };
 
-            var result = await _personsCosmosStore.UpsertAsync(personToCreate, cancellationToken: cancellationToken);
+            var result = await _peopleCosmosStore.UpsertAsync(personToCreate, cancellationToken: cancellationToken);
 
             var personId = result.Entity.Id;
 
@@ -90,7 +90,7 @@ namespace Cosmonaut.NetCore2WebApi.Controllers
             return Ok(personId);
         }
 
-        [HttpPut("/api/persons/{id:Guid}")]
+        [HttpPut("/api/people/{id:Guid}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] EditPersonRequest request,
             CancellationToken cancellationToken)
         {
@@ -105,7 +105,7 @@ namespace Cosmonaut.NetCore2WebApi.Controllers
             }
 
             var existingPerson =
-                await _personsCosmosStore.FindAsync(id.ToString(), cancellationToken: cancellationToken);
+                await _peopleCosmosStore.FindAsync(id.ToString(), cancellationToken: cancellationToken);
 
             if (existingPerson == null)
             {
@@ -118,7 +118,7 @@ namespace Cosmonaut.NetCore2WebApi.Controllers
                 Name = request.Name
             };
 
-            var result = await _personsCosmosStore.UpdateAsync(personToSave, cancellationToken: cancellationToken);
+            var result = await _peopleCosmosStore.UpdateAsync(personToSave, cancellationToken: cancellationToken);
 
             var personId = result.Entity.Id;
 
@@ -130,7 +130,7 @@ namespace Cosmonaut.NetCore2WebApi.Controllers
             return Ok(personId);
         }
 
-        [HttpDelete("/api/persons/{id:Guid}")]
+        [HttpDelete("/api/people/{id:Guid}")]
         public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
         {
             if (id == Guid.Empty)
@@ -138,13 +138,13 @@ namespace Cosmonaut.NetCore2WebApi.Controllers
                 return BadRequest();
             }
 
-            await _personsCosmosStore.RemoveByIdAsync(id.ToString(), cancellationToken: cancellationToken);
+            await _peopleCosmosStore.RemoveByIdAsync(id.ToString(), cancellationToken: cancellationToken);
 
             return Ok();
         }
 
         //Alternative to having 1 endpoint for Creation and 1 for Update -> Upsert
-        [HttpPut("/api/persons")]
+        [HttpPut("/api/people")]
         public async Task<IActionResult> Upsert([FromBody] UpsertPersonRequest request,
             CancellationToken cancellationToken)
         {
@@ -154,7 +154,7 @@ namespace Cosmonaut.NetCore2WebApi.Controllers
                 Name = request.Name
             };
 
-            var result = await _personsCosmosStore.UpsertAsync(personToUpsert, cancellationToken: cancellationToken);
+            var result = await _peopleCosmosStore.UpsertAsync(personToUpsert, cancellationToken: cancellationToken);
 
             var personId = result.Entity.Id;
 

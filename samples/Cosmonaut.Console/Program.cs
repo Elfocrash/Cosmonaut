@@ -39,9 +39,6 @@ namespace Cosmonaut.Console
                 settings.ConnectionPolicy = connectionPolicy;
                 settings.DefaultCollectionThroughput = 5000;
             });
-
-            serviceCollection.AddCosmosStore<Person>(cosmosSettings);
-            serviceCollection.AddCosmosStore<EntityWithoutPropertyWithIdName>(cosmosSettings);
             
             serviceCollection.AddCosmosStore<Car>(cosmosSettings);
 
