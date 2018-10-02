@@ -10,9 +10,9 @@ namespace Cosmonaut.NetCore2WebApi
     {
         public static void Configure(IServiceCollection services, IConfiguration configuration)
         {
-            //Look at appsettings.Development.json
-            var config = new AppSettingsSection();
-            configuration.GetSection("CosmosDb").Bind(config);
+            //Look at appsettings.Development.json | https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-2.1
+            var cosmosConfig = new AppSettingsSection();
+            configuration.GetSection("CosmosDb").Bind(cosmosConfig);
             
             var connectionPolicy = new ConnectionPolicy
             {
@@ -20,11 +20,11 @@ namespace Cosmonaut.NetCore2WebApi
                 ConnectionMode = ConnectionMode.Direct
             };
             
-            var cosmosSettings = new CosmosStoreSettings(config.CosmosDatabaseName, 
-                config.CosmosDatabaseUrl, 
-                config.CosmosAuthKey
+            var cosmosSettings = new CosmosStoreSettings(cosmosConfig.CosmosDatabaseName, 
+                cosmosConfig.CosmosDatabaseUrl, 
+                cosmosConfig.CosmosAuthKey
                 , connectionPolicy
-                , defaultCollectionThroughput: config.DefaultConnectionThroughput);
+                , defaultCollectionThroughput: cosmosConfig.DefaultConnectionThroughput);
             
             AddCosmosStores(services, cosmosSettings);
         }
@@ -33,18 +33,18 @@ namespace Cosmonaut.NetCore2WebApi
         {
             services.AddCosmosStore<Person>(cosmosSettings);
         }
-
-        public class AppSettingsSection
+    }
+    
+    public class AppSettingsSection
+    {
+        public AppSettingsSection()
         {
-            public AppSettingsSection()
-            {
-                DefaultConnectionThroughput = 5000;
-            }
-            
-            public string CosmosDatabaseName { get; set; }
-            public string CosmosDatabaseUrl { get; set; }
-            public string CosmosAuthKey { get; set; }
-            public int DefaultConnectionThroughput { get; set; }
+            DefaultConnectionThroughput = 5000;
         }
+            
+        public string CosmosDatabaseName { get; set; }
+        public string CosmosDatabaseUrl { get; set; }
+        public string CosmosAuthKey { get; set; }
+        public int DefaultConnectionThroughput { get; set; }
     }
 }
