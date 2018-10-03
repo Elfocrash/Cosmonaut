@@ -39,7 +39,7 @@ namespace Cosmonaut.Console
                 settings.ConnectionPolicy = connectionPolicy;
                 settings.DefaultCollectionThroughput = 5000;
             });
-
+            
             serviceCollection.AddCosmosStore<Car>(cosmosSettings);
 
             var provider = serviceCollection.BuildServiceProvider();
