@@ -15,23 +15,30 @@ namespace Cosmonaut
 {
     public class CosmonautClient : ICosmonautClient
     {
-        public CosmonautClient(IDocumentClient documentClient)
+        public CosmonautClient(IDocumentClient documentClient, bool infiniteRetrying = true)
         {
             DocumentClient = documentClient;
+            if (infiniteRetrying)
+                DocumentClient.SetupInfiniteRetries();
         }
 
-        public CosmonautClient(Func<IDocumentClient> documentClientFunc)
+        public CosmonautClient(Func<IDocumentClient> documentClientFunc, bool infiniteRetrying = true)
         {
             DocumentClient = documentClientFunc();
+            if (infiniteRetrying)
+                DocumentClient.SetupInfiniteRetries();
         }
 
         public CosmonautClient(
             Uri endpoint, 
             string authKeyOrResourceToken, 
             ConnectionPolicy connectionPolicy = null,
-            ConsistencyLevel? desiredConsistencyLevel = null)
+            ConsistencyLevel? desiredConsistencyLevel = null,
+            bool infiniteRetrying = true)
         {
             DocumentClient = DocumentClientFactory.CreateDocumentClient(endpoint, authKeyOrResourceToken, connectionPolicy, desiredConsistencyLevel);
+            if (infiniteRetrying)
+                DocumentClient.SetupInfiniteRetries();
         }
 
         public CosmonautClient(
@@ -39,16 +46,20 @@ namespace Cosmonaut
             string authKeyOrResourceToken,
             JsonSerializerSettings jsonSerializerSettings,
             ConnectionPolicy connectionPolicy = null,
-            ConsistencyLevel? desiredConsistencyLevel = null)
+            ConsistencyLevel? desiredConsistencyLevel = null,
+            bool infiniteRetrying = true)
         {
             DocumentClient = DocumentClientFactory.CreateDocumentClient(endpoint, authKeyOrResourceToken, jsonSerializerSettings, connectionPolicy, desiredConsistencyLevel);
+            if (infiniteRetrying)
+                DocumentClient.SetupInfiniteRetries();
         }
 
         public CosmonautClient(
             string endpoint,
             string authKeyOrResourceToken,
             ConnectionPolicy connectionPolicy = null,
-            ConsistencyLevel? desiredConsistencyLevel = null) : this(new Uri(endpoint), authKeyOrResourceToken, connectionPolicy, desiredConsistencyLevel)
+            ConsistencyLevel? desiredConsistencyLevel = null,
+            bool infiniteRetrying = true) : this(new Uri(endpoint), authKeyOrResourceToken, connectionPolicy, desiredConsistencyLevel, infiniteRetrying)
         {
         }
 
@@ -197,7 +208,7 @@ namespace Cosmonaut
                 .ExecuteCosmosCommand();
         }
 
-        public async Task<CosmosResponse<T>> CreateDocumentAsync<T>(string databaseId, string collectionId, T obj, 
+        public async Task<CosmosResponse<T>> CreateDocumentAsync<T>(string databaseId, string collectionId, T obj,
             RequestOptions requestOptions = null, CancellationToken cancellationToken = default) where T : class
         {
             var safeDocument = obj.ConvertObjectToDocument();
@@ -224,7 +235,7 @@ namespace Cosmonaut
                 .ExecuteCosmosCommand();
         }
 
-        public async Task<CosmosResponse<T>> UpdateDocumentAsync<T>(string databaseId, string collectionId, T document, 
+        public async Task<CosmosResponse<T>> UpdateDocumentAsync<T>(string databaseId, string collectionId, T document,
             RequestOptions requestOptions = null, CancellationToken cancellationToken = default) where T : class
         {
             var safeDocument = document.ConvertObjectToDocument();
@@ -243,7 +254,7 @@ namespace Cosmonaut
                 .ExecuteCosmosCommand();
         }
 
-        public async Task<CosmosResponse<T>> UpsertDocumentAsync<T>(string databaseId, string collectionId, 
+        public async Task<CosmosResponse<T>> UpsertDocumentAsync<T>(string databaseId, string collectionId,
             T document, RequestOptions requestOptions = null, CancellationToken cancellationToken = default) where T : class
         {
             var safeDocument = document.ConvertObjectToDocument();

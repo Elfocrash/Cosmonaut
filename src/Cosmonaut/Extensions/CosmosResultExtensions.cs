@@ -163,7 +163,8 @@ namespace Cosmonaut.Extensions
             var results = new List<T>();
             while (query.HasMoreResults)
             {
-                var items = await query.InvokeExecuteNextAsync(() => query.ExecuteNextAsync<T>(cancellationToken), query.ToString()).ExecuteCosmosCommand();
+                var items = await query.InvokeExecuteNextAsync(() => query.ExecuteNextAsync<T>(cancellationToken),
+                    query.ToString());
                 results.AddRange(items);
                 if (stopOnAny && results.Any())
                     return results;
@@ -182,7 +183,8 @@ namespace Cosmonaut.Extensions
                 if (results.Count == pageSize)
                     break;
 
-                var items = await query.InvokeExecuteNextAsync(() => query.ExecuteNextAsync<T>(cancellationToken), query.ToString()).ExecuteCosmosCommand();
+                var items = await query.InvokeExecuteNextAsync(() => query.ExecuteNextAsync<T>(cancellationToken),
+                    query.ToString());
                 nextPageToken = items.ResponseContinuation;
                 
                 foreach (var item in items)
@@ -212,7 +214,8 @@ namespace Cosmonaut.Extensions
                 if (results.Count == pageSize)
                     break;
 
-                var items = await query.InvokeExecuteNextAsync(() => query.ExecuteNextAsync<T>(cancellationToken), query.ToString()).ExecuteCosmosCommand();
+                var items = await query.InvokeExecuteNextAsync(() => query.ExecuteNextAsync<T>(cancellationToken),
+                    query.ToString());
                 nextPageToken = items.ResponseContinuation;
 
                 foreach (var item in items)

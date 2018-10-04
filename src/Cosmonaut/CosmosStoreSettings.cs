@@ -27,6 +27,8 @@ namespace Cosmonaut
 
         public JsonSerializerSettings JsonSerializerSettings { get; set; }
 
+        public bool InfiniteRetries { get; set; } = true;
+
         public CosmosStoreSettings(string databaseName,
             string endpointUrl,
             string authKey,

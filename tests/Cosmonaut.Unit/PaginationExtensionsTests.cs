@@ -1,8 +1,6 @@
 ﻿using System;
 using Cosmonaut.Extensions;
 using FluentAssertions;
-using Microsoft.Azure.Documents;
-using Moq;
 using Xunit;
 
 namespace Cosmonaut.Unit
