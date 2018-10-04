@@ -13,6 +13,7 @@ Cosmonaut is a supercharged SDK with object mapping capabilities that enables .N
 - [How to easily start using CosmosDB in your C# application in no time with Cosmonaut](http://chapsas.com/how-to-easily-start-using-cosmosdb-in-your-c-application-in-no-time-with-cosmonaut/)
 - [(Video) Getting started with .NET Core and CosmosDB using Cosmonaut](http://chapsas.com/video-getting-started-with-net-core-and-cosmosdb-using-cosmonaut/)
 - [(Video) How to save money in CosmosDB with Cosmonaut's Collection Sharing](http://chapsas.com/video-how-to-save-money-in-cosmosdb-with-cosmonauts-collection-sharing/)
+- [CosmosDB Fluent Pagination with Cosmonaut](http://chapsas.com/cosmosdb-fluent-pagination-with-cosmonaut/)
 
 ### Usage 
 The idea is pretty simple. You can have one CosmoStore per entity (POCO/dtos etc)

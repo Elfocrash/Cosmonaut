@@ -68,8 +68,7 @@ namespace Cosmonaut.System
             await _cosmonautClient.DeleteDatabaseAsync("Nick");
             await _cosmonautClient.DeleteDatabaseAsync("TheGreek");
         }
-
-
+        
         [Fact]
         public async Task QueryOffersAsync_WhenQueryingOffers_ThenAllOffersGetReturned()
         {
@@ -84,6 +83,24 @@ namespace Cosmonaut.System
             {
                 offers.Select(x => x.ResourceLink).Contains(collection.SelfLink).Should().BeTrue();
             });
+        }
+
+        [Fact]
+        public async Task UpdateOfferAsync_WhenOfferIsUpdated_ThenRUsCorrespondToTheUpdate()
+        {
+            // Arrange
+            var offer = await _cosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);
+
+            // Act
+            var newOffer = new OfferV2(offer, 600);
+            var updated = await _cosmonautClient.UpdateOfferAsync(newOffer);
+            var queried = await _cosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);
+
+            // Assert
+            offer.Content.OfferThroughput.Should().Be(400);
+            updated.StatusCode.Should().Be(HttpStatusCode.OK);
+            queried.Content.OfferThroughput.Should().Be(600);
+            updated.Resource.Should().BeEquivalentTo(queried);
         }
 
         [Fact]

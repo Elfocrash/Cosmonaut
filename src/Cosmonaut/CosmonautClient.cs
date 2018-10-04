@@ -155,6 +155,11 @@ namespace Cosmonaut
             return offers.Cast<OfferV2>();
         }
 
+        public async Task<ResourceResponse<Offer>> UpdateOfferAsync(Offer offer)
+        {
+            return await this.InvokeCosmosOperationAsync(() => DocumentClient.ReplaceOfferAsync(offer), offer.Id).ExecuteCosmosCommand();
+        }
+
         public async Task<IEnumerable<StoredProcedure>> QueryStoredProceduresAsync(string databaseId, string collectionId, Expression<Func<StoredProcedure, bool>> predicate = null, 
             FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {

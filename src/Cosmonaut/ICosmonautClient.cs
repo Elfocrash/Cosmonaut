@@ -49,6 +49,8 @@ namespace Cosmonaut
         Task<IEnumerable<OfferV2>> QueryOffersV2Async(Expression<Func<Offer, bool>> predicate = null,
             FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
 
+        Task<ResourceResponse<Offer>> UpdateOfferAsync(Offer offer);
+
         Task<IEnumerable<StoredProcedure>> QueryStoredProceduresAsync(string databaseId, string collectionId,
             Expression<Func<StoredProcedure, bool>> predicate = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
 
