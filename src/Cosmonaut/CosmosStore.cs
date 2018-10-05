@@ -241,32 +241,6 @@ namespace Cosmonaut
                 : null;
             return await FindAsync(id, requestOptions, cancellationToken);
         }
-
-        private static async Task<CosmosMultipleResponse<TEntity>> HandleOperationWithRateLimitRetry(
-            IEnumerable<Task<CosmosResponse<TEntity>>> entitiesTasks,
-            Func<TEntity, Task<CosmosResponse<TEntity>>> operationFunc)
-        {
-            var response = new CosmosMultipleResponse<TEntity>();
-            var results = (await entitiesTasks.WhenAllTasksAsync()).ToList();
-
-            async Task RetryPotentialRateLimitFailures()
-            {
-                var failedBecauseOfRateLimit =
-                    results.Where(x => x.CosmosOperationStatus == CosmosOperationStatus.RequestRateIsLarge).ToList();
-                if (!failedBecauseOfRateLimit.Any())
-                    return;
-
-                results.RemoveAll(x => x.CosmosOperationStatus == CosmosOperationStatus.RequestRateIsLarge);
-                entitiesTasks = failedBecauseOfRateLimit.Select(entity => operationFunc(entity.Entity));
-                results.AddRange(await entitiesTasks.WhenAllTasksAsync());
-                await RetryPotentialRateLimitFailures();
-            }
-
-            await RetryPotentialRateLimitFailures();
-            response.FailedEntities.AddRange(results.Where(x => !x.IsSuccess));
-            response.SuccessfulEntities.AddRange(results.Where(x => x.IsSuccess));
-            return response;
-        }
         
         private void InitialiseCosmosStore()
         {
@@ -293,10 +267,9 @@ namespace Cosmonaut
             try
             {
                 var multipleResponse = await _cosmosScaler.UpscaleCollectionIfConfiguredAsSuch(entitiesList, DatabaseName, CollectionName, operationFunc);
-                var multiOperationEntitiesTasks = entitiesList.Select(operationFunc);
-                var operationResult = await HandleOperationWithRateLimitRetry(multiOperationEntitiesTasks, operationFunc);
-                multipleResponse.SuccessfulEntities.AddRange(operationResult.SuccessfulEntities);
-                multipleResponse.FailedEntities.AddRange(operationResult.FailedEntities);
+                var results = (await entitiesList.Select(operationFunc).WhenAllTasksAsync()).ToList();
+                multipleResponse.SuccessfulEntities.AddRange(results.Where(x => x.IsSuccess));
+                multipleResponse.FailedEntities.AddRange(results.Where(x => !x.IsSuccess));
                 await _cosmosScaler.DownscaleCollectionRequestUnitsToDefault(DatabaseName, CollectionName);
                 return multipleResponse;
             }
