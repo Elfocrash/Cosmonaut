@@ -28,7 +28,7 @@
 
   <ItemGroup>
     <PackageReference Include="Humanizer.Core.uk" Version="2.5.1" />
-    <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="2.1.1" />
+    <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="2.1.2" />
   </ItemGroup>
 
 </Project>
