@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using Microsoft.Azure.Documents.Client;
 
 namespace Cosmonaut.Extensions
@@ -40,7 +41,10 @@ namespace Cosmonaut.Extensions
                 throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be a positive number.");
             }
 
-            return GetQueryableWithPaginationSettings(queryable, continuationToken, pageSize);
+            if (!string.IsNullOrWhiteSpace(continuationToken))
+                continuationToken = Encoding.ASCII.GetString(Convert.FromBase64String(continuationToken));
+
+            return GetQueryableWithPaginationSettings(queryable, continuationToken , pageSize);
         }
 
         private static IQueryable<T> GetQueryableWithPaginationSettings<T>(IQueryable<T> queryable, string continuationInfo, int pageSize)

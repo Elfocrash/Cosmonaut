@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Cosmonaut.Diagnostics;
@@ -201,6 +202,9 @@ namespace Cosmonaut.Extensions
                         break;
                 }
             }
+
+            if (!string.IsNullOrWhiteSpace(nextPageToken))
+                nextPageToken = Convert.ToBase64String(Encoding.ASCII.GetBytes(nextPageToken));
             return new CosmosPagedResults<T>(results, pageSize, nextPageToken, queryable);
         }
 
@@ -226,6 +230,8 @@ namespace Cosmonaut.Extensions
                         break;
                 }
             }
+            if (!string.IsNullOrWhiteSpace(nextPageToken))
+                nextPageToken = Convert.ToBase64String(Encoding.ASCII.GetBytes(nextPageToken));
             return new CosmosPagedResults<T>(results, pageSize, nextPageToken, queryable);
         }
 
