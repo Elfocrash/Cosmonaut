@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Cosmonaut.Testing;
@@ -84,7 +85,7 @@ namespace Cosmonaut.Unit
             };
             var document = dummy.ConvertObjectToDocument();
             var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
-            mockDocumentClient.Setup(x => x.ReadDocumentAsync(UriFactory.CreateDocumentUri("databaseName", "dummies", id), It.IsAny<RequestOptions>()))
+            mockDocumentClient.Setup(x => x.ReadDocumentAsync(UriFactory.CreateDocumentUri("databaseName", "dummies", id), It.IsAny<RequestOptions>(), CancellationToken.None))
                 .ReturnsAsync(resourceResponse);
 
             var entityStore = new CosmosStore<Dummy>(new CosmonautClient(() => mockDocumentClient.Object), "databaseName");

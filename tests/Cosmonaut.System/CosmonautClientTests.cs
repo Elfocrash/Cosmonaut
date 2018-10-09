@@ -32,7 +32,11 @@ namespace Cosmonaut.System
             });
 
             _cosmonautClient.CreateDatabaseAsync(new Database { Id = _databaseId }).GetAwaiter().GetResult();
-            _cosmonautClient.CreateCollectionAsync(_databaseId, new DocumentCollection { Id = _collectionName }).GetAwaiter().GetResult();
+            _cosmonautClient.CreateCollectionAsync(_databaseId, new DocumentCollection
+            {
+                Id = _collectionName,
+                IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.Number, -1), new RangeIndex(DataType.String, -1))
+            }).GetAwaiter().GetResult();
         }
 
         [Fact]
@@ -64,8 +68,7 @@ namespace Cosmonaut.System
             await _cosmonautClient.DeleteDatabaseAsync("Nick");
             await _cosmonautClient.DeleteDatabaseAsync("TheGreek");
         }
-
-
+        
         [Fact]
         public async Task QueryOffersAsync_WhenQueryingOffers_ThenAllOffersGetReturned()
         {
@@ -80,6 +83,24 @@ namespace Cosmonaut.System
             {
                 offers.Select(x => x.ResourceLink).Contains(collection.SelfLink).Should().BeTrue();
             });
+        }
+
+        [Fact]
+        public async Task UpdateOfferAsync_WhenOfferIsUpdated_ThenRUsCorrespondToTheUpdate()
+        {
+            // Arrange
+            var offer = await _cosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);
+
+            // Act
+            var newOffer = new OfferV2(offer, 600);
+            var updated = await _cosmonautClient.UpdateOfferAsync(newOffer);
+            var queried = await _cosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);
+
+            // Assert
+            offer.Content.OfferThroughput.Should().Be(400);
+            updated.StatusCode.Should().Be(HttpStatusCode.OK);
+            queried.Content.OfferThroughput.Should().Be(600);
+            updated.Resource.Should().BeEquivalentTo(queried);
         }
 
         [Fact]
@@ -204,6 +225,111 @@ namespace Cosmonaut.System
                 cats.Select(x => x.CatId).Should().Contain(result.Id);
                 cats.Select(cat => cat.Name).Should().Contain(result.GetPropertyValue<string>("Name"));
             });
+        }
+
+        [Fact]
+        public async Task WhenPaginatedQueryExecutesWithSkipTake_ThenPaginatedResultsAreReturnedCorrectly()
+        {
+            var cats = new List<Cat>();
+            for (var i = 0; i < 15; i++)
+            {
+                var cat = new Cat { Name = $"Cat {i}" };
+                var created = await _cosmonautClient.CreateDocumentAsync(_databaseId, _collectionName, cat);
+                cats.Add(created.Entity);
+            }
+            cats = cats.OrderBy(x => x.Name).ToList();
+
+            var firstPage = await _cosmonautClient.Query<Cat>(_databaseId, _collectionName).Where(x=>x.Name.StartsWith("Cat")).WithPagination(1, 5).OrderBy(x => x.Name).ToListAsync();
+            var secondPage = await _cosmonautClient.Query<Cat>(_databaseId, _collectionName).Where(x => x.Name.StartsWith("Cat")).WithPagination(2, 5).OrderBy(x => x.Name).ToListAsync();
+            var thirdPage = await _cosmonautClient.Query<Cat>(_databaseId, _collectionName).Where(x => x.Name.StartsWith("Cat")).WithPagination(3, 5).OrderBy(x => x.Name).ToListAsync();
+            var fourthPage = await _cosmonautClient.Query<Cat>(_databaseId, _collectionName).Where(x => x.Name.StartsWith("Cat")).WithPagination(4, 5).OrderBy(x => x.Name).ToListAsync();
+
+            
+            firstPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Take(5));
+            secondPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(5).Take(5));
+            thirdPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(10).Take(5));
+            fourthPage.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task WhenPaginatedQueryExecutesWithNextPageAsync_ThenPaginatedResultsAreReturnedCorrectly()
+        {
+            var cats = new List<Cat>();
+            for (var i = 0; i < 15; i++)
+            {
+                var cat = new Cat { Name = $"Cat {i}" };
+                var created = await _cosmonautClient.CreateDocumentAsync(_databaseId, _collectionName, cat);
+                cats.Add(created.Entity);
+            }
+            cats = cats.OrderBy(x => x.Name).ToList();
+
+            var firstPage = await _cosmonautClient.Query<Cat>(_databaseId, _collectionName).Where(x => x.Name.StartsWith("Cat")).WithPagination(1, 5).OrderBy(x => x.Name).ToPagedListAsync();
+            var secondPage = await firstPage.GetNextPageAsync();
+            var thirdPage = await secondPage.GetNextPageAsync();
+            var fourthPage = await thirdPage.GetNextPageAsync();
+
+            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Take(5));
+            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(5).Take(5));
+            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(10).Take(5));
+            fourthPage.Results.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task WhenPaginatedQueryAndFeedOptionsExecutesWithNextPageAsync_ThenPaginatedResultsAreReturnedCorrectly()
+        {
+            var cats = new List<Cat>();
+            for (var i = 0; i < 15; i++)
+            {
+                var cat = new Cat { Name = $"Cat {i}" };
+                var created = await _cosmonautClient.CreateDocumentAsync(_databaseId, _collectionName, cat);
+                cats.Add(created.Entity);
+            }
+            cats = cats.OrderBy(x => x.Name).ToList();
+
+            var firstPage = await _cosmonautClient.Query<Cat>(_databaseId, _collectionName, new FeedOptions { RequestContinuation = "SomethingBad", MaxItemCount = 666 }).WithPagination(1, 5).OrderBy(x => x.Name).ToPagedListAsync();
+            var secondPage = await firstPage.GetNextPageAsync();
+            var thirdPage = await secondPage.GetNextPageAsync();
+            var fourthPage = await thirdPage.GetNextPageAsync();
+
+            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Take(5));
+            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(5).Take(5));
+            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(10).Take(5));
+            fourthPage.Results.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task WhenPaginatedQueryExecutesWithContinuationToken_ThenPaginatedResultsAreReturnedCorrectly()
+        {
+            var cats = new List<Cat>();
+            for (var i = 0; i < 30; i++)
+            {
+                var cat = new Cat { Name = $"Cat {i}" };
+                var created = await _cosmonautClient.CreateDocumentAsync(_databaseId, _collectionName, cat);
+                cats.Add(created.Entity);
+            }
+            cats = cats.OrderBy(x => x.Name).ToList();
+
+            var firstPage = await _cosmonautClient.Query<Cat>(_databaseId, _collectionName).Where(x => x.Name.StartsWith("Cat")).WithPagination(1, 10).OrderBy(x => x.Name).ToPagedListAsync();
+            var secondPage = await _cosmonautClient.Query<Cat>(_databaseId, _collectionName).Where(x => x.Name.StartsWith("Cat")).WithPagination(firstPage.NextPageToken, 10).OrderBy(x => x.Name).ToPagedListAsync();
+            var thirdPage = await _cosmonautClient.Query<Cat>(_databaseId, _collectionName).Where(x => x.Name.StartsWith("Cat")).WithPagination(secondPage.NextPageToken, 10).OrderBy(x => x.Name).ToPagedListAsync();
+            var fourthPage = await _cosmonautClient.Query<Cat>(_databaseId, _collectionName).Where(x => x.Name.StartsWith("Cat")).WithPagination(4, 10).OrderBy(x => x.Name).ToPagedListAsync();
+            var emptyTokenPage = await _cosmonautClient.Query<Cat>(_databaseId, _collectionName).Where(x => x.Name.StartsWith("Cat")).WithPagination(string.Empty, 10).OrderBy(x => x.Name).ToPagedListAsync();
+
+            firstPage.HasNextPage.Should().BeTrue();
+            firstPage.NextPageToken.Should().NotBeNullOrEmpty();
+            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Take(10));
+            secondPage.HasNextPage.Should().BeTrue();
+            secondPage.NextPageToken.Should().NotBeNullOrEmpty();
+            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(10).Take(10));
+            thirdPage.HasNextPage.Should().BeFalse();
+            thirdPage.NextPageToken.Should().BeNullOrEmpty();
+            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(20).Take(10));
+            fourthPage.Results.Should().BeEmpty();
+            fourthPage.NextPageToken.Should().BeNullOrEmpty();
+            fourthPage.HasNextPage.Should().BeFalse();
+            emptyTokenPage.HasNextPage.Should().BeTrue();
+            emptyTokenPage.NextPageToken.Should().NotBeNullOrEmpty();
+            emptyTokenPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Take(10));
         }
 
         [Fact]

@@ -32,7 +32,7 @@ namespace Cosmonaut
             string sql, object parameters = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
         
         Task<Document> GetDocumentAsync(string databaseId, string collectionId, string documentId,
-            RequestOptions requestOptions = null);
+            RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
         Task<DocumentCollection> GetCollectionAsync(string databaseId, string collectionId,
             RequestOptions requestOptions = null);
@@ -48,6 +48,8 @@ namespace Cosmonaut
 
         Task<IEnumerable<OfferV2>> QueryOffersV2Async(Expression<Func<Offer, bool>> predicate = null,
             FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
+
+        Task<ResourceResponse<Offer>> UpdateOfferAsync(Offer offer);
 
         Task<IEnumerable<StoredProcedure>> QueryStoredProceduresAsync(string databaseId, string collectionId,
             Expression<Func<StoredProcedure, bool>> predicate = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
@@ -66,39 +68,41 @@ namespace Cosmonaut
         Task<ResourceResponse<Database>> CreateDatabaseAsync(Database database, RequestOptions requestOptions = null);
 
         Task<ResourceResponse<Document>> CreateDocumentAsync(string databaseId, string collectionId,
-            Document document, RequestOptions requestOptions = null);
+            Document document, RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
         Task<CosmosResponse<T>> CreateDocumentAsync<T>(string databaseId, string collectionId, T document,
-            RequestOptions requestOptions = null) where T : class;
+            RequestOptions requestOptions = null, CancellationToken cancellationToken = default) where T : class;
 
         Task<ResourceResponse<Document>> DeleteDocumentAsync(string databaseId, string collectionId, string documentId,
-            RequestOptions requestOptions = null);
+            RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
         Task<ResourceResponse<Document>> UpdateDocumentAsync(string databaseId, string collectionId, Document document,
-            RequestOptions requestOptions = null);
+            RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
         Task<CosmosResponse<T>> UpdateDocumentAsync<T>(string databaseId, string collectionId, T document,
-            RequestOptions requestOptions = null) where T : class;
+            RequestOptions requestOptions = null, CancellationToken cancellationToken = default) where T : class;
 
         Task<ResourceResponse<Document>> UpsertDocumentAsync(string databaseId, string collectionId, Document document,
-            RequestOptions requestOptions = null);
+            RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
         Task<CosmosResponse<T>> UpsertDocumentAsync<T>(string databaseId, string collectionId, T document,
-            RequestOptions requestOptions = null) where T : class;
+            RequestOptions requestOptions = null, CancellationToken cancellationToken = default) where T : class;
 
-        Task<ResourceResponse<Database>> DeleteDatabaseAsync(string databasedId, RequestOptions options = null);
+        Task<ResourceResponse<Database>> DeleteDatabaseAsync(string databaseId, RequestOptions options = null);
 
-        Task<ResourceResponse<DocumentCollection>> DeleteCollectionAsync(string databasedId, string collectionId, 
+        Task<ResourceResponse<DocumentCollection>> DeleteCollectionAsync(string databaseId, string collectionId, 
             RequestOptions requestOptions = null);
 
-        Task<ResourceResponse<DocumentCollection>> UpdateCollectionAsync(string databasedId, string collectionId, DocumentCollection documentCollection, 
+        Task<ResourceResponse<DocumentCollection>> UpdateCollectionAsync(string databaseId, string collectionId, DocumentCollection documentCollection, 
             RequestOptions requestOptions = null);
 
-        Task<StoredProcedureResponse<TValue>> ExecuteStoredProcedureAsync<TValue>(string databasedId, string collectionId, string storedProcedureId, 
+        Task<StoredProcedureResponse<TValue>> ExecuteStoredProcedureAsync<TValue>(string databaseId, string collectionId, string storedProcedureId, 
             params object[] procedureParams);
 
-        Task<StoredProcedureResponse<TValue>> ExecuteStoredProcedureAsync<TValue>(string databasedId, string collectionId, string storedProcedureId,
+        Task<StoredProcedureResponse<TValue>> ExecuteStoredProcedureAsync<TValue>(string databaseId, string collectionId, string storedProcedureId,
             RequestOptions requestOptions, params object[] procedureParams);
 
+        Task<StoredProcedureResponse<TValue>> ExecuteStoredProcedureAsync<TValue>(string databaseId, string collectionId, string storedProcedureId,
+            RequestOptions requestOptions, CancellationToken cancellationToken, params object[] procedureParams);
     }
 }

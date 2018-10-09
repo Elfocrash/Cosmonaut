@@ -9,8 +9,10 @@ using Cosmonaut.Operations;
 using Cosmonaut.Response;
 using Cosmonaut.System.Models;
 using FluentAssertions;
+using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace Cosmonaut.System
@@ -193,6 +195,33 @@ namespace Cosmonaut.System
         }
 
         [Fact]
+        public async Task WhenValidEntitiesAreAdded_ThenTheyCanBeFoundAsync()
+        {
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
+            var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            var birdStore = _serviceProvider.GetService<ICosmosStore<Bird>>();
+            var alpacaStore = _serviceProvider.GetService<ICosmosStore<Alpaca>>();
+            var addedCats = await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 1);
+            var addedDogs = await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list), 1);
+            var addedLions = await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list), 1);
+            var addedBirds = await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list), 1);
+            var addedAlpacas = await ExecuteMultipleAddOperationsForType<Alpaca>(list => alpacaStore.AddRangeAsync(list), 1);
+
+            var catFound = await catStore.FindAsync(addedCats.SuccessfulEntities.Single().Entity.CatId, addedCats.SuccessfulEntities.Single().Entity.CatId);
+            var dogFound = await dogStore.FindAsync(addedDogs.SuccessfulEntities.Single().Entity.Id);
+            var lionFound = await lionStore.FindAsync(addedLions.SuccessfulEntities.Single().Entity.Id, addedLions.SuccessfulEntities.Single().Entity.Id);
+            var birdFound = await birdStore.FindAsync(addedBirds.SuccessfulEntities.Single().Entity.Id, addedBirds.SuccessfulEntities.Single().Entity.Id);
+            var alpacaFound = await alpacaStore.FindAsync(addedAlpacas.SuccessfulEntities.Single().Entity.Id);
+
+            catFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Cat>(addedCats.SuccessfulEntities.Single().ResourceResponse.Resource.ToString()));
+            dogFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Dog>(addedDogs.SuccessfulEntities.Single().ResourceResponse.Resource.ToString()));
+            lionFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Lion>(addedLions.SuccessfulEntities.Single().ResourceResponse.Resource.ToString()));
+            birdFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Bird>(addedBirds.SuccessfulEntities.Single().ResourceResponse.Resource.ToString()));
+            alpacaFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Alpaca>(addedAlpacas.SuccessfulEntities.Single().ResourceResponse.Resource.ToString()));
+        }
+
+        [Fact]
         public async Task WhenCollectionIsUpScaled_AndAutomaticScalingIsTurnedOff_ThenOfferDoesNotChange()
         {
             var catStore = new CosmosStore<Cat>(new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey), _collectionName);
@@ -281,6 +310,90 @@ namespace Cosmonaut.System
             postScaleOffer.Content.OfferThroughput.Should().Be(400);
         }
 
+        [Fact]
+        public async Task WhenPaginatedQueryExecutesWithSkipTake_ThenPaginatedResultsAreReturnedCorrectly()
+        {
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var addedCats = (await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 15))
+                .SuccessfulEntities.Select(x=>x.Entity).OrderBy(x=>x.Name).ToList();
+
+            var firstPage = await catStore.Query().WithPagination(1, 5).OrderBy(x=>x.Name).ToListAsync();
+            var secondPage = await catStore.Query().WithPagination(2, 5).OrderBy(x => x.Name).ToListAsync();
+            var thirdPage = await catStore.Query().WithPagination(3, 5).OrderBy(x => x.Name).ToListAsync();
+            var fourthPage = await catStore.Query().WithPagination(4, 5).OrderBy(x => x.Name).ToListAsync();
+
+            firstPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(5));
+            secondPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(5).Take(5));
+            thirdPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(10).Take(5));
+            fourthPage.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task WhenPaginatedQueryExecutesWithNextPageAsync_ThenPaginatedResultsAreReturnedCorrectly()
+        {
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var addedCats = (await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 15))
+                .SuccessfulEntities.Select(x => x.Entity).OrderBy(x => x.Name).ToList();
+
+            var firstPage = await catStore.Query().WithPagination(1, 5).OrderBy(x => x.Name).ToPagedListAsync();
+            var secondPage = await firstPage.GetNextPageAsync();
+            var thirdPage = await secondPage.GetNextPageAsync();
+            var fourthPage = await thirdPage.GetNextPageAsync();
+
+            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(5));
+            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(5).Take(5));
+            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(10).Take(5));
+            fourthPage.Results.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task WhenPaginatedQueryAndFeedOptionsExecutesWithNextPageAsync_ThenPaginatedResultsAreReturnedCorrectly()
+        {
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var addedCats = (await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 15))
+                .SuccessfulEntities.Select(x => x.Entity).OrderBy(x => x.Name).ToList();
+
+            var firstPage = await catStore.Query(new FeedOptions{ RequestContinuation = "SomethingBad", MaxItemCount = 666}).WithPagination(1, 5).OrderBy(x => x.Name).ToPagedListAsync();
+            var secondPage = await firstPage.GetNextPageAsync();
+            var thirdPage = await secondPage.GetNextPageAsync();
+            var fourthPage = await thirdPage.GetNextPageAsync();
+
+            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(5));
+            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(5).Take(5));
+            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(10).Take(5));
+            fourthPage.Results.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task WhenPaginatedQueryExecutesWithContinuationToken_ThenPaginatedResultsAreReturnedCorrectly()
+        {
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var addedCats = (await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 30))
+                .SuccessfulEntities.Select(x => x.Entity).OrderBy(x => x.Name).ToList();
+
+            var firstPage = await catStore.Query().WithPagination(1, 10).OrderBy(x => x.Name).ToPagedListAsync();
+            var secondPage = await catStore.Query().WithPagination(firstPage.NextPageToken, 10).OrderBy(x => x.Name).ToPagedListAsync();
+            var thirdPage = await catStore.Query().WithPagination(secondPage.NextPageToken, 10).OrderBy(x => x.Name).ToPagedListAsync();
+            var fourthPage = await catStore.Query().WithPagination(4, 10).OrderBy(x => x.Name).ToPagedListAsync();
+            var emptyTokenPage = await catStore.Query().WithPagination(null, 10).OrderBy(x => x.Name).ToPagedListAsync();
+
+            firstPage.HasNextPage.Should().BeTrue();
+            firstPage.NextPageToken.Should().NotBeNullOrEmpty();
+            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(10));
+            secondPage.HasNextPage.Should().BeTrue();
+            secondPage.NextPageToken.Should().NotBeNullOrEmpty();
+            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(10).Take(10));
+            thirdPage.HasNextPage.Should().BeFalse();
+            thirdPage.NextPageToken.Should().BeNullOrEmpty();
+            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(20).Take(10));
+            fourthPage.Results.Should().BeEmpty();
+            fourthPage.NextPageToken.Should().BeNullOrEmpty();
+            fourthPage.HasNextPage.Should().BeFalse();
+            emptyTokenPage.HasNextPage.Should().BeTrue();
+            emptyTokenPage.NextPageToken.Should().NotBeNullOrEmpty();
+            emptyTokenPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(10));
+        }
+
         private async Task<CosmosMultipleResponse<T>> ExecuteMultipleAddOperationsForType<T>(
             Func<IEnumerable<T>, Task<CosmosMultipleResponse<T>>> operationFunc, int itemCount = 50) 
             where T : Animal, new()
@@ -332,13 +445,35 @@ namespace Cosmonaut.System
         {
             serviceCollection
                 .AddCosmosStore<Cat>(_databaseId, _emulatorUri, _emulatorKey,
-                settings => { settings.ConnectionPolicy = _connectionPolicy; }, _collectionName)
+                    settings =>
+                    {
+                        settings.ConnectionPolicy = _connectionPolicy;
+                        settings.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.Number, -1), new RangeIndex(DataType.String, -1));
+                    }, _collectionName)
                 .AddCosmosStore<Dog>(_databaseId, _emulatorUri, _emulatorKey,
-                    settings => { settings.ConnectionPolicy = _connectionPolicy; })
+                    settings =>
+                    {
+                        settings.ConnectionPolicy = _connectionPolicy;
+                        settings.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.Number, -1), new RangeIndex(DataType.String, -1));
+                    })
                 .AddCosmosStore<Lion>(_databaseId, _emulatorUri, _emulatorKey,
-                    settings => { settings.ConnectionPolicy = _connectionPolicy; })
+                    settings =>
+                    {
+                        settings.ConnectionPolicy = _connectionPolicy;
+                        settings.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.Number, -1), new RangeIndex(DataType.String, -1));
+                    })
                 .AddCosmosStore<Bird>(_databaseId, _emulatorUri, _emulatorKey,
-                    settings => { settings.ConnectionPolicy = _connectionPolicy; });
+                    settings =>
+                    {
+                        settings.ConnectionPolicy = _connectionPolicy;
+                        settings.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.Number, -1), new RangeIndex(DataType.String, -1));
+                    })
+                .AddCosmosStore<Alpaca>(_databaseId, _emulatorUri, _emulatorKey,
+                    settings =>
+                    {
+                        settings.ConnectionPolicy = _connectionPolicy;
+                        settings.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.Number, -1), new RangeIndex(DataType.String, -1));
+                    });
         }
     }
 }

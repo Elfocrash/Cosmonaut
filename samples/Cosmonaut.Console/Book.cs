@@ -11,7 +11,6 @@ namespace Cosmonaut.Console
         public string AnotherRandomProp { get; set; }
         
         public string Id { get; set; }
-
         public string CosmosEntityName { get; set; }
     }
 }

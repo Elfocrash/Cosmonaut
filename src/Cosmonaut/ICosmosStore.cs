@@ -20,6 +20,16 @@ namespace Cosmonaut
         IQueryable<TEntity> Query(FeedOptions feedOptions = null);
 
         /// <summary>
+        ///     Returns an IQueryable that matches the expression provided. You can use ToListAsync to enumerate it or add WithPagination for
+        ///     pagination support.
+        /// </summary>
+        /// <param name="sql">The sql query for this operation.</param>
+        /// <param name="parameters">The sql parameters to replace if any</param>
+        /// <param name="feedOptions">The feed options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
+        IQueryable<TEntity> Query(string sql, object parameters = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
         ///     Returns a single item that matches the expression provided.
         /// </summary>
         /// <param name="sql">The sql query for this operation.</param>
@@ -61,6 +71,7 @@ namespace Cosmonaut
         /// <typeparam name="TEntity">The type of the entity.</typeparam>
         /// <param name="entity">The entity to add.</param>
         /// <param name="requestOptions">The request options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
         /// <returns> 
         ///     A task that represents the asynchronous Add operation. The task result contains the
         ///     <see cref="CosmosResponse{TEntity}"/> for the entity. The response provides access to 
@@ -74,7 +85,7 @@ namespace Cosmonaut
         ///     An error is encountered while processing the entity.
         ///     This is because the given entity does not have an Id specified.
         /// </exception>
-        Task<CosmosResponse<TEntity>> AddAsync(TEntity entity, RequestOptions requestOptions = null);
+        Task<CosmosResponse<TEntity>> AddAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
 
         /// <summary>
@@ -96,6 +107,7 @@ namespace Cosmonaut
         ///     An error is encountered while processing the entity.
         ///     This is because the given entity does not have an Id specified.
         /// </exception>
+        [Obsolete("Use the IEnumerable method instead")]
         Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(params TEntity[] entities);
 
 
@@ -105,6 +117,7 @@ namespace Cosmonaut
         /// <typeparam name="TEntity">The type of the entities.</typeparam>
         /// <param name="entities">The entities to add.</param>
         /// <param name="requestOptions">The request options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
         /// <returns> 
         ///     A task that represents the asynchronous AddRange operation. The task result contains the
         ///     <see cref="CosmosMultipleResponse{TEntity}"/> for the entities. The response provides access to 
@@ -119,7 +132,7 @@ namespace Cosmonaut
         ///     An error is encountered while processing the entity.
         ///     This is because the given entity does not have an Id specified.
         /// </exception>
-        Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(IEnumerable<TEntity> entities, RequestOptions requestOptions = null);
+        Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(IEnumerable<TEntity> entities, RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
 
         /// <summary>
@@ -128,6 +141,7 @@ namespace Cosmonaut
         /// <typeparam name="TEntity">The type of the entity.</typeparam>
         /// <param name="entity">The entity to update.</param>
         /// <param name="requestOptions">The request options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
         /// <returns> 
         ///     A task that represents the asynchronous Update operation. The task result contains the
         ///     <see cref="CosmosResponse{TEntity}"/> for the entity. The response provides access to 
@@ -141,7 +155,7 @@ namespace Cosmonaut
         ///     An error is encountered while processing the entity.
         ///     This is because the given entity does not have an Id specified.
         /// </exception>
-        Task<CosmosResponse<TEntity>> UpdateAsync(TEntity entity, RequestOptions requestOptions = null);
+        Task<CosmosResponse<TEntity>> UpdateAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
 
         /// <summary>
@@ -163,6 +177,7 @@ namespace Cosmonaut
         ///     An error is encountered while processing the entity.
         ///     This is because the given entity does not have an Id specified.
         /// </exception>
+        [Obsolete("Use the IEnumerable method instead")]
         Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(params TEntity[] entities);
 
 
@@ -172,6 +187,7 @@ namespace Cosmonaut
         /// <typeparam name="TEntity">The type of the entities.</typeparam>
         /// <param name="entities">The entities to update.</param>
         /// <param name="requestOptions">The request options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
         /// <returns> 
         ///     A task that represents the asynchronous Update operation. The task result contains the
         ///     <see cref="CosmosResponse{TEntity}"/> for the entity. The response provides access to 
@@ -186,7 +202,7 @@ namespace Cosmonaut
         ///     An error is encountered while processing the entity.
         ///     This is because the given entity does not have an Id specified.
         /// </exception>
-        Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(IEnumerable<TEntity> entities, RequestOptions requestOptions = null);
+        Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(IEnumerable<TEntity> entities, RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
 
         /// <summary>
@@ -195,6 +211,7 @@ namespace Cosmonaut
         /// <typeparam name="TEntity">The type of the entity.</typeparam>
         /// <param name="entity">The entity to upsert.</param>
         /// <param name="requestOptions">The request options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
         /// <returns> 
         ///     A task that represents the asynchronous Upsert operation. The task result contains the
         ///     <see cref="CosmosResponse{TEntity}"/> for the entity. The response provides access to 
@@ -208,7 +225,7 @@ namespace Cosmonaut
         ///     An error is encountered while processing the entity.
         ///     This is because the given entity does not have an Id specified.
         /// </exception>
-        Task<CosmosResponse<TEntity>> UpsertAsync(TEntity entity, RequestOptions requestOptions = null);
+        Task<CosmosResponse<TEntity>> UpsertAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
 
         /// <summary>
@@ -230,6 +247,7 @@ namespace Cosmonaut
         ///     An error is encountered while processing the entity.
         ///     This is because the given entity does not have an Id specified.
         /// </exception>
+        [Obsolete("Use the IEnumerable method instead")]
         Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(params TEntity[] entities);
 
 
@@ -239,6 +257,7 @@ namespace Cosmonaut
         /// <typeparam name="TEntity">The type of the entities.</typeparam>
         /// <param name="entities">The entities to upsert.</param>
         /// <param name="requestOptions">The request options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
         /// <returns> 
         ///     A task that represents the asynchronous Upsert operation. The task result contains the
         ///     <see cref="CosmosResponse{TEntity}"/> for the entity. The response provides access to 
@@ -253,7 +272,7 @@ namespace Cosmonaut
         ///     An error is encountered while processing the entity.
         ///     This is because the given entity does not have an Id specified.
         /// </exception>
-        Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(IEnumerable<TEntity> entities, RequestOptions requestOptions = null);
+        Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(IEnumerable<TEntity> entities, RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
 
         /// <summary>
@@ -279,6 +298,7 @@ namespace Cosmonaut
         /// <typeparam name="TEntity">The type of the entity.</typeparam>
         /// <param name="entity">The entity to remove.</param>
         /// <param name="requestOptions">The request options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
         /// <returns> 
         ///     A task that represents the asynchronous Remove operation. The task result contains the
         ///     <see cref="CosmosResponse{TEntity}"/> for the entity. The response provides access to 
@@ -293,7 +313,7 @@ namespace Cosmonaut
         ///     An error is encountered while processing the entity.
         ///     This is because the given entity has more that one Ids specified for it.
         /// </exception>
-        Task<CosmosResponse<TEntity>> RemoveAsync(TEntity entity, RequestOptions requestOptions = null);
+        Task<CosmosResponse<TEntity>> RemoveAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
 
         /// <summary>
@@ -315,6 +335,7 @@ namespace Cosmonaut
         ///     An error is encountered while processing the entity.
         ///     This is because the given entity has more that one Ids specified for it.
         /// </exception>
+        [Obsolete("Use the IEnumerable method instead")]
         Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(params TEntity[] entities);
 
 
@@ -324,6 +345,7 @@ namespace Cosmonaut
         /// <typeparam name="TEntity">The type of the entities.</typeparam>
         /// <param name="entities">The entities to remove.</param>
         /// <param name="requestOptions">The request options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
         /// <returns> 
         ///     A task that represents the asynchronous RemoveRange operation. The task result contains the
         ///     <see cref="CosmosMultipleResponse{TEntity}"/> for the entities. The response provides access to 
@@ -338,7 +360,7 @@ namespace Cosmonaut
         ///     An error is encountered while processing the entity.
         ///     This is because the given entity has more that one Ids specified for it.
         /// </exception>
-        Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(IEnumerable<TEntity> entities, RequestOptions requestOptions = null);
+        Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(IEnumerable<TEntity> entities, RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
 
         /// <summary>
@@ -347,12 +369,13 @@ namespace Cosmonaut
         /// <typeparam name="TEntity">The type of the entity.</typeparam>
         /// <param name="id">The id of the entity attempting to remove. </param>
         /// <param name="requestOptions">The request options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
         /// <returns> 
         ///     A task that represents the asynchronous RemoveById operation. The task result contains the
         ///     <see cref="CosmosResponse{TEntity}"/> for the entity. The response provides access to 
         ///     various response information such as whether it was successful or what (if anything) went wrong.
         /// </returns>
-        Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id, RequestOptions requestOptions = null);
+        Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id, RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         ///     Returns an entity by document/entity id from the cosmos db store. If the collection is partitioned you will need to provide the
@@ -360,16 +383,18 @@ namespace Cosmonaut
         /// </summary>
         /// <param name="id">The id of the document/entity.</param>
         /// <param name="requestOptions">The request options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
         /// <returns>The entity that matches the id and partition key. Returns null if the entity is not found.</returns>
-        Task<TEntity> FindAsync(string id, RequestOptions requestOptions = null);
+        Task<TEntity> FindAsync(string id, RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         ///     Returns an entity by document/entity id and partition key value from the cosmos db store.
         /// </summary>
         /// <param name="id">The id of the document/entity.</param>
         /// <param name="partitionKeyValue">The partition key value.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
         /// <returns>The entity that matches the id and partition key. Returns null if the entity is not found.</returns>
-        Task<TEntity> FindAsync(string id, string partitionKeyValue);
+        Task<TEntity> FindAsync(string id, object partitionKeyValue, CancellationToken cancellationToken = default);
 
         /// <summary>
         ///     The settings that were used to initialise this CosmosStore
@@ -377,7 +402,7 @@ namespace Cosmonaut
         CosmosStoreSettings Settings { get; }
 
         /// <summary>
-        ///     Indicates whether this is a shared CosmostStore
+        ///     Indicates whether this is a shared CosmosStore
         /// </summary>
         bool IsShared { get; }
 

@@ -6,13 +6,14 @@
 
 > The word was derived from "kosmos" (Ancient Greek: κόσμος) which means world/universe and "nautes" (Ancient Greek: ναῦς) which means sailor/navigator
 
-Cosmonaut is an object mapper that enables .NET developers to work with a CosmosDB using .NET objects. It eliminates the need for most of the data-access code that developers usually need to write.
+Cosmonaut is a supercharged SDK with object mapping capabilities that enables .NET developers to work with CosmosDB. It eliminates the need for most of the data-access code that developers usually need to write.
 
 ### Getting started
 
 - [How to easily start using CosmosDB in your C# application in no time with Cosmonaut](http://chapsas.com/how-to-easily-start-using-cosmosdb-in-your-c-application-in-no-time-with-cosmonaut/)
 - [(Video) Getting started with .NET Core and CosmosDB using Cosmonaut](http://chapsas.com/video-getting-started-with-net-core-and-cosmosdb-using-cosmonaut/)
 - [(Video) How to save money in CosmosDB with Cosmonaut's Collection Sharing](http://chapsas.com/video-how-to-save-money-in-cosmosdb-with-cosmonauts-collection-sharing/)
+- [CosmosDB Fluent Pagination with Cosmonaut](http://chapsas.com/cosmosdb-fluent-pagination-with-cosmonaut/)
 
 ### Usage 
 The idea is pretty simple. You can have one CosmoStore per entity (POCO/dtos etc)
@@ -28,11 +29,12 @@ serviceCollection.AddCosmosStore<Book>(cosmosSettings);
 
 //or just by using the Action extension
 
-serviceCollection.AddCosmosStore<Book>(options =>
+serviceCollection.AddCosmosStore<Book>("<<databaseName>>", "<<cosmosUri>>"), "<<authkey>>", settings =>
 {
-    options.DatabaseName = "<<databaseName>>";
-    options.AuthKey = "<<authkey>>";
-    options.EndpointUrl = new Uri("<<cosmosUri>>");
+    settings.ConnectionPolicy = connectionPolicy;
+    settings.DefaultCollectionThroughput = 5000;
+    settings.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.Number, -1),
+        new RangeIndex(DataType.String, -1));
 });
 
 //or just initialise the object
@@ -75,6 +77,32 @@ var user = await cosmoStore.QueryMultipleAsync("select * from c w.Firstname = 'S
 // or parameterised sql query
 var user = await cosmoStore.QueryMultipleAsync("select * from c w.Firstname = @name", new { name = "Smith" });
 ```
+
+##### Pagination
+
+Cosmonaut supports two types of pagination.
+
+* Page number + Page size
+* ContinuationToken + Page size
+
+Both of there methods work by adding the `.WithPagination()` method after you used any of the `Query` methods.
+
+```csharp
+var firstPage = await booksStore.Query().WithPagination(1, 10).OrderBy(x=>x.Name).ToListAsync();
+var secondPage = await booksStore.Query().WithPagination(2, 10).OrderBy(x => x.Name).ToPagedListAsync();
+var thirdPage = await booksStore.Query().WithPagination(secondPage.NextPageToken, 10).OrderBy(x => x.Name).ToPagedListAsync();
+var fourthPage = await thirdPage.GetNextPageAsync();
+var fifthPage = await booksStore.Query().WithPagination(5, 10).OrderBy(x => x.Name).ToListAsync();
+```
+
+`ToListAsync()` on a paged query will just return the results. `ToPagedListAsync()` on the other hand will return a `CosmosPagedResults` object. This object contains the results but also a boolean indicating whether there are more pages after the one you just got but also the continuation token you need to use to get the next page.
+
+##### Pagination recommendations
+
+Because page number + page size pagination goes though all the documents until it gets to the requested page, it's potentially slow and expensive.
+The recommended approach would be to use the page number + page size approach once for the first page and get the results using the `.ToPagedListAsync()` method. This method will return the next continuation token and it will also tell you if there are more pages for this query. Then use the continuation token alternative of `WithPagination` to continue from your last query.
+
+Keep in mind that this approach means that you have to keep state on the client for the next query, but that's what you'd do if you where using previous/next buttons anyway.
 
 ##### Adding an entity in the entity store
 ```csharp
@@ -138,6 +166,12 @@ A cosmos id needs to exist somehow on your entity model. For that reason if it i
 
 It is **HIGHLY RECOMMENDED** that you decorate your Id property with the `[JsonProperty("id")]` attribute to prevent any unexpected behaviour.
 
+#### CosmonautClient
+
+Cosmonaut has it's own version of a `DocumentClient` called `CosmonautClient`. The difference is that the `CosmonautClient` interface is more user friendly and it looks more like something you would use in a real life scenario. It won't throw not found exceptions if an item is not found but it will return `null` instead. It will also retry automatically when you get 429s (too many requests).
+
+It also has support for logging and monitoring as you are going to see in the logging section of this page.
+
 #### Transactions
 
 There is currently no way to reliably do transactions with the current CosmosDB SDK. Because Cosmonaut is a wrapper around the CosmosDB SDK it doesn't support them either. However there are plans for investigating potential other ways to achieve transactional operations such as server side stored procedures that Cosmonaut could provision and call.
@@ -161,9 +195,13 @@ By default CosmosDB is created with the following indexing rules
                     "precision": -1
                 },
                 {
-                    "kind": "Hash",
+                    "kind": "Range",
                     "dataType": "String",
-                    "precision": 3
+                    "precision": -1
+                }
+                {
+                    "kind": "Spatial",
+                    "dataType": "Point"
                 }
             ]
         }
@@ -182,6 +220,8 @@ will return the item if it exists in CosmosDB but
 will throw an error. Changing the Hash to Range will work.
 
 However you can get around that by setting the `FeedOptions.EnableScanInQuery` to `true` for this `Query()`
+
+Same goes for ordering. If you use `OrderBy` on a string property you need to have this property's path set up as `Range` and precision `-1`.
 
 More about CosmosDB Indexing [here](https://docs.microsoft.com/en-us/azure/cosmos-db/indexing-policies)
 

@@ -3,16 +3,16 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.6</TargetFramework>
     <Authors>Nick Chapsas</Authors>
-    <Description>A simple object mapper for Azure CosmosDB (ORM)</Description>
-	<Summary>A simple and easy to use entity store for Microsoft's CosmosDB.</Summary>
+    <Description>A supercharged .NET SDK for Azure CosmosDB with ORM support</Description>
+	<Summary>A powerful and easy to use SDK for Azure CosmosDB.</Summary>
     <Copyright>Copyright 2018 - Nick Chapsas</Copyright>
 	<Title>Cosmonaut</Title>
     <PackageLicenseUrl>https://github.com/Elfocrash/Cosmonaut/blob/develop/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/Elfocrash/Cosmonaut</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Elfocrash/Cosmonaut</RepositoryUrl>
-    <PackageTags>cosmosdb documentdb azure cosmos entitystore entity db orm</PackageTags>
+    <PackageTags>azure entitystore entity db orm microsoft cosmos cosmosdb documentdb docdb nosql azureofficial dotnetcore netcore netstandard</PackageTags>
     <PackageReleaseNotes>Please report any issues on Github.</PackageReleaseNotes>
-    <Version>2.2.0</Version>
+    <Version>2.4.1</Version>
     <NeutralLanguage></NeutralLanguage>
     <Company>Nick Chapsas</Company>
     <PackageIconUrl>https://raw.githubusercontent.com/Elfocrash/Cosmonaut/develop/logo.png</PackageIconUrl>
@@ -27,12 +27,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Humanizer.Core.uk" Version="2.4.2" />
-    <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="1.9.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Properties\PublishProfiles\" />
+    <PackageReference Include="Humanizer.Core.uk" Version="2.5.1" />
+    <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="2.1.2" />
   </ItemGroup>
 
 </Project>

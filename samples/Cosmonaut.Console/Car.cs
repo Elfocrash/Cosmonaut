@@ -6,7 +6,7 @@ namespace Cosmonaut.Console
     public class Car : ISharedCosmosEntity
     {
         public string Id { get; set; }
-        
+
         [CosmosPartitionKey]
         public string Name { get; set; }
 

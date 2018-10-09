@@ -13,11 +13,11 @@ namespace Cosmonaut
 
         public Uri EndpointUrl { get; }
 
-        public ConnectionPolicy ConnectionPolicy { get; set; } = null;
+        public ConnectionPolicy ConnectionPolicy { get; set; }
 
         public ConsistencyLevel? ConsistencyLevel { get; set; } = null;
 
-        public IndexingPolicy IndexingPolicy { get; set; } = null;
+        public IndexingPolicy IndexingPolicy { get; set; } = CosmosConstants.DefaultIndexingPolicy;
 
         public int DefaultCollectionThroughput { get; set; } =  CosmosConstants.MinimumCosmosThroughput;
 
@@ -26,6 +26,8 @@ namespace Cosmonaut
         public int MaximumUpscaleRequestUnits { get; set; } = CosmosConstants.DefaultMaximumUpscaleThroughput;
 
         public JsonSerializerSettings JsonSerializerSettings { get; set; }
+
+        public bool InfiniteRetries { get; set; } = true;
 
         public CosmosStoreSettings(string databaseName,
             string endpointUrl,
@@ -82,7 +84,7 @@ namespace Cosmonaut
             DefaultCollectionThroughput = defaultCollectionThroughput;
             ScaleCollectionRUsAutomatically = scaleCollectionRUsAutomatically;
             MaximumUpscaleRequestUnits = maximumUpscaleRequestUnits;
-            IndexingPolicy = indexingPolicy;
+            IndexingPolicy = indexingPolicy ?? CosmosConstants.DefaultIndexingPolicy;
         }
     }
 }

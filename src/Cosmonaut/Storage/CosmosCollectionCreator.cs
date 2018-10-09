@@ -33,13 +33,11 @@ namespace Cosmonaut.Storage
 
             var newCollection = new DocumentCollection
             {
-                Id = collectionId
+                Id = collectionId,
+                IndexingPolicy = indexingPolicy ?? CosmosConstants.DefaultIndexingPolicy
             };
 
             SetPartitionKeyDefinitionForCollection(typeof(TEntity), newCollection);
-
-            if (indexingPolicy != null)
-                newCollection.IndexingPolicy = indexingPolicy;
 
             newCollection = await _cosmonautClient.CreateCollectionAsync(databaseId, newCollection, new RequestOptions
             {

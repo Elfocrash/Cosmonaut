@@ -15,7 +15,7 @@ namespace Cosmonaut.Testing
         public static ResourceResponse<T> ToResourceResponse<T>(this T resource, HttpStatusCode statusCode, IDictionary<string, string> responseHeaders = null) where T : Resource, new()
         {
             var resourceResponse = new ResourceResponse<T>(resource);
-            var documentServiceResponseType = Type.GetType("Microsoft.Azure.Documents.DocumentServiceResponse, Microsoft.Azure.DocumentDB.Core, Version=1.9.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
+            var documentServiceResponseType = Type.GetType("Microsoft.Azure.Documents.DocumentServiceResponse, Microsoft.Azure.DocumentDB.Core, Version=2.1.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
 
             var flags = BindingFlags.NonPublic | BindingFlags.Instance;
 
@@ -29,12 +29,15 @@ namespace Cosmonaut.Testing
                 }
             }
 
-            var arguments = new object[] { Stream.Null, headers, statusCode, null };
+            var headersDictionaryType = Type.GetType("Microsoft.Azure.Documents.Collections.DictionaryNameValueCollection, Microsoft.Azure.DocumentDB.Core, Version=2.1.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
 
-            var documentServiceResponse =
-                documentServiceResponseType.GetTypeInfo().GetConstructors(flags)[0].Invoke(arguments);
+            var headersDictionaryInstance = Activator.CreateInstance(headersDictionaryType, headers);
 
-            var responseField = typeof(ResourceResponse<T>).GetTypeInfo().GetField("response", BindingFlags.NonPublic | BindingFlags.Instance);
+            var arguments = new[] { Stream.Null, headersDictionaryInstance, statusCode, null };
+
+            var documentServiceResponse = documentServiceResponseType.GetTypeInfo().GetConstructors(flags)[0].Invoke(arguments);
+
+            var responseField = typeof(ResourceResponse<T>).GetTypeInfo().GetField("response", flags);
 
             responseField?.SetValue(resourceResponse, documentServiceResponse);
 
@@ -44,7 +47,7 @@ namespace Cosmonaut.Testing
 
         public static FeedResponse<T> ToFeedResponse<T>(this IQueryable<T> resource, IDictionary<string, string> responseHeaders = null)
         {
-            var feedResponseType = Type.GetType("Microsoft.Azure.Documents.Client.FeedResponse`1, Microsoft.Azure.DocumentDB.Core, Version=1.9.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
+            var feedResponseType = Type.GetType("Microsoft.Azure.Documents.Client.FeedResponse`1, Microsoft.Azure.DocumentDB.Core, Version=2.1.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
 
             var flags = BindingFlags.NonPublic | BindingFlags.Instance;
 
@@ -53,7 +56,7 @@ namespace Cosmonaut.Testing
                 { "x-ms-request-charge", "0" },
                 { "x-ms-activity-id", Guid.NewGuid().ToString() }
             };
-            
+
             if (responseHeaders != null)
             {
                 foreach (var responseHeader in responseHeaders)
@@ -62,13 +65,18 @@ namespace Cosmonaut.Testing
                 }
             }
 
-            var arguments = new object[] { resource, resource.Count(), headers, false, null };
+            var headersDictionaryType = Type.GetType("Microsoft.Azure.Documents.Collections.DictionaryNameValueCollection, Microsoft.Azure.DocumentDB.Core, Version=2.1.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
+
+            var headersDictionaryInstance = Activator.CreateInstance(headersDictionaryType, headers);
+
+            var arguments = new object[] { resource, resource.Count(), headersDictionaryInstance, false, null, null, null, 0 };
 
             if (feedResponseType != null)
             {
                 var t = feedResponseType.MakeGenericType(typeof(T));
 
-                var feedResponse = t.GetTypeInfo().GetConstructors(flags)[0].Invoke(arguments);
+                var feedResponse = t.GetTypeInfo().GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance)[0]
+                    .Invoke(arguments);
 
                 return (FeedResponse<T>)feedResponse;
             }

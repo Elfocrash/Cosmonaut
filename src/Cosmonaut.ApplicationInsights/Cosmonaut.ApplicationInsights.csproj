@@ -9,7 +9,7 @@
     <PackageProjectUrl>https://github.com/Elfocrash/Cosmonaut</PackageProjectUrl>
     <PackageTags>cosmosdb azure cosmos entitystore entity db orm</PackageTags>
     <RepositoryUrl>https://github.com/Elfocrash/Cosmonaut</RepositoryUrl>
-    <Version>2.1.0</Version>
+    <Version>2.1.1</Version>
     <PackageReleaseNotes>Please report any issues on Github.</PackageReleaseNotes>
     <PackageIconUrl>https://raw.githubusercontent.com/Elfocrash/Cosmonaut/develop/logo.png</PackageIconUrl>
   </PropertyGroup>
