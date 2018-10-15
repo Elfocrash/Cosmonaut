@@ -17,4 +17,10 @@
     <ProjectReference Include="..\..\src\Cosmonaut\Cosmonaut.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="Castle.Core">
+      <HintPath>..\..\..\..\..\Users\nick.chapsas\.nuget\packages\castle.core\4.2.1\lib\netstandard1.3\Castle.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

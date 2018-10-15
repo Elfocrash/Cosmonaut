@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Cosmonaut.Extensions.Microsoft.DependencyInjection;
-using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -41,7 +40,7 @@ namespace Cosmonaut.Console
             });
             
             serviceCollection.AddCosmosStore<Car>(cosmosSettings);
-
+            
             var provider = serviceCollection.BuildServiceProvider();
 
             var booksStore = provider.GetService<ICosmosStore<Book>>();
@@ -69,7 +68,7 @@ namespace Cosmonaut.Console
 
             var carsRemoved = await carStore.RemoveAsync(x => true);
             System.Console.WriteLine($"Removed {carsRemoved.SuccessfulEntities.Count} cars from the database.");
-
+            
             var books = new List<Book>();
             for (int i = 0; i < 25; i++)
             {
@@ -82,7 +81,7 @@ namespace Cosmonaut.Console
             }
 
             var cars = new List<Car>();
-            for (int i = 0; i < 25; i++)
+            for (int i = 0; i < 500; i++)
             {
                 cars.Add(new Car
                 {
@@ -90,6 +89,8 @@ namespace Cosmonaut.Console
                     Name = "Car " + i,
                 });
             }
+            
+            cars.ForEach(async car => await cosmonautClient.CreateDocumentAsync("localtest", "testcollection", car));
 
             var watch = new Stopwatch();
             watch.Start();
@@ -97,6 +98,8 @@ namespace Cosmonaut.Console
             var addedCars = await carStore.AddRangeAsync(cars);
 
             var addedBooks = await booksStore.AddRangeAsync(books);
+            
+            var remove = await carStore.RemoveByExpressionAsync(x => x.Name.StartsWith("Car"));
 
             System.Console.WriteLine($"Added {addedCars.SuccessfulEntities.Count + addedBooks.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();

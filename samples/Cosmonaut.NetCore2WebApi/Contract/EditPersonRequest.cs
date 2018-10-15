@@ -1,5 +1,3 @@
-using System;
-
 namespace Cosmonaut.NetCore2WebApi.Contract
 {
     public class EditPersonRequest

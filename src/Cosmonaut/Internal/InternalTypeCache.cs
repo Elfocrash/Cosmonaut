@@ -16,11 +16,17 @@ namespace Cosmonaut.Internal
         internal ConstructorInfo FeedResponseCtorInfo<T>() => Type.GetType($"Microsoft.Azure.Documents.Client.FeedResponse`1{LibVersion}").MakeGenericType(typeof(T))
             .GetTypeInfo().GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance)[0];
 
+        internal MethodInfo DocumentQueryEvaluatorEvaluate { get; }
+
+        internal Type DocumentQueryType { get; }
+
         private InternalTypeCache()
         {
             DocumentServiceResponseCtorInfo = Type.GetType($"Microsoft.Azure.Documents.DocumentServiceResponse{LibVersion}")
                 .GetTypeInfo().GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance)[0];
             DictionaryNameValueCollectionType = Type.GetType($"Microsoft.Azure.Documents.Collections.DictionaryNameValueCollection{LibVersion}");
+            DocumentQueryEvaluatorEvaluate = Type.GetType($"Microsoft.Azure.Documents.Linq.DocumentQueryEvaluator{LibVersion}").GetTypeInfo().GetMethod("Evaluate");
+            DocumentQueryType = Type.GetType($"Microsoft.Azure.Documents.Linq.DocumentQuery`1{LibVersion}");
         }
 
         internal static InternalTypeCache Instance

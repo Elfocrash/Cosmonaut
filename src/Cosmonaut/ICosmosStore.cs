@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Cosmonaut.Exceptions;
 using Cosmonaut.Response;
+using Cosmonaut.StoredProcedures.Responses;
 using Microsoft.Azure.Documents.Client;
 
 namespace Cosmonaut
@@ -276,10 +277,10 @@ namespace Cosmonaut
 
 
         /// <summary>
-        ///     Removed all the entities matching the given criteria.
+        ///     Removes all the entities matching the given criteria.
         /// </summary>
         /// <typeparam name="TEntity">The type of the entities.</typeparam>
-        /// <param name="predicate">The entities to remove.</param>
+        /// <param name="predicate">An expression that will match the entities to be removed.</param>
         /// <param name="feedOptions">The feed options for this operation.</param>
         /// <param name="requestOptions">The request options for this operation.</param>
         /// <param name="cancellationToken">The cancellation token for this operation.</param>
@@ -291,6 +292,17 @@ namespace Cosmonaut
         /// </returns>
         Task<CosmosMultipleResponse<TEntity>> RemoveAsync(Expression<Func<TEntity, bool>> predicate, FeedOptions feedOptions = null, RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
+        /// <summary>
+        ///     Removes all the entities in a partition matching the given expression.
+        /// </summary>
+        /// <param name="predicate">An expression that will match the entities to be removed.</param>
+        /// <param name="requestOptions">The request options for this operation.</param>
+        /// <param name="cancellationToken">The cancellation token for this operation.</param>
+        /// <returns>
+        ///     A task that represents the asynchronous Remove operation.
+        /// </returns>
+        /// <remarks>This method can only be run against a single partition.</remarks>
+        Task<IStoredProcedureResponse<RemoveByExpressionResponse>> RemoveByExpressionAsync(Expression<Func<TEntity, bool>> predicate, RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         ///     Removes the given entity from the cosmos db store.

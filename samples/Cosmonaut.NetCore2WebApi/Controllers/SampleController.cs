@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,8 +6,6 @@ using Cosmonaut.Extensions;
 using Cosmonaut.NetCore2WebApi.Contract;
 using Cosmonaut.NetCore2WebApi.Model;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.Documents.SystemFunctions;
-using Microsoft.EntityFrameworkCore;
 
 namespace Cosmonaut.NetCore2WebApi.Controllers
 {

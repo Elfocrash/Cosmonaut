@@ -8,6 +8,8 @@ using Cosmonaut.Extensions;
 using Cosmonaut.Operations;
 using Cosmonaut.Response;
 using Cosmonaut.Storage;
+using Cosmonaut.StoredProcedures;
+using Cosmonaut.StoredProcedures.Responses;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Newtonsoft.Json;
@@ -32,6 +34,7 @@ namespace Cosmonaut
 
         private readonly IDatabaseCreator _databaseCreator;
         private readonly ICollectionCreator _collectionCreator;
+        private readonly IScriptCreator _scriptCreator;
         private readonly CosmosScaler<TEntity> _cosmosScaler;
 
         public CosmosStore(CosmosStoreSettings settings) : this(settings, string.Empty)
@@ -48,6 +51,7 @@ namespace Cosmonaut
             if (string.IsNullOrEmpty(Settings.DatabaseName)) throw new ArgumentNullException(nameof(Settings.DatabaseName));
             _collectionCreator = new CosmosCollectionCreator(CosmonautClient);
             _databaseCreator = new CosmosDatabaseCreator(CosmonautClient);
+            _scriptCreator = new CosmosScriptCreator(CosmonautClient);
             _cosmosScaler = new CosmosScaler<TEntity>(this);
             InitialiseCosmosStore();
         }
@@ -74,6 +78,7 @@ namespace Cosmonaut
             string overriddenCollectionName,
             IDatabaseCreator databaseCreator = null,
             ICollectionCreator collectionCreator = null,
+            IScriptCreator scriptCreator = null,
             bool scaleable = false)
         {
             CollectionName = overriddenCollectionName;
@@ -86,6 +91,7 @@ namespace Cosmonaut
             if (string.IsNullOrEmpty(Settings.DatabaseName)) throw new ArgumentNullException(nameof(Settings.DatabaseName));
             _collectionCreator = collectionCreator ?? new CosmosCollectionCreator(CosmonautClient);
             _databaseCreator = databaseCreator ?? new CosmosDatabaseCreator(CosmonautClient);
+            _scriptCreator = scriptCreator ?? new CosmosScriptCreator(CosmonautClient);
             _cosmosScaler = new CosmosScaler<TEntity>(this);
             InitialiseCosmosStore();
         }
@@ -158,6 +164,15 @@ namespace Cosmonaut
         {
             var entitiesToRemove = await Query(GetFeedOptionsForQuery(feedOptions)).Where(predicate).ToListAsync(cancellationToken);
             return await RemoveRangeAsync(entitiesToRemove, requestOptions, cancellationToken);
+        }
+
+        public async Task<IStoredProcedureResponse<RemoveByExpressionResponse>> RemoveByExpressionAsync(Expression<Func<TEntity, bool>> predicate, RequestOptions requestOptions = null
+            , CancellationToken cancellationToken = default)
+        {
+            var removeSpec = CosmonautClient.Query<TEntity>(DatabaseName, CollectionName).Where(predicate).ToRemoveByExpressionSpec();
+            var result = await CosmonautClient.ExecuteStoredProcedureAsync<RemoveByExpressionResponse>(DatabaseName, CollectionName,
+                CosmonautStoredProcedures.RemoveByExpression.Id, requestOptions, cancellationToken, removeSpec);
+            return result;
         }
 
         public async Task<CosmosResponse<TEntity>> RemoveAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
@@ -255,6 +270,7 @@ namespace Cosmonaut
             _databaseCreator.EnsureCreatedAsync(DatabaseName).ConfigureAwait(false).GetAwaiter().GetResult();
             _collectionCreator.EnsureCreatedAsync<TEntity>(DatabaseName, CollectionName, CollectionThrouput, Settings.IndexingPolicy)
                 .ConfigureAwait(false).GetAwaiter().GetResult();
+            _scriptCreator.EnsureCreatedAsync(DatabaseName, CollectionName).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         private async Task<CosmosMultipleResponse<TEntity>> ExecuteMultiOperationAsync(IEnumerable<TEntity> entities,

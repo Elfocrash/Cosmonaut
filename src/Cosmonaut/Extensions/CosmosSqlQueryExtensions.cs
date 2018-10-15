@@ -4,6 +4,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Cosmonaut.Exceptions;
+using Cosmonaut.Internal;
+using Cosmonaut.StoredProcedures.Specs;
 using Microsoft.Azure.Documents;
 
 namespace Cosmonaut.Extensions
@@ -75,7 +77,7 @@ namespace Cosmonaut.Extensions
             return $"{firstPartQuery} where {sharedCollectionExpressionQuery} and {secondPartQuery}";
         }
 
-        private static string GetCollectionIdentifier(string sql)
+        internal static string GetCollectionIdentifier(string sql)
         {
             var matchedWithAs = IdentifierWithAsMatchRegex.Match(sql);
 
@@ -126,6 +128,11 @@ namespace Cosmonaut.Extensions
             }
 
             return potentialIdentifierFromAs;
+        }
+
+        public static RemoveByExpressionSpec ToRemoveByExpressionSpec(this IQueryable queryable)
+        {
+            return new RemoveByExpressionSpec(queryable.EvaluateSqlQuery());
         }
     }
 }
