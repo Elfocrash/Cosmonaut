@@ -375,7 +375,7 @@ namespace Cosmonaut.System
             var secondPage = await catStore.Query().WithPagination(firstPage.NextPageToken, 10).OrderBy(x => x.Name).ToPagedListAsync();
             var thirdPage = await catStore.Query().WithPagination(secondPage.NextPageToken, 10).OrderBy(x => x.Name).ToPagedListAsync();
             var fourthPage = await catStore.Query().WithPagination(4, 10).OrderBy(x => x.Name).ToPagedListAsync();
-            var emptyTokenPage = await catStore.Query().WithPagination(string.Empty, 10).OrderBy(x => x.Name).ToPagedListAsync();
+            var emptyTokenPage = await catStore.Query().WithPagination(null, 10).OrderBy(x => x.Name).ToPagedListAsync();
 
             firstPage.HasNextPage.Should().BeTrue();
             firstPage.NextPageToken.Should().NotBeNullOrEmpty();

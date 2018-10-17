@@ -32,6 +32,10 @@ namespace Cosmonaut.Extensions
         /// Adds pagination for your CosmosDB query. This is an efficient and cheap form of pagination because it doesn't go 
         /// though all the documents to get to the page you want. Read more at https://github.com/Elfocrash/Cosmonaut
         /// </summary>
+        /// ///
+        /// <param name="queryable">The DocumentQueryable for the operation</param>
+        /// <param name="continuationToken">When null or empty string, the first page of items will be returned</param>
+        /// <param name="pageSize">The size of the page we are expecting</param>
         /// <returns>A specific page of the results that your query matches.</returns>
         public static IQueryable<T> WithPagination<T>(this IQueryable<T> queryable, string continuationToken, int pageSize)
         {
@@ -39,6 +43,9 @@ namespace Cosmonaut.Extensions
             {
                 throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be a positive number.");
             }
+
+            if (continuationToken == null)
+                continuationToken = string.Empty;
 
             return GetQueryableWithPaginationSettings(queryable, continuationToken, pageSize);
         }

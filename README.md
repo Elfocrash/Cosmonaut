@@ -16,8 +16,8 @@ Cosmonaut is a supercharged SDK with object mapping capabilities that enables .N
 - [CosmosDB Fluent Pagination with Cosmonaut](http://chapsas.com/cosmosdb-fluent-pagination-with-cosmonaut/)
 
 ### Usage 
-The idea is pretty simple. You can have one CosmoStore per entity (POCO/dtos etc)
-This entity will be used to create a collection in the cosmosdb and it will offer all the data access for this object
+The idea is pretty simple. You can have one CosmosStore per entity (POCO/dtos etc).
+This entity will be used to create a collection or use part of a one in CosmosDB and it will offer all the data access for this object.
 
 Registering the CosmosStores in ServiceCollection for DI support
 ```csharp
