@@ -152,10 +152,10 @@ How can you do that?
 
 Well it's actually pretty simple. Just implement the `ISharedCosmosEntity` interface and decorate your object with the `SharedCosmosCollection` attribute.
 
-The attribute accepts two properties, `SharedCollectionName` which is mandatory and `EntityPrefix` which is optional.
+The attribute accepts two properties, `SharedCollectionName` which is mandatory and `EntityName` which is optional.
 The `SharedCollectionName` property will be used to name the collection that the entity will share with other entities. 
 
-The `CosmosEntityName` will be used to make the object identifiable for Cosmosnaut. Be default it will pluralize the name of the class, but you can specify it to override this behavior.
+The `EntityName` will be used to make the object identifiable for Cosmosnaut. Be default it will pluralize the name of the class, but you can specify it to override this behavior. You can override this by providing your own name by setting the `EntityName` value at the attribute level.
 
 Once you set this up you can add individual CosmosStores with shared collections.
 
