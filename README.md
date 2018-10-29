@@ -15,6 +15,10 @@ Cosmonaut is a supercharged SDK with object mapping capabilities that enables .N
 - [(Video) How to save money in CosmosDB with Cosmonaut's Collection Sharing](http://chapsas.com/video-how-to-save-money-in-cosmosdb-with-cosmonauts-collection-sharing/)
 - [CosmosDB Fluent Pagination with Cosmonaut](http://chapsas.com/cosmosdb-fluent-pagination-with-cosmonaut/)
 
+### Samples
+ - The `samples` folder in this project
+ - [Web app server-side pagination for CosmosDB](https://github.com/Elfocrash/CosmosDBPaginationSample)
+
 ### Usage 
 The idea is pretty simple. You can have one CosmosStore per entity (POCO/dtos etc).
 This entity will be used to create a collection or use part of a one in CosmosDB and it will offer all the data access for this object.
