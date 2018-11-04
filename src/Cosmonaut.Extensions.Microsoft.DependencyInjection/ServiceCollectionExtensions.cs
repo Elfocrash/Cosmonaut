@@ -26,7 +26,7 @@ namespace Cosmonaut.Extensions.Microsoft.DependencyInjection
             settingsAction?.Invoke(settings);
             return services.AddCosmosStore<TEntity>(settings, overriddenCollectionName);
         }
-        
+
         public static IServiceCollection AddCosmosStore<TEntity>(this IServiceCollection services,
             ICosmonautClient cosmonautClient,
             string databaseName,
