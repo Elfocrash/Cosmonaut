@@ -13,3 +13,8 @@ steps:
 - powershell: .\installcosmosemu.ps1
 - script: dotnet build --configuration $(buildConfiguration)
   displayName: 'dotnet build $(buildConfiguration)'
+- script: dotnet test tests\Cosmonaut.Unit
+  displayName: 'Running unit tests'
+- script: dotnet test tests\Cosmonaut.System
+  displayName: 'Running integration tests'
+  
