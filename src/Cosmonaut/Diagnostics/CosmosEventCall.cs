@@ -20,6 +20,11 @@ namespace Cosmonaut.Diagnostics
 
         internal async Task<TResult> InvokeAsync<TResult>(Func<Task<TResult>> eventCall)
         {
+            if (!CosmosEventSource.EventSource.IsEnabled())
+            {
+                return await eventCall();
+            }
+
             var timer = new Stopwatch();
             try
             {
@@ -43,6 +48,11 @@ namespace Cosmonaut.Diagnostics
 
         internal async Task<FeedResponse<TEntity>> InvokeAsync<TEntity>(Func<Task<FeedResponse<TEntity>>> eventCall)
         {
+            if (!CosmosEventSource.EventSource.IsEnabled())
+            {
+                return await eventCall();
+            }
+
             var timer = new Stopwatch();
             try
             {
@@ -67,6 +77,11 @@ namespace Cosmonaut.Diagnostics
 
         internal async Task<ResourceResponse<TEntity>> InvokeAsync<TEntity>(Func<Task<ResourceResponse<TEntity>>> eventCall) where TEntity : Resource, new()
         {
+            if (!CosmosEventSource.EventSource.IsEnabled())
+            {
+                return await eventCall();
+            }
+
             var timer = new Stopwatch();
             try
             {
