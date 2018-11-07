@@ -9,7 +9,7 @@ namespace Cosmonaut.Diagnostics
 {
     public static class CosmosEventExtensions
     {
-        public static Task<TResult> InvokeCosmosCallAsync<TResult>(
+        internal static Task<TResult> InvokeCosmosCallAsync<TResult>(
             this object invoker,
             Func<Task<TResult>> eventCall,
             string data,
@@ -20,7 +20,7 @@ namespace Cosmonaut.Diagnostics
             return CreateCosmosEventCall(invoker, data, properties, target, name).InvokeAsync(eventCall);
         }
 
-        public static Task<ResourceResponse<TResource>> InvokeCosmosOperationAsync<TResource>(
+        internal static Task<ResourceResponse<TResource>> InvokeCosmosOperationAsync<TResource>(
             this object invoker,
             Func<Task<ResourceResponse<TResource>>> eventCall,
             string data,
@@ -31,7 +31,18 @@ namespace Cosmonaut.Diagnostics
             return CreateCosmosEventCall(invoker, data, properties, target, name).InvokeAsync(eventCall);
         }
 
-        public static Task<StoredProcedureResponse<TResource>> InvokeCosmosOperationAsync<TResource>(
+        internal static Task<DocumentResponse<TResource>> InvokeCosmosOperationAsync<TResource>(
+            this object invoker,
+            Func<Task<DocumentResponse<TResource>>> eventCall,
+            string data,
+            Dictionary<string, object> properties = null,
+            string target = null,
+            string name = null)
+        {
+            return CreateCosmosEventCall(invoker, data, properties, target, name).InvokeAsync(eventCall);
+        }
+
+        internal static Task<StoredProcedureResponse<TResource>> InvokeCosmosOperationAsync<TResource>(
             this object invoker,
             Func<Task<StoredProcedureResponse<TResource>>> eventCall,
             string data,
@@ -42,7 +53,7 @@ namespace Cosmonaut.Diagnostics
             return CreateCosmosEventCall(invoker, data, properties, target, name).InvokeAsync(eventCall);
         }
 
-        public static Task<FeedResponse<TEntity>> InvokeExecuteNextAsync<TEntity>(
+        internal static Task<FeedResponse<TEntity>> InvokeExecuteNextAsync<TEntity>(
             this object invoker,
             Func<Task<FeedResponse<TEntity>>> eventCall,
             string data,

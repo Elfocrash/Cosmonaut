@@ -222,6 +222,28 @@ namespace Cosmonaut.System
         }
 
         [Fact]
+        public async Task WhenValidEntitiesAreNotAdded_ThenTheyCanNotBeFoundAsync()
+        {
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
+            var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            var birdStore = _serviceProvider.GetService<ICosmosStore<Bird>>();
+            var alpacaStore = _serviceProvider.GetService<ICosmosStore<Alpaca>>();
+
+            var catFound = await catStore.FindAsync(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
+            var dogFound = await dogStore.FindAsync(Guid.NewGuid().ToString());
+            var lionFound = await lionStore.FindAsync(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
+            var birdFound = await birdStore.FindAsync(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
+            var alpacaFound = await alpacaStore.FindAsync(Guid.NewGuid().ToString());
+
+            catFound.Should().BeNull();
+            dogFound.Should().BeNull();
+            lionFound.Should().BeNull();
+            birdFound.Should().BeNull();
+            alpacaFound.Should().BeNull();
+        }
+
+        [Fact]
         public async Task WhenCollectionIsUpScaled_AndAutomaticScalingIsTurnedOff_ThenOfferDoesNotChange()
         {
             var catStore = new CosmosStore<Cat>(new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey), _collectionName);

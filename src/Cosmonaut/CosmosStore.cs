@@ -228,10 +228,8 @@ namespace Cosmonaut
 
         public async Task<TEntity> FindAsync(string id, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
-            var document = await CosmonautClient.GetDocumentAsync(DatabaseName, CollectionName, id,
+            return await CosmonautClient.GetDocumentAsync<TEntity>(DatabaseName, CollectionName, id,
                 GetRequestOptions(id, requestOptions), cancellationToken);
-            
-            return document != null ? JsonConvert.DeserializeObject<TEntity>(document.ToString()) : null;
         }
 
         public async Task<TEntity> FindAsync(string id, object partitionKeyValue, CancellationToken cancellationToken = default)

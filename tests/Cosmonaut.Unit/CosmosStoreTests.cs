@@ -71,30 +71,5 @@ namespace Cosmonaut.Unit
             // Assert
             result.Should().BeFalse();
         }
-        
-        [Fact]
-        public async Task FindAsync_ReturnsEntity_WhenFoundInCosmosDB()
-        {
-            // Arrange
-            Mock<IDocumentClient> mockDocumentClient = MockHelpers.GetMockDocumentClient();
-            var id = Guid.NewGuid().ToString();
-            var dummy = new Dummy
-            {
-                Id = id,
-                Name = "Nick"
-            };
-            var document = dummy.ConvertObjectToDocument();
-            var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
-            mockDocumentClient.Setup(x => x.ReadDocumentAsync(UriFactory.CreateDocumentUri("databaseName", "dummies", id), It.IsAny<RequestOptions>(), CancellationToken.None))
-                .ReturnsAsync(resourceResponse);
-
-            var entityStore = new CosmosStore<Dummy>(new CosmonautClient(() => mockDocumentClient.Object), "databaseName");
-
-            // Act
-            var result = await entityStore.FindAsync(id);
-
-            //Assert
-            result.Should().BeEquivalentTo(dummy);
-        }
     }
 }

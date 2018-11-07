@@ -471,7 +471,43 @@ namespace Cosmonaut.System
             updated.StatusCode.Should().Be(HttpStatusCode.Created);
             updated.Resource.GetPropertyValue<string>("Name").Should().Be("MEGAKITTY");
         }
-        
+
+        [Fact]
+        public async Task GetDocumentAsync_WhenDocumentExists_ThenReturnsObject()
+        {
+            // Arrange
+            var catId = Guid.NewGuid().ToString();
+            var cat = new Cat { CatId = catId, Name = "Kitty" };
+
+            // Act
+            var added = await _cosmonautClient.CreateDocumentAsync(_databaseId, _collectionName, cat);
+            var found = await _cosmonautClient.GetDocumentAsync(_databaseId, _collectionName, cat.CatId);
+
+            // Assert
+            added.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+            added.Entity.Name.Should().Be("Kitty");
+            found.Should().NotBeNull();
+            found.Id.Should().Be(cat.CatId);
+        }
+
+        [Fact]
+        public async Task GetDocumentAsync_WhenDocumentDoesntExists_ThenReturnsNull()
+        {
+            // Arrange
+            var catId = Guid.NewGuid().ToString();
+            var cat = new Cat { CatId = catId, Name = "Kitty" };
+
+            // Act
+            var added = await _cosmonautClient.CreateDocumentAsync(_databaseId, _collectionName, cat);
+            var found = await _cosmonautClient.GetDocumentAsync(_databaseId, _collectionName, cat.CatId);
+
+            // Assert
+            added.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+            added.Entity.Name.Should().Be("Kitty");
+            found.Should().NotBeNull();
+            found.Id.Should().Be(cat.CatId);
+        }
+
         public void Dispose()
         {
             _cosmonautClient.DeleteCollectionAsync(_databaseId, _collectionName).GetAwaiter().GetResult();
