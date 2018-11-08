@@ -40,7 +40,8 @@ namespace Cosmonaut.Diagnostics
         public void TrackError(
             string dependencyTypeName,
             string dependencyName, 
-            string target, 
+            string target,
+            string resultCode,
             string data,
             long startTime, 
             double durationMilliseconds,
@@ -51,7 +52,7 @@ namespace Cosmonaut.Diagnostics
             string properties)
         {
             if (IsEnabled())
-                WriteEvent(DependencyEventErrorId, dependencyTypeName, dependencyName, target, data, startTime,
+                WriteEvent(DependencyEventErrorId, dependencyTypeName, dependencyName, target, resultCode, data, startTime,
                     durationMilliseconds, errorType, errorMessage, stackTrace, isSuccess, properties);
         }
     }

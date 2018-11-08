@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
@@ -15,7 +16,7 @@ namespace Cosmonaut.Diagnostics
             string data,
             Dictionary<string, object> properties = null,
             string target = null,
-            string name = null)
+            [CallerMemberName]string name = null)
         {
             return CreateCosmosEventCall(invoker, data, properties, target, name).InvokeAsync(eventCall);
         }
@@ -26,7 +27,7 @@ namespace Cosmonaut.Diagnostics
             string data,
             Dictionary<string, object> properties = null,
             string target = null,
-            string name = null) where TResource : Resource, new()
+            [CallerMemberName]string name = null) where TResource : Resource, new()
         {
             return CreateCosmosEventCall(invoker, data, properties, target, name).InvokeAsync(eventCall);
         }
@@ -37,7 +38,7 @@ namespace Cosmonaut.Diagnostics
             string data,
             Dictionary<string, object> properties = null,
             string target = null,
-            string name = null)
+            [CallerMemberName]string name = null)
         {
             return CreateCosmosEventCall(invoker, data, properties, target, name).InvokeAsync(eventCall);
         }
@@ -48,7 +49,7 @@ namespace Cosmonaut.Diagnostics
             string data,
             Dictionary<string, object> properties = null,
             string target = null,
-            string name = null)
+            [CallerMemberName]string name = null)
         {
             return CreateCosmosEventCall(invoker, data, properties, target, name).InvokeAsync(eventCall);
         }
@@ -59,7 +60,7 @@ namespace Cosmonaut.Diagnostics
             string data,
             Dictionary<string, object> properties = null,
             string target = null,
-            string name = null)
+            [CallerMemberName]string name = null)
         {
             return CreateCosmosEventCall(invoker, data, properties, target, name).InvokeAsync(eventCall);
         }
