@@ -1,14 +1,8 @@
 ﻿using System;
-using System.Net;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using Cosmonaut.Extensions;
-using Cosmonaut.Testing;
 using FluentAssertions;
-using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
-using Moq;
 using Newtonsoft.Json;
 using Xunit;
 

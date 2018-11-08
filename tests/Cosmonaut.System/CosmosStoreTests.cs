@@ -39,7 +39,6 @@ namespace Cosmonaut.System
             _cosmonautClient = new CosmonautClient(_emulatorUri, _emulatorKey, _connectionPolicy);
             var serviceCollection = new ServiceCollection();
             AddCosmosStores(serviceCollection);
-
             _serviceProvider = serviceCollection.BuildServiceProvider();
         }
 

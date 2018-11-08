@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Cosmonaut.Diagnostics;
+using Cosmonaut.Internal;
 using Cosmonaut.Response;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.Documents.Linq;
@@ -255,10 +255,7 @@ namespace Cosmonaut.Extensions
             if (!queryable.GetType().Name.Equals("DocumentQuery`1"))
                 return null;
 
-            //TODO: There should be a better way to get this without reflection
-            return (string)queryable.Provider.GetType().GetTypeInfo()
-                .GetField("documentsFeedOrDatabaseLink", BindingFlags.Instance | BindingFlags.NonPublic)?
-                .GetValue(queryable.Provider);
+            return InternalTypeCache.Instance.DocumentFeedOrDbLinkFieldInfo?.GetValue(queryable.Provider)?.ToString();
         }
     }
 }
