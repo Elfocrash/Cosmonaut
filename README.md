@@ -273,15 +273,3 @@ Just initialise the AppInsightsTelemetryModule in your Startup or setup pipeline
 Example: `AppInsightsTelemetryModule.Instance.Initialize(new TelemetryConfiguration("InstrumentationKey"))`
 
 If you already have initialised `TelemetryConfiguration` for your application then use `TelemetryConfiguration.Active` instead of `new TelemetryConfiguration` because if you don't there will be no association between the dependency calls and the parent request.
-
-#### Benchmarks
-
-##### Averages of 1000 iterations for 1000 documents (1Kb each) per operation on collection with default indexing and Unlimited RU/s (POCO serialization)
-
-| Operation used | Duration |
-| ------------- |:-------------:|
-| AddRangeAsync | 1152ms |
-| ToListAsync |51ms|
-| UpdateRangeAsync |1129ms|
-| UpsertRangeAsync |1034ms|
-| RemoveRangeAsync | 899ms |
