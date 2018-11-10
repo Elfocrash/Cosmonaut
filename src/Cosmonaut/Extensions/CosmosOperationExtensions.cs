@@ -30,6 +30,29 @@ namespace Cosmonaut.Extensions
             }
         }
 
+        internal static async Task<TResult> ExecuteCosmosQuery<TResult>(this Task<DocumentResponse<TResult>> operationTask) where TResult : class
+        {
+            try
+            {
+                var response = await operationTask;
+                return response?.Document;
+            }
+            catch (DocumentClientException exception)
+            {
+                var cosmosReponse = exception.ToCosmosResponse<TResult>();
+
+                switch (cosmosReponse.CosmosOperationStatus)
+                {
+                    case CosmosOperationStatus.ResourceNotFound:
+                        return null;
+                    case CosmosOperationStatus.RequestRateIsLarge:
+                        await Task.Delay(exception.RetryAfter);
+                        return await ExecuteCosmosQuery(operationTask);
+                }
+                throw;
+            }
+        }
+
         internal static async Task<ResourceResponse<TResult>> ExecuteCosmosCommand<TResult>(this Task<ResourceResponse<TResult>> operationTask) where TResult : Resource, new()
         {
             try

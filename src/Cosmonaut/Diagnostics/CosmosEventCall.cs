@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Net;
 using System.Reflection;
@@ -11,6 +13,25 @@ namespace Cosmonaut.Diagnostics
 {
     internal class CosmosEventCall
     {
+        private static readonly IDictionary<string, string> TrackedResponseHeaders = new Dictionary<string, string>{
+            {"etag", "Etag" },
+            {"x-ms-activity-id", "ActivityId"},
+            {"x-ms-alt-content-path", "AltContentPath"},
+            {"x-ms-continuation", "RequestContinuation"},
+            {"x-ms-item-count", "ItemCount"},
+            {"x-ms-request-charge", "RequestCharge"},
+            {"x-ms-resource-quota", "ResourceQuota"},
+            {"x-ms-resource-usage", "ResourceUsage"},
+            {"x-ms-schemaversion", "SchemaVersion"},
+            {"x-ms-serviceversion", "ServiceVersion"},
+            {"x-ms-session-token", "SessionToken"},
+            {"x-ms-lsn", "Lsn"},
+            {"x-ms-quorum-acked-lsn", "QuorumAckedLsn"},
+            {"x-ms-current-write-quorum", "CurrentWriteQuorum"},
+            {"x-ms-current-replica-set-size", "CurrentReplicaSetSize"},
+            {"x-ms-global-Committed-lsn", "GlobalCommittedLsn"}
+        };
+
         internal CosmosEventMetadata EventMetadata { get; }
 
         internal CosmosEventCall(CosmosEventMetadata eventMetadata)
@@ -20,22 +41,24 @@ namespace Cosmonaut.Diagnostics
 
         internal async Task<TResult> InvokeAsync<TResult>(Func<Task<TResult>> eventCall)
         {
+            if (!CosmosEventSource.EventSource.IsEnabled())
+            {
+                return await eventCall();
+            }
+
             var timer = new Stopwatch();
             try
             {
-                EventMetadata.StartTime = DateTimeOffset.UtcNow;
-                if (string.IsNullOrEmpty(EventMetadata.DependencyName))
-                    EventMetadata.DependencyName = eventCall.GetMethodInfo().Name;
+                SetPreExecutionEventMetadata(eventCall);
                 timer.Start();
                 var result = await eventCall();
                 timer.Stop();
-                TrackSuccess(timer);
+                TrackSuccess(timer, HttpStatusCode.OK.ToString("D"));
                 return result;
             }
             catch (Exception ex)
             {
                 timer.Stop();
-                EventMetadata.ResultCode = HttpStatusCode.InternalServerError.ToString("D");
                 TrackException(ex, timer);
                 throw;
             }
@@ -43,17 +66,47 @@ namespace Cosmonaut.Diagnostics
 
         internal async Task<FeedResponse<TEntity>> InvokeAsync<TEntity>(Func<Task<FeedResponse<TEntity>>> eventCall)
         {
+            if (!CosmosEventSource.EventSource.IsEnabled())
+            {
+                return await eventCall();
+            }
+
             var timer = new Stopwatch();
             try
             {
-                EventMetadata.StartTime = DateTimeOffset.UtcNow;
-                if (string.IsNullOrEmpty(EventMetadata.DependencyName))
-                    EventMetadata.DependencyName = eventCall.GetMethodInfo().Name;
+                SetPreExecutionEventMetadata(eventCall);
                 timer.Start();
                 var result = await eventCall();
                 timer.Stop();
-                SetFeedResponseProperties(result);
-                TrackSuccess(timer);
+                AddEventMetadataFromHeaders(result.ResponseHeaders);
+                LogQueryMetricsIfPresent(result);
+                TrackSuccess(timer, HttpStatusCode.OK.ToString("D"));
+                return result;
+            }
+            catch (Exception ex)
+            {
+                timer.Stop();
+                TrackException(ex, timer);
+                throw;
+            }
+        }
+
+        internal async Task<DocumentResponse<TEntity>> InvokeAsync<TEntity>(Func<Task<DocumentResponse<TEntity>>> eventCall)
+        {
+            if (!CosmosEventSource.EventSource.IsEnabled())
+            {
+                return await eventCall();
+            }
+
+            var timer = new Stopwatch();
+            try
+            {
+                SetPreExecutionEventMetadata(eventCall);
+                timer.Start();
+                var result = await eventCall();
+                timer.Stop();
+                AddEventMetadataFromHeaders(result.ResponseHeaders);
+                TrackSuccess(timer, HttpStatusCode.OK.ToString("D"));
                 return result;
             }
             catch (Exception ex)
@@ -67,49 +120,70 @@ namespace Cosmonaut.Diagnostics
 
         internal async Task<ResourceResponse<TEntity>> InvokeAsync<TEntity>(Func<Task<ResourceResponse<TEntity>>> eventCall) where TEntity : Resource, new()
         {
+            if (!CosmosEventSource.EventSource.IsEnabled())
+            {
+                return await eventCall();
+            }
+
             var timer = new Stopwatch();
             try
             {
-                EventMetadata.StartTime = DateTimeOffset.UtcNow;
-                if (string.IsNullOrEmpty(EventMetadata.DependencyName))
-                    EventMetadata.DependencyName = eventCall.GetMethodInfo().Name;
+                SetPreExecutionEventMetadata(eventCall);
                 timer.Start();
                 var result = await eventCall();
                 timer.Stop();
-                SetResourceResponseProperties(result);
-                TrackSuccess(timer);
+                AddEventMetadataFromHeaders(result.ResponseHeaders);
+                TrackSuccess(timer, result.StatusCode.ToString("D"));
                 return result;
             }
             catch (Exception ex)
             {
                 timer.Stop();
-                EventMetadata.ResultCode = HttpStatusCode.InternalServerError.ToString("D");
                 TrackException(ex, timer);
                 throw;
             }
         }
-        
-        private void SetFeedResponseProperties<TEntity>(FeedResponse<TEntity> result)
+
+        internal async Task<StoredProcedureResponse<TEntity>> InvokeAsync<TEntity>(Func<Task<StoredProcedureResponse<TEntity>>> eventCall)
         {
-            if (result.QueryMetrics != null)
+            if (!CosmosEventSource.EventSource.IsEnabled())
             {
-                EventMetadata.Properties[nameof(result.QueryMetrics)] = JsonConvert.SerializeObject(result.QueryMetrics);
+                return await eventCall();
             }
 
-            EventMetadata.Properties[nameof(result.Count)] = result.Count.ToString();
-            EventMetadata.Properties[nameof(result.ActivityId)] = result.ActivityId;
-            EventMetadata.Properties[nameof(result.RequestCharge)] = result.RequestCharge;
-            EventMetadata.ResultCode = HttpStatusCode.OK.ToString("D");
+            var timer = new Stopwatch();
+            try
+            {
+                SetPreExecutionEventMetadata(eventCall);
+                timer.Start();
+                var result = await eventCall();
+                timer.Stop();
+                AddEventMetadataFromHeaders(result.ResponseHeaders);
+                TrackSuccess(timer, HttpStatusCode.OK.ToString("D"));
+                return result;
+            }
+            catch (Exception ex)
+            {
+                timer.Stop();
+                AddEventMetadataFromException(ex);
+                TrackException(ex, timer);
+                throw;
+            }
         }
 
-        private void SetResourceResponseProperties<TEntity>(ResourceResponse<TEntity> result) where TEntity : Resource, new()
+        private void LogQueryMetricsIfPresent<TEntity>(FeedResponse<TEntity> result)
         {
-            if (result == null)
+            if (result.QueryMetrics == null)
                 return;
 
-            EventMetadata.ResultCode = result.StatusCode.ToString("D");
-            EventMetadata.Properties[nameof(result.RequestCharge)] = result.RequestCharge;
-            EventMetadata.Properties[nameof(result.ActivityId)] = result.ActivityId;
+            EventMetadata.Properties[nameof(result.QueryMetrics)] = JsonConvert.SerializeObject(result.QueryMetrics);
+        }
+
+        private void SetPreExecutionEventMetadata<TResult>(Func<Task<TResult>> eventCall)
+        {
+            EventMetadata.StartTime = DateTimeOffset.UtcNow;
+            if (string.IsNullOrEmpty(EventMetadata.DependencyName))
+                EventMetadata.DependencyName = eventCall.GetMethodInfo().Name;
         }
 
         private void TrackException(Exception ex, Stopwatch timer)
@@ -117,11 +191,13 @@ namespace Cosmonaut.Diagnostics
             EventMetadata.Error = ex;
             EventMetadata.Duration = timer.Elapsed;
             EventMetadata.Success = false;
-            
+            AddEventMetadataFromException(ex);
+
             CosmosEventSource.EventSource.TrackError(
                 EventMetadata.DependencyTypeName,
                 EventMetadata.DependencyName,
-                EventMetadata.Target,
+                EventMetadata.Target ?? EventMetadata.DependencyName,
+                EventMetadata.ResultCode,
                 EventMetadata.Data,
                 EventMetadata.StartTime.ToUnixTimeMilliseconds(),
                 EventMetadata.Duration.TotalMilliseconds,
@@ -132,21 +208,51 @@ namespace Cosmonaut.Diagnostics
                 JsonConvert.SerializeObject(EventMetadata.Properties));
         }
 
-        private void TrackSuccess(Stopwatch timer)
+        private void TrackSuccess(Stopwatch timer, string resultCode)
         {
             EventMetadata.Success = true;
             EventMetadata.Duration = timer.Elapsed;
+            EventMetadata.ResultCode = resultCode;
 
             CosmosEventSource.EventSource.TrackSuccess(
                 EventMetadata.DependencyTypeName,
                 EventMetadata.DependencyName,
-                EventMetadata.Target,
+                EventMetadata.Target ?? EventMetadata.DependencyName,
                 EventMetadata.ResultCode,
                 EventMetadata.Data,
                 EventMetadata.StartTime.ToUnixTimeMilliseconds(),
                 EventMetadata.Duration.TotalMilliseconds,
                 EventMetadata.Success,
                 JsonConvert.SerializeObject(EventMetadata.Properties));
+        }
+        
+        private void AddEventMetadataFromException(Exception ex)
+        {
+            if (!(ex is DocumentClientException documentClientException))
+            {
+                EventMetadata.ResultCode = HttpStatusCode.InternalServerError.ToString("D");
+                return;
+            }
+                
+            AddEventMetadataFromHeaders(documentClientException.ResponseHeaders);
+            EventMetadata.ResultCode = documentClientException.StatusCode?.ToString("D") ?? HttpStatusCode.InternalServerError.ToString("D");
+        }
+
+        private void AddEventMetadataFromHeaders(NameValueCollection headers)
+        {
+            if (headers == null)
+                return;
+
+            if (string.IsNullOrEmpty(EventMetadata.Target))
+                EventMetadata.Target = headers.Get("x-ms-alt-content-path");
+
+            foreach (string header in headers)
+            {
+                if (!TrackedResponseHeaders.ContainsKey(header))
+                    continue;
+
+                EventMetadata.Properties[TrackedResponseHeaders[header]] = headers[header];
+            }
         }
     }
 }

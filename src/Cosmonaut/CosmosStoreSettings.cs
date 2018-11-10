@@ -41,9 +41,9 @@ namespace Cosmonaut
             string authKey,
             Action<CosmosStoreSettings> settings)
         {
-            DatabaseName = databaseName;
-            EndpointUrl = endpointUrl;
-            AuthKey = authKey;
+            DatabaseName = databaseName ?? throw new ArgumentNullException(nameof(databaseName));
+            EndpointUrl = endpointUrl ?? throw new ArgumentNullException(nameof(endpointUrl));
+            AuthKey = authKey ?? throw new ArgumentNullException(nameof(authKey));
             settings?.Invoke(this);
         }
         
@@ -77,9 +77,9 @@ namespace Cosmonaut
             bool scaleCollectionRUsAutomatically = false,
             int maximumUpscaleRequestUnits = CosmosConstants.DefaultMaximumUpscaleThroughput)
         {
-            DatabaseName = databaseName;
-            AuthKey = authKey;
-            EndpointUrl = endpointUrl;
+            DatabaseName = databaseName ?? throw new ArgumentNullException(nameof(databaseName));
+            EndpointUrl = endpointUrl ?? throw new ArgumentNullException(nameof(endpointUrl));
+            AuthKey = authKey ?? throw new ArgumentNullException(nameof(authKey));
             ConnectionPolicy = connectionPolicy;
             DefaultCollectionThroughput = defaultCollectionThroughput;
             ScaleCollectionRUsAutomatically = scaleCollectionRUsAutomatically;

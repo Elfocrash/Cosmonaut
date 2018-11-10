@@ -42,7 +42,6 @@ namespace Cosmonaut.Testing
             return resourceResponse;
         }
 
-
         public static FeedResponse<T> ToFeedResponse<T>(this IQueryable<T> resource, IDictionary<string, string> responseHeaders = null)
         {
             var headers = new NameValueCollection

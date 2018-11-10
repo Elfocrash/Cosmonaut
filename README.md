@@ -1,4 +1,4 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/au32jna62iue4wut?svg=true)](https://ci.appveyor.com/project/Elfocrash/cosmonaut) [![NuGet Package](https://img.shields.io/nuget/v/Cosmonaut.svg)](https://www.nuget.org/packages/Cosmonaut)
+[![Build Status](https://dev.azure.com/nickchapsas/Cosmonaut/_apis/build/status/Elfocrash.Cosmonaut)](https://dev.azure.com/nickchapsas/Cosmonaut/_build/latest?definitionId=2) [![NuGet Package](https://img.shields.io/nuget/v/Cosmonaut.svg)](https://www.nuget.org/packages/Cosmonaut) [![Licensed under the MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/Elfocrash/Cosmonaut/blob/master/LICENSE)
 
 # Cosmonaut
 
@@ -14,6 +14,12 @@ Cosmonaut is a supercharged SDK with object mapping capabilities that enables .N
 - [(Video) Getting started with .NET Core and CosmosDB using Cosmonaut](http://chapsas.com/video-getting-started-with-net-core-and-cosmosdb-using-cosmonaut/)
 - [(Video) How to save money in CosmosDB with Cosmonaut's Collection Sharing](http://chapsas.com/video-how-to-save-money-in-cosmosdb-with-cosmonauts-collection-sharing/)
 - [CosmosDB Fluent Pagination with Cosmonaut](http://chapsas.com/cosmosdb-fluent-pagination-with-cosmonaut/)
+- [Implementing server side CosmosDB pagination in a Blazor Web App (Part 1: Page Number and Page Size)
+](https://chapsas.com/implementing-skiptake-server-side-cosmosdb-pagination-in-a-blazor-web-app/)
+
+### Samples
+ - The `samples` folder in this project
+ - [Web app server-side pagination for CosmosDB](https://github.com/Elfocrash/CosmosDBPaginationSample)
 
 ### Usage 
 The idea is pretty simple. You can have one CosmosStore per entity (POCO/dtos etc).
@@ -267,15 +273,3 @@ Just initialise the AppInsightsTelemetryModule in your Startup or setup pipeline
 Example: `AppInsightsTelemetryModule.Instance.Initialize(new TelemetryConfiguration("InstrumentationKey"))`
 
 If you already have initialised `TelemetryConfiguration` for your application then use `TelemetryConfiguration.Active` instead of `new TelemetryConfiguration` because if you don't there will be no association between the dependency calls and the parent request.
-
-#### Benchmarks
-
-##### Averages of 1000 iterations for 1000 documents (1Kb each) per operation on collection with default indexing and Unlimited RU/s (POCO serialization)
-
-| Operation used | Duration |
-| ------------- |:-------------:|
-| AddRangeAsync | 1152ms |
-| ToListAsync |51ms|
-| UpdateRangeAsync |1129ms|
-| UpsertRangeAsync |1034ms|
-| RemoveRangeAsync | 899ms |

@@ -34,6 +34,9 @@ namespace Cosmonaut
         Task<Document> GetDocumentAsync(string databaseId, string collectionId, string documentId,
             RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
+        Task<T> GetDocumentAsync<T>(string databaseId, string collectionId, string documentId,
+            RequestOptions requestOptions = null, CancellationToken cancellationToken = default) where T : class;
+
         Task<DocumentCollection> GetCollectionAsync(string databaseId, string collectionId,
             RequestOptions requestOptions = null);
 

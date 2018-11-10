@@ -84,7 +84,16 @@ namespace Cosmonaut
             return await this.InvokeCosmosOperationAsync(() => DocumentClient.ReadDocumentAsync(documentUri, requestOptions, cancellationToken), documentId)
                 .ExecuteCosmosQuery();
         }
-        
+
+        public async Task<T> GetDocumentAsync<T>(string databaseId, string collectionId, string documentId,
+            RequestOptions requestOptions = null, CancellationToken cancellationToken = default) where T : class
+        {
+            var documentUri = UriFactory.CreateDocumentUri(databaseId, collectionId, documentId);
+            return await this.InvokeCosmosOperationAsync(
+                () => DocumentClient.ReadDocumentAsync<T>(documentUri, requestOptions, cancellationToken), documentId)
+                .ExecuteCosmosQuery();
+        }
+
         public async Task<IEnumerable<DocumentCollection>> QueryCollectionsAsync(string databaseId, 
             Expression<Func<DocumentCollection, bool>> predicate = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
