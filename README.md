@@ -27,15 +27,13 @@ This entity will be used to create a collection or use part of a one in CosmosDB
 
 Registering the CosmosStores in ServiceCollection for DI support
 ```csharp
- var cosmosSettings = new CosmosStoreSettings("<<databaseName>>", 
-    "<<cosmosUri>>"), 
-    "<<authkey>>");
+ var cosmosSettings = new CosmosStoreSettings("<<databaseName>>", "<<cosmosUri>>", "<<authkey>>");
                 
 serviceCollection.AddCosmosStore<Book>(cosmosSettings);
 
 //or just by using the Action extension
 
-serviceCollection.AddCosmosStore<Book>("<<databaseName>>", "<<cosmosUri>>"), "<<authkey>>", settings =>
+serviceCollection.AddCosmosStore<Book>("<<databaseName>>", "<<cosmosUri>>", "<<authkey>>", settings =>
 {
     settings.ConnectionPolicy = connectionPolicy;
     settings.DefaultCollectionThroughput = 5000;
