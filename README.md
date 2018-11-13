@@ -16,6 +16,8 @@ Cosmonaut is a supercharged SDK with object mapping capabilities that enables .N
 - [CosmosDB Fluent Pagination with Cosmonaut](http://chapsas.com/cosmosdb-fluent-pagination-with-cosmonaut/)
 - [Implementing server side CosmosDB pagination in a Blazor Web App (Part 1: Page Number and Page Size)
 ](https://chapsas.com/implementing-skiptake-server-side-cosmosdb-pagination-in-a-blazor-web-app/)
+- [Implementing server side CosmosDB pagination in a Blazor Web App (Part 2: Next/Previous Page)
+](https://chapsas.com/implementing-server-side-cosmosdb-pagination-in-a-blazor-web-app-part-2-next-page-previous-page/)
 
 ### Samples
  - The `samples` folder in this project
