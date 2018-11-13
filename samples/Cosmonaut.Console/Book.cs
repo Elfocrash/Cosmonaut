@@ -1,4 +1,5 @@
 ﻿using Cosmonaut.Attributes;
+using Newtonsoft.Json;
 
 namespace Cosmonaut.Console
 {
@@ -11,6 +12,10 @@ namespace Cosmonaut.Console
         public string AnotherRandomProp { get; set; }
         
         public string Id { get; set; }
+
         public string CosmosEntityName { get; set; }
+        
+        [JsonProperty("_etag")]
+        public string Etag { get; set; }
     }
 }

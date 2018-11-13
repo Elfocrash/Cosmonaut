@@ -16,9 +16,9 @@ namespace Cosmonaut.Extensions
             }
             catch (DocumentClientException exception)
             {
-                var cosmosReponse = exception.ToCosmosResponse<TResult>();
+                var cosmosResponse = exception.ToCosmosResponse<TResult>();
 
-                switch (cosmosReponse.CosmosOperationStatus)
+                switch (cosmosResponse.CosmosOperationStatus)
                 {
                     case CosmosOperationStatus.ResourceNotFound:
                         return null;
@@ -39,9 +39,9 @@ namespace Cosmonaut.Extensions
             }
             catch (DocumentClientException exception)
             {
-                var cosmosReponse = exception.ToCosmosResponse<TResult>();
+                var cosmosResponse = exception.ToCosmosResponse<TResult>();
 
-                switch (cosmosReponse.CosmosOperationStatus)
+                switch (cosmosResponse.CosmosOperationStatus)
                 {
                     case CosmosOperationStatus.ResourceNotFound:
                         return null;
@@ -62,9 +62,10 @@ namespace Cosmonaut.Extensions
             }
             catch (DocumentClientException exception)
             {
-                var cosmosReponse = exception.ToCosmosResponse<TResult>();
+                var cosmosResponse = exception.ToCosmosResponse<TResult>();
 
-                if (cosmosReponse.CosmosOperationStatus == CosmosOperationStatus.ResourceNotFound) return null;
+                if (cosmosResponse.CosmosOperationStatus == CosmosOperationStatus.ResourceNotFound)
+                    return null;
 
                 throw;
             }
@@ -79,11 +80,17 @@ namespace Cosmonaut.Extensions
             }
             catch (DocumentClientException exception)
             {
-                var cosmosReponse = exception.ToCosmosResponse(entity);
+                var cosmosResponse = exception.ToCosmosResponse(entity);
 
-                if (cosmosReponse.CosmosOperationStatus == CosmosOperationStatus.ResourceNotFound) return cosmosReponse;
-
-                throw;
+                switch (cosmosResponse.CosmosOperationStatus)
+                {
+                    case CosmosOperationStatus.ResourceNotFound:
+                    case CosmosOperationStatus.PreconditionFailed:
+                    case CosmosOperationStatus.Conflict:
+                        return cosmosResponse;
+                    default:
+                        throw;
+                }
             }
         }
     }

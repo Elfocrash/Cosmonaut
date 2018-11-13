@@ -144,15 +144,15 @@ namespace Cosmonaut
             return await AddRangeAsync((IEnumerable<TEntity>)entities);
         }
 
-        public async Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(IEnumerable<TEntity> entities, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
+        public async Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(IEnumerable<TEntity> entities, Func<TEntity, RequestOptions> requestOptions = null, CancellationToken cancellationToken = default)
         {
-            return await ExecuteMultiOperationAsync(entities, x => AddAsync(x, requestOptions, cancellationToken));
+            return await ExecuteMultiOperationAsync(entities, x => AddAsync(x, requestOptions?.Invoke(x), cancellationToken));
         }
         
         public async Task<CosmosMultipleResponse<TEntity>> RemoveAsync(
             Expression<Func<TEntity, bool>> predicate, 
-            FeedOptions feedOptions = null, 
-            RequestOptions requestOptions = null,
+            FeedOptions feedOptions = null,
+            Func<TEntity, RequestOptions> requestOptions = null,
             CancellationToken cancellationToken = default)
         {
             var entitiesToRemove = await Query(GetFeedOptionsForQuery(feedOptions)).Where(predicate).ToListAsync(cancellationToken);
@@ -174,9 +174,9 @@ namespace Cosmonaut
             return await RemoveRangeAsync((IEnumerable<TEntity>)entities);
         }
 
-        public async Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(IEnumerable<TEntity> entities, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
+        public async Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(IEnumerable<TEntity> entities, Func<TEntity, RequestOptions> requestOptions = null, CancellationToken cancellationToken = default)
         {
-            return await ExecuteMultiOperationAsync(entities, x => RemoveAsync(x, requestOptions, cancellationToken));
+            return await ExecuteMultiOperationAsync(entities, x => RemoveAsync(x, requestOptions?.Invoke(x), cancellationToken));
         }
 
         public async Task<CosmosResponse<TEntity>> UpdateAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
@@ -194,9 +194,9 @@ namespace Cosmonaut
             return await UpdateRangeAsync((IEnumerable<TEntity>)entities);
         }
 
-        public async Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(IEnumerable<TEntity> entities, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
+        public async Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(IEnumerable<TEntity> entities, Func<TEntity, RequestOptions> requestOptions = null, CancellationToken cancellationToken = default)
         {
-            return await ExecuteMultiOperationAsync(entities, x => UpdateAsync(x, requestOptions, cancellationToken));
+            return await ExecuteMultiOperationAsync(entities, x => UpdateAsync(x, requestOptions?.Invoke(x), cancellationToken));
         }
 
         public async Task<CosmosResponse<TEntity>> UpsertAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
@@ -207,9 +207,9 @@ namespace Cosmonaut
             return new CosmosResponse<TEntity>(entity, response);
         }
 
-        public async Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(IEnumerable<TEntity> entities, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
+        public async Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(IEnumerable<TEntity> entities, Func<TEntity, RequestOptions> requestOptions = null, CancellationToken cancellationToken = default)
         {
-            return await ExecuteMultiOperationAsync(entities, x => UpsertAsync(x, requestOptions, cancellationToken));
+            return await ExecuteMultiOperationAsync(entities, x => UpsertAsync(x, requestOptions?.Invoke(x), cancellationToken));
         }
 
         [Obsolete("Use the IEnumerable method instead")]

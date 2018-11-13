@@ -14,6 +14,10 @@ namespace Cosmonaut.Extensions
                     return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.ResourceNotFound);
                 case (HttpStatusCode) CosmosConstants.TooManyRequestsStatusCode:
                     return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.RequestRateIsLarge);
+                case HttpStatusCode.PreconditionFailed:
+                    return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.PreconditionFailed);
+                case HttpStatusCode.Conflict:
+                    return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.Conflict);
             }
 
             throw exception;

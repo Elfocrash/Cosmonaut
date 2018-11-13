@@ -70,7 +70,7 @@ namespace Cosmonaut.Unit
             var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
             addedDummy.Name = "newTest";
             // Act
-            var result = await entityStore.UpdateRangeAsync(addedDummy);
+            var result = await entityStore.UpdateRangeAsync(new []{ addedDummy });
 
             // Assert
             result.FailedEntities.Should().BeEmpty();
@@ -126,7 +126,7 @@ namespace Cosmonaut.Unit
             var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
             addedDummy.Name = "newTest";
             // Act
-            var result = await entityStore.UpsertRangeAsync(addedDummy);
+            var result = await entityStore.UpsertRangeAsync(new []{ addedDummy });
 
             // Assert
             result.FailedEntities.Should().BeEmpty();

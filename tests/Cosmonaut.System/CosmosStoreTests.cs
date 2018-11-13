@@ -85,9 +85,12 @@ namespace Cosmonaut.System
                 });
             }
 
-            var addedResults = new Action(() => cosmosStore.AddRangeAsync(cats).GetAwaiter().GetResult());
+            var addedResults = await cosmosStore.AddRangeAsync(cats);
 
-            addedResults.Should().Throw<AggregateException>();
+            addedResults.IsSuccess.Should().BeFalse();
+            addedResults.FailedEntities.Count.Should().Be(10);
+            addedResults.SuccessfulEntities.Count.Should().Be(0);
+            addedResults.FailedEntities.Select(x=>x.CosmosOperationStatus).Should().AllBeEquivalentTo(CosmosOperationStatus.Conflict);
         }
         
         [Fact]

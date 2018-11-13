@@ -4,6 +4,8 @@
     {
         Success,
         RequestRateIsLarge,
-        ResourceNotFound
+        ResourceNotFound,
+        PreconditionFailed,
+        Conflict
     }
 }

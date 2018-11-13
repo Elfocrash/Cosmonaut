@@ -133,7 +133,11 @@ namespace Cosmonaut.Console
                 addedre.AnotherRandomProp += " Nick";
             }
 
-            var updated = await booksStore.UpsertRangeAsync(addedRetrieved);
+            var updated = await booksStore.UpsertRangeAsync(addedRetrieved, x => new RequestOptions { AccessCondition = new AccessCondition
+            {
+                Type = AccessConditionType.IfMatch,
+                Condition = x.Etag
+            }});
             System.Console.WriteLine($"Updated {updated.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
 
