@@ -92,28 +92,6 @@ namespace Cosmonaut
         /// </summary>
         /// <typeparam name="TEntity">The type of the entities.</typeparam>
         /// <param name="entities">The entities to add.</param>
-        /// <returns> 
-        ///     A task that represents the asynchronous AddRange operation. The task result contains the
-        ///     <see cref="CosmosMultipleResponse{TEntity}"/> for the entities. The response provides access to 
-        ///     various response information such as whether it was successful or what (if anything) went wrong
-        ///     at the individual entity level.
-        /// </returns>
-        /// <exception cref="MultipleCosmosIdsException">
-        ///     An error is encountered while processing the entity.
-        ///     This is because the given entity has more that one Ids specified for it.
-        /// </exception>
-        /// <exception cref="CosmosEntityWithoutIdException{TEntity}">
-        ///     An error is encountered while processing the entity.
-        ///     This is because the given entity does not have an Id specified.
-        /// </exception>
-        [Obsolete("Use the IEnumerable method instead")]
-        Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(params TEntity[] entities);
-        
-        /// <summary>
-        ///     Adds the given entities in the cosmos db store.
-        /// </summary>
-        /// <typeparam name="TEntity">The type of the entities.</typeparam>
-        /// <param name="entities">The entities to add.</param>
         /// <param name="requestOptions">The request options for this operation.</param>
         /// <param name="cancellationToken">The CancellationToken for this operation.</param>
         /// <returns> 
@@ -159,28 +137,6 @@ namespace Cosmonaut
         /// </summary>
         /// <typeparam name="TEntity">The type of the entities.</typeparam>
         /// <param name="entities">The entities to update.</param>
-        /// <returns> 
-        ///     A task that represents the asynchronous Update operation. The task result contains the
-        ///     <see cref="CosmosResponse{TEntity}"/> for the entity. The response provides access to 
-        ///     various response information such as whether it was successful or what (if anything) went wrong
-        ///     at the individual entity level.
-        /// </returns>
-        /// <exception cref="MultipleCosmosIdsException">
-        ///     An error is encountered while processing the entity.
-        ///     This is because the given entity has more that one Ids specified for it.
-        /// </exception>
-        /// <exception cref="CosmosEntityWithoutIdException{TEntity}">
-        ///     An error is encountered while processing the entity.
-        ///     This is because the given entity does not have an Id specified.
-        /// </exception>
-        [Obsolete("Use the IEnumerable method instead")]
-        Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(params TEntity[] entities);
-        
-        /// <summary>
-        ///     Updates the given entities in the cosmos db store.
-        /// </summary>
-        /// <typeparam name="TEntity">The type of the entities.</typeparam>
-        /// <param name="entities">The entities to update.</param>
         /// <param name="requestOptions">The request options for this operation.</param>
         /// <param name="cancellationToken">The CancellationToken for this operation.</param>
         /// <returns> 
@@ -220,28 +176,6 @@ namespace Cosmonaut
         ///     This is because the given entity does not have an Id specified.
         /// </exception>
         Task<CosmosResponse<TEntity>> UpsertAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
-        
-        /// <summary>
-        ///     Adds if absent or updates if present the given entities in the cosmos db store.
-        /// </summary>
-        /// <typeparam name="TEntity">The type of the entities.</typeparam>
-        /// <param name="entities">The entities to upsert.</param>
-        /// <returns> 
-        ///     A task that represents the asynchronous Upsert operation. The task result contains the
-        ///     <see cref="CosmosResponse{TEntity}"/> for the entity. The response provides access to 
-        ///     various response information such as whether it was successful or what (if anything) went wrong
-        ///     at the individual entity level.
-        /// </returns>
-        /// <exception cref="MultipleCosmosIdsException">
-        ///     An error is encountered while processing the entity.
-        ///     This is because the given entity has more that one Ids specified for it.
-        /// </exception>
-        /// <exception cref="CosmosEntityWithoutIdException{TEntity}">
-        ///     An error is encountered while processing the entity.
-        ///     This is because the given entity does not have an Id specified.
-        /// </exception>
-        [Obsolete("Use the IEnumerable method instead")]
-        Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(params TEntity[] entities);
         
         /// <summary>
         ///     Adds if absent or updates if present the given entities in the cosmos db store.
@@ -305,28 +239,6 @@ namespace Cosmonaut
         ///     This is because the given entity has more that one Ids specified for it.
         /// </exception>
         Task<CosmosResponse<TEntity>> RemoveAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
-        
-        /// <summary>
-        ///     Removes the given entities from the cosmos db store.
-        /// </summary>
-        /// <typeparam name="TEntity">The type of the entities.</typeparam>
-        /// <param name="entities">The entities to remove.</param>
-        /// <returns> 
-        ///     A task that represents the asynchronous RemoveRange operation. The task result contains the
-        ///     <see cref="CosmosMultipleResponse{TEntity}"/> for the entities. The response provides access to 
-        ///     various response information such as whether it was successful or what (if anything) went wrong
-        ///      at the individual entity level.
-        /// </returns>
-        /// <exception cref="CosmosEntityWithoutIdException{TEntity}">
-        ///     An error is encountered while processing the entity.
-        ///     This is because the given entity does not have an Id specified.
-        /// </exception>
-        /// <exception cref="MultipleCosmosIdsException">
-        ///     An error is encountered while processing the entity.
-        ///     This is because the given entity has more that one Ids specified for it.
-        /// </exception>
-        [Obsolete("Use the IEnumerable method instead")]
-        Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(params TEntity[] entities);
         
         /// <summary>
         ///     Removes the given entities from the cosmos db store.

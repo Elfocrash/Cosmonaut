@@ -7,6 +7,7 @@ using Cosmonaut.Extensions;
 using Cosmonaut.Response;
 using Cosmonaut.System.Models;
 using FluentAssertions;
+using FluentAssertions.Equivalency;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Newtonsoft.Json;
@@ -136,7 +137,7 @@ namespace Cosmonaut.System
                 new FeedOptions{EnableScanInQuery = true});
 
             // Assert
-            results.Should().BeEquivalentTo(cats);
+            results.Should().BeEquivalentTo(cats, ExcludeEtagCheck());
         }
 
         [Fact]
@@ -157,7 +158,7 @@ namespace Cosmonaut.System
                 new FeedOptions { EnableScanInQuery = true });
 
             // Assert
-            results.Should().BeEquivalentTo(cats);
+            results.Should().BeEquivalentTo(cats, ExcludeEtagCheck());
         }
 
         [Fact]
@@ -176,7 +177,7 @@ namespace Cosmonaut.System
             var results = (await _cosmonautClient.QueryDocumentsAsync<Cat>(_databaseId, _collectionName)).ToList();
 
             // Assert
-            results.Should().BeEquivalentTo(cats);
+            results.Should().BeEquivalentTo(cats, ExcludeEtagCheck());
         }
 
         [Fact]
@@ -245,9 +246,9 @@ namespace Cosmonaut.System
             var fourthPage = await _cosmonautClient.Query<Cat>(_databaseId, _collectionName).Where(x => x.Name.StartsWith("Cat")).WithPagination(4, 5).OrderBy(x => x.Name).ToListAsync();
 
             
-            firstPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Take(5));
-            secondPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(5).Take(5));
-            thirdPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(10).Take(5));
+            firstPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Take(5), ExcludeEtagCheck());
+            secondPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(5).Take(5), ExcludeEtagCheck());
+            thirdPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(10).Take(5), ExcludeEtagCheck());
             fourthPage.Should().BeEmpty();
         }
 
@@ -268,9 +269,9 @@ namespace Cosmonaut.System
             var thirdPage = await secondPage.GetNextPageAsync();
             var fourthPage = await thirdPage.GetNextPageAsync();
 
-            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Take(5));
-            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(5).Take(5));
-            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(10).Take(5));
+            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Take(5), ExcludeEtagCheck());
+            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(5).Take(5), ExcludeEtagCheck());
+            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(10).Take(5), ExcludeEtagCheck());
             fourthPage.Results.Should().BeEmpty();
         }
 
@@ -291,9 +292,9 @@ namespace Cosmonaut.System
             var thirdPage = await secondPage.GetNextPageAsync();
             var fourthPage = await thirdPage.GetNextPageAsync();
 
-            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Take(5));
-            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(5).Take(5));
-            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(10).Take(5));
+            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Take(5), ExcludeEtagCheck());
+            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(5).Take(5), ExcludeEtagCheck());
+            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(10).Take(5), ExcludeEtagCheck());
             fourthPage.Results.Should().BeEmpty();
         }
 
@@ -317,19 +318,19 @@ namespace Cosmonaut.System
 
             firstPage.HasNextPage.Should().BeTrue();
             firstPage.NextPageToken.Should().NotBeNullOrEmpty();
-            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Take(10));
+            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Take(10), ExcludeEtagCheck());
             secondPage.HasNextPage.Should().BeTrue();
             secondPage.NextPageToken.Should().NotBeNullOrEmpty();
-            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(10).Take(10));
+            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(10).Take(10), ExcludeEtagCheck());
             thirdPage.HasNextPage.Should().BeFalse();
             thirdPage.NextPageToken.Should().BeNullOrEmpty();
-            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(20).Take(10));
+            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(20).Take(10), ExcludeEtagCheck());
             fourthPage.Results.Should().BeEmpty();
             fourthPage.NextPageToken.Should().BeNullOrEmpty();
             fourthPage.HasNextPage.Should().BeFalse();
             emptyTokenPage.HasNextPage.Should().BeTrue();
             emptyTokenPage.NextPageToken.Should().NotBeNullOrEmpty();
-            emptyTokenPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Take(10));
+            emptyTokenPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Take(10), ExcludeEtagCheck());
         }
 
         [Fact]
@@ -544,6 +545,15 @@ namespace Cosmonaut.System
         {
             _cosmonautClient.DeleteCollectionAsync(_databaseId, _collectionName).GetAwaiter().GetResult();
             _cosmonautClient.DeleteDatabaseAsync(_databaseId).GetAwaiter().GetResult();
+        }
+
+        private static Func<EquivalencyAssertionOptions<Cat>, EquivalencyAssertionOptions<Cat>> ExcludeEtagCheck()
+        {
+            return config =>
+            {
+                config.Excluding(cat => cat.Etag);
+                return config;
+            };
         }
     }
 }

@@ -9,6 +9,7 @@ using Cosmonaut.Operations;
 using Cosmonaut.Response;
 using Cosmonaut.System.Models;
 using FluentAssertions;
+using FluentAssertions.Equivalency;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -70,12 +71,12 @@ namespace Cosmonaut.System
         }
 
         [Fact]
-        public async Task WhenInvalidValidEntitiesAreAdded_ThenTheyFail()
+        public async Task WhenEntitiesAreAddedAndIdExists_ThenTheyFail()
         {
             var cats = new List<Cat>();
             var cosmosStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
             var id = Guid.NewGuid().ToString();
-            await cosmosStore.AddAsync(new Cat {CatId = id, Name = "Nick"});
+            await cosmosStore.AddAsync(new Cat { CatId = id, Name = "Nick" });
 
             for (var i = 0; i < 10; i++)
             {
@@ -92,7 +93,33 @@ namespace Cosmonaut.System
             addedResults.SuccessfulEntities.Count.Should().Be(0);
             addedResults.FailedEntities.Select(x=>x.CosmosOperationStatus).Should().AllBeEquivalentTo(CosmosOperationStatus.Conflict);
         }
-        
+
+        [Fact]
+        public async Task WhenEntitiesAreAddedAndTheyChangedWithAccessCondition_ThenTheyFail()
+        {
+            var cosmosStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var response = await ExecuteMultipleAddOperationsForType<Cat>(list => cosmosStore.AddRangeAsync(list), 10);
+            
+            var addedCats = response.SuccessfulEntities
+                .Select(x => JsonConvert.DeserializeObject<Cat>(x.ResourceResponse.Resource.ToString())).ToList();
+                addedCats.ForEach(x => x.Name = "different Name");
+            await cosmosStore.UpdateRangeAsync(addedCats);
+
+            var updatedResults = await cosmosStore.UpdateRangeAsync(addedCats, cat => new RequestOptions{AccessCondition = new AccessCondition
+            {
+                Type = AccessConditionType.IfMatch,
+                Condition = cat.Etag
+            }});
+
+            response.IsSuccess.Should().BeTrue();
+            response.FailedEntities.Count.Should().Be(0);
+            response.SuccessfulEntities.Count.Should().Be(10);
+            updatedResults.IsSuccess.Should().BeFalse();
+            updatedResults.FailedEntities.Count.Should().Be(10);
+            updatedResults.SuccessfulEntities.Count.Should().Be(0);
+            updatedResults.FailedEntities.Select(x => x.CosmosOperationStatus).Should().AllBeEquivalentTo(CosmosOperationStatus.PreconditionFailed);
+        }
+
         [Fact]
         public async Task WhenValidEntitiesAreRemoved_ThenRemovedResultsAreSuccessful()
         {
@@ -182,7 +209,7 @@ namespace Cosmonaut.System
             var lions = await lionStore.QueryMultipleAsync("select * from c");
             var birds = await birdStore.Query().ToListAsync();
 
-            cats.Should().BeEquivalentTo(addedCats.SuccessfulEntities.Select(x=>x.Entity));
+            cats.Should().BeEquivalentTo(addedCats.SuccessfulEntities.Select(x=>x.Entity), ExcludeEtagCheck());
             dogs.Should().BeEquivalentTo(addedDogs.SuccessfulEntities.Select(x => x.Entity));
             lions.Should().BeEquivalentTo(addedLions.SuccessfulEntities.Select(x => x.Entity), config =>
             {
@@ -346,9 +373,9 @@ namespace Cosmonaut.System
             var thirdPage = await catStore.Query().WithPagination(3, 5).OrderBy(x => x.Name).ToListAsync();
             var fourthPage = await catStore.Query().WithPagination(4, 5).OrderBy(x => x.Name).ToListAsync();
 
-            firstPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(5));
-            secondPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(5).Take(5));
-            thirdPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(10).Take(5));
+            firstPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(5), ExcludeEtagCheck());
+            secondPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(5).Take(5), ExcludeEtagCheck());
+            thirdPage.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(10).Take(5), ExcludeEtagCheck());
             fourthPage.Should().BeEmpty();
         }
 
@@ -364,9 +391,9 @@ namespace Cosmonaut.System
             var thirdPage = await secondPage.GetNextPageAsync();
             var fourthPage = await thirdPage.GetNextPageAsync();
 
-            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(5));
-            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(5).Take(5));
-            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(10).Take(5));
+            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(5), ExcludeEtagCheck());
+            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(5).Take(5), ExcludeEtagCheck());
+            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(10).Take(5), ExcludeEtagCheck());
             fourthPage.Results.Should().BeEmpty();
         }
 
@@ -382,9 +409,9 @@ namespace Cosmonaut.System
             var thirdPage = await secondPage.GetNextPageAsync();
             var fourthPage = await thirdPage.GetNextPageAsync();
 
-            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(5));
-            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(5).Take(5));
-            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(10).Take(5));
+            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(5), ExcludeEtagCheck());
+            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(5).Take(5), ExcludeEtagCheck());
+            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(10).Take(5), ExcludeEtagCheck());
             fourthPage.Results.Should().BeEmpty();
         }
 
@@ -403,19 +430,19 @@ namespace Cosmonaut.System
 
             firstPage.HasNextPage.Should().BeTrue();
             firstPage.NextPageToken.Should().NotBeNullOrEmpty();
-            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(10));
+            firstPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(10), ExcludeEtagCheck());
             secondPage.HasNextPage.Should().BeTrue();
             secondPage.NextPageToken.Should().NotBeNullOrEmpty();
-            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(10).Take(10));
+            secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(10).Take(10), ExcludeEtagCheck());
             thirdPage.HasNextPage.Should().BeFalse();
             thirdPage.NextPageToken.Should().BeNullOrEmpty();
-            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(20).Take(10));
+            thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Skip(20).Take(10), ExcludeEtagCheck());
             fourthPage.Results.Should().BeEmpty();
             fourthPage.NextPageToken.Should().BeNullOrEmpty();
             fourthPage.HasNextPage.Should().BeFalse();
             emptyTokenPage.HasNextPage.Should().BeTrue();
             emptyTokenPage.NextPageToken.Should().NotBeNullOrEmpty();
-            emptyTokenPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(10));
+            emptyTokenPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(addedCats.Take(10), ExcludeEtagCheck());
         }
 
         private async Task<CosmosMultipleResponse<T>> ExecuteMultipleAddOperationsForType<T>(
@@ -498,6 +525,15 @@ namespace Cosmonaut.System
                         settings.ConnectionPolicy = _connectionPolicy;
                         settings.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.Number, -1), new RangeIndex(DataType.String, -1));
                     });
+        }
+
+        private static Func<EquivalencyAssertionOptions<Cat>, EquivalencyAssertionOptions<Cat>> ExcludeEtagCheck()
+        {
+            return config =>
+            {
+                config.Excluding(cat => cat.Etag);
+                return config;
+            };
         }
     }
 }
