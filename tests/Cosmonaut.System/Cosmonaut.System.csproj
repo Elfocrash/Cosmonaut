@@ -19,10 +19,4 @@
     <ProjectReference Include="..\..\src\Cosmonaut\Cosmonaut.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="Microsoft.ApplicationInsights">
-      <HintPath>..\..\..\..\..\Users\nick.chapsas\.nuget\packages\microsoft.applicationinsights\2.6.4\lib\netstandard1.3\Microsoft.ApplicationInsights.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>
