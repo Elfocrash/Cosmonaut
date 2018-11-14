@@ -167,7 +167,15 @@ The `EntityName` will be used to make the object identifiable for Cosmosnaut. Be
 
 Once you set this up you can add individual CosmosStores with shared collections.
 
-### Restrictions
+#### Response Handling
+Cosmonaut follows a different approach when it comes to error handling. The CosmosDB SDK is throwing exceptions for almost every type of error. Cosmonaut follows a different approach.
+
+In Cosmonaut methods that return `CosmosResponse` or `CosmosMultipleResponse` won't throw exceptions for the following errors: `ResourceNotFound`, `PreconditionFailed` and `Conflict`. 
+They will instead return a `CosmosResponse` with the `IsSuccess` flag to `false`, the `CosmosOperationStatus` enum explaining what the error was and the `Exception` object containing the exceptions that caused the request to fail.
+
+On top of that, any methods that return `ResourceResponse<T>` in the CosmonautClient will not throw an exception for `ResourceNotFound` and they will instead return `null`.
+
+#### Restrictions
 Because of the way the internal `id` property of Cosmosdb works, there is a mandatory restriction made.
 You cannot have a property named Id or a property with the attribute `[JsonProperty("id")]` without it being a string.
 A cosmos id needs to exist somehow on your entity model. For that reason if it isn't part of your entity you can just extend the `CosmosEntity` class.
