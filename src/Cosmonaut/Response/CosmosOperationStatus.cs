@@ -1,6 +1,6 @@
 ﻿namespace Cosmonaut.Response
 {
-    internal enum CosmosOperationStatus
+    public enum CosmosOperationStatus
     {
         Success,
         RequestRateIsLarge,

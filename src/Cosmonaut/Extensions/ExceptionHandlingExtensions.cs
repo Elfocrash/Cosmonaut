@@ -11,13 +11,13 @@ namespace Cosmonaut.Extensions
             switch (exception.StatusCode)
             {
                 case HttpStatusCode.NotFound:
-                    return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.ResourceNotFound);
+                    return new CosmosResponse<TEntity>(entity, exception, CosmosOperationStatus.ResourceNotFound);
                 case (HttpStatusCode) CosmosConstants.TooManyRequestsStatusCode:
-                    return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.RequestRateIsLarge);
+                    return new CosmosResponse<TEntity>(entity, exception, CosmosOperationStatus.RequestRateIsLarge);
                 case HttpStatusCode.PreconditionFailed:
-                    return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.PreconditionFailed);
+                    return new CosmosResponse<TEntity>(entity, exception, CosmosOperationStatus.PreconditionFailed);
                 case HttpStatusCode.Conflict:
-                    return new CosmosResponse<TEntity>(entity, CosmosOperationStatus.Conflict);
+                    return new CosmosResponse<TEntity>(entity, exception, CosmosOperationStatus.Conflict);
             }
 
             throw exception;

@@ -18,14 +18,9 @@ namespace Cosmonaut.Extensions
             {
                 var cosmosResponse = exception.ToCosmosResponse<TResult>();
 
-                switch (cosmosResponse.CosmosOperationStatus)
-                {
-                    case CosmosOperationStatus.ResourceNotFound:
-                        return null;
-                    case CosmosOperationStatus.RequestRateIsLarge:
-                        await Task.Delay(exception.RetryAfter);
-                        return await ExecuteCosmosQuery(operationTask);
-                }
+                if (cosmosResponse.CosmosOperationStatus == CosmosOperationStatus.ResourceNotFound)
+                    return null;
+
                 throw;
             }
         }
@@ -41,14 +36,9 @@ namespace Cosmonaut.Extensions
             {
                 var cosmosResponse = exception.ToCosmosResponse<TResult>();
 
-                switch (cosmosResponse.CosmosOperationStatus)
-                {
-                    case CosmosOperationStatus.ResourceNotFound:
-                        return null;
-                    case CosmosOperationStatus.RequestRateIsLarge:
-                        await Task.Delay(exception.RetryAfter);
-                        return await ExecuteCosmosQuery(operationTask);
-                }
+                if (cosmosResponse.CosmosOperationStatus == CosmosOperationStatus.ResourceNotFound)
+                    return null;
+
                 throw;
             }
         }

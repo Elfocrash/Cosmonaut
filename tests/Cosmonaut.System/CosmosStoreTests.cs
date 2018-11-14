@@ -91,6 +91,8 @@ namespace Cosmonaut.System
             addedResults.IsSuccess.Should().BeFalse();
             addedResults.FailedEntities.Count.Should().Be(10);
             addedResults.SuccessfulEntities.Count.Should().Be(0);
+            addedResults.FailedEntities.Select(x => x.Exception).Should().AllBeAssignableTo<DocumentClientException>();
+            addedResults.FailedEntities.Select(x => x.Exception).Cast<DocumentClientException>().Select(x => x.StatusCode).Should().AllBeEquivalentTo(HttpStatusCode.Conflict);
             addedResults.FailedEntities.Select(x=>x.CosmosOperationStatus).Should().AllBeEquivalentTo(CosmosOperationStatus.Conflict);
         }
 
@@ -117,6 +119,8 @@ namespace Cosmonaut.System
             updatedResults.IsSuccess.Should().BeFalse();
             updatedResults.FailedEntities.Count.Should().Be(10);
             updatedResults.SuccessfulEntities.Count.Should().Be(0);
+            updatedResults.FailedEntities.Select(x => x.Exception).Should().AllBeAssignableTo<DocumentClientException>();
+            updatedResults.FailedEntities.Select(x => x.Exception).Cast<DocumentClientException>().Select(x=>x.StatusCode).Should().AllBeEquivalentTo(HttpStatusCode.PreconditionFailed);
             updatedResults.FailedEntities.Select(x => x.CosmosOperationStatus).Should().AllBeEquivalentTo(CosmosOperationStatus.PreconditionFailed);
         }
 

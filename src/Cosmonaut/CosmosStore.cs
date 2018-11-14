@@ -285,7 +285,8 @@ namespace Cosmonaut
 
         private FeedOptions GetFeedOptionsForQuery(FeedOptions feedOptions)
         {
-            var shouldEnablePartitionQuery = typeof(TEntity).HasPartitionKey() && feedOptions?.PartitionKey == null;
+            var shouldEnablePartitionQuery = (typeof(TEntity).HasPartitionKey() && feedOptions?.PartitionKey == null) 
+                                             || (feedOptions != null && feedOptions.EnableCrossPartitionQuery);
 
             if (feedOptions == null)
             {
