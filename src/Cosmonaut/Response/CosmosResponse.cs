@@ -17,18 +17,18 @@ namespace Cosmonaut.Response
 
         public Exception Exception { get; }
 
-        internal CosmosResponse(ResourceResponse<Document> resourceResponse)
+        public CosmosResponse(ResourceResponse<Document> resourceResponse)
         {
             ResourceResponse = resourceResponse;
         }
 
-        internal CosmosResponse(TEntity entity, ResourceResponse<Document> resourceResponse)
+        public CosmosResponse(TEntity entity, ResourceResponse<Document> resourceResponse)
         {
             ResourceResponse = resourceResponse;
             Entity = entity;
         }
-        
-        internal CosmosResponse(TEntity entity, Exception exception, CosmosOperationStatus statusType)
+
+        public CosmosResponse(TEntity entity, Exception exception, CosmosOperationStatus statusType)
         {
             CosmosOperationStatus = statusType;
             Entity = entity;
