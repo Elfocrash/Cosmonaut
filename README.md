@@ -84,6 +84,26 @@ var user = await cosmoStore.QueryMultipleAsync("select * from c w.Firstname = 'S
 var user = await cosmoStore.QueryMultipleAsync("select * from c w.Firstname = @name", new { name = "Smith" });
 ```
 
+#### Collection sharing
+Cosmonaut is all about making the integration with CosmosDB easy as well as making things like cost optimisation part of the library.
+
+That's why Cosmonaut support collection sharing between different types of entities.
+
+Why would you do that?
+
+Cosmos is charging you based on how many RU/s your individual collection is provisioned at. This means that if you don't need to have one collection per entity because you won't use it that much, even on the minimum 400 RU/s, you will be charged money. That's where the magic of schemaless comes in.
+
+How can you do that?
+
+Well it's actually pretty simple. Just implement the `ISharedCosmosEntity` interface and decorate your object with the `SharedCosmosCollection` attribute.
+
+The attribute accepts two properties, `SharedCollectionName` which is mandatory and `EntityName` which is optional.
+The `SharedCollectionName` property will be used to name the collection that the entity will share with other entities. 
+
+The `EntityName` will be used to make the object identifiable for Cosmosnaut. Be default it will pluralize the name of the class, but you can specify it to override this behavior. You can override this by providing your own name by setting the `EntityName` value at the attribute level.
+
+Once you set this up you can add individual CosmosStores with shared collections.
+
 ##### Pagination
 
 Cosmonaut supports two types of pagination.
@@ -144,26 +164,6 @@ await cosmoStore.RemoveAsync(x => x.Name == "Nick"); // Removes all the entities
 await cosmoStore.RemoveAsync(entity);// Removes the specific entity
 await cosmoStore.RemoveByIdAsync("<<anId>>");// Removes an entity with the specified ID
 ```
-
-#### Collection sharing
-Cosmonaut is all about making the integration with CosmosDB easy as well as making things like cost optimisation part of the library.
-
-That's why Cosmonaut support collection sharing between different types of entities.
-
-Why would you do that?
-
-Cosmos is charging you based on how many RU/s your individual collection is provisioned at. This means that if you don't need to have one collection per entity because you won't use it that much, even on the minimum 400 RU/s, you will be charged money. That's where the magic of schemaless comes in.
-
-How can you do that?
-
-Well it's actually pretty simple. Just implement the `ISharedCosmosEntity` interface and decorate your object with the `SharedCosmosCollection` attribute.
-
-The attribute accepts two properties, `SharedCollectionName` which is mandatory and `EntityName` which is optional.
-The `SharedCollectionName` property will be used to name the collection that the entity will share with other entities. 
-
-The `EntityName` will be used to make the object identifiable for Cosmosnaut. Be default it will pluralize the name of the class, but you can specify it to override this behavior. You can override this by providing your own name by setting the `EntityName` value at the attribute level.
-
-Once you set this up you can add individual CosmosStores with shared collections.
 
 #### Response Handling
 Cosmonaut follows a different approach when it comes to error handling. The CosmosDB SDK is throwing exceptions for almost every type of error. Cosmonaut follows a different approach.
