@@ -1,5 +1,4 @@
 ﻿using Cosmonaut.Attributes;
-using Newtonsoft.Json;
 
 namespace Cosmonaut.Console
 {

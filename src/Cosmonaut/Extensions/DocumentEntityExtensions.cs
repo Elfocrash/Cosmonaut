@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using Cosmonaut.Attributes;
 using Cosmonaut.Exceptions;
+using Cosmonaut.Internal;
 using Microsoft.Azure.Documents;
 using Newtonsoft.Json;
 
@@ -12,7 +13,7 @@ namespace Cosmonaut.Extensions
     {
         internal static PartitionKeyDefinition GetPartitionKeyDefinitionForEntity(this Type type)
         {
-            var partitionKeyProperties = type.GetTypeInfo().GetProperties()
+            var partitionKeyProperties = InternalTypeCache.Instance.GetPropertiesFromCache(type)
                 .Where(x => x.GetCustomAttribute<CosmosPartitionKeyAttribute>() != null).ToList();
 
             if (partitionKeyProperties.Count > 1)
@@ -50,7 +51,7 @@ namespace Cosmonaut.Extensions
         internal static string GetPartitionKeyValueAsStringForEntity<TEntity>(this TEntity entity) where TEntity : class
         {
             var type = entity.GetType();
-            var partitionKeyProperty = type.GetTypeInfo().GetProperties()
+            var partitionKeyProperty = InternalTypeCache.Instance.GetPropertiesFromCache(type)
                 .Where(x => x.GetCustomAttribute<CosmosPartitionKeyAttribute>() != null)
                 .ToList();
 
@@ -62,7 +63,7 @@ namespace Cosmonaut.Extensions
 
         internal static bool HasPartitionKey(this Type type)
         {
-            var partitionKeyProperty = type.GetTypeInfo().GetProperties()
+            var partitionKeyProperty = InternalTypeCache.Instance.GetPropertiesFromCache(type)
                 .Where(x => x.GetCustomAttribute<CosmosPartitionKeyAttribute>() != null).ToList();
 
             if (partitionKeyProperty.Count > 1)
@@ -73,7 +74,7 @@ namespace Cosmonaut.Extensions
 
         internal static void ValidateEntityForCosmosDb<TEntity>(this TEntity entity) where TEntity : class
         {
-            var propertyInfos = entity.GetType().GetTypeInfo().GetProperties();
+            var propertyInfos = InternalTypeCache.Instance.GetPropertiesFromCache(entity.GetType());
 
             var containsJsonAttributeIdCount = GetCountOfJsonPropertiesWithNameIdForObject(entity, propertyInfos);
 
@@ -110,7 +111,7 @@ namespace Cosmonaut.Extensions
 
         private static int GetCountOfJsonPropertyWithNameIdInInterfaces<TEntity>(TEntity entity) where TEntity : class
         {
-            return entity.GetType().GetTypeInfo().GetInterfaces().Count(x => x.GetTypeInfo().GetProperties()
+            return entity.GetType().GetTypeInfo().GetInterfaces().Count(x => InternalTypeCache.Instance.GetPropertiesFromCache(x)
                 .Any(prop => prop.GetCustomAttributes<JsonPropertyAttribute>()
                     .Any(attr => !string.IsNullOrEmpty(attr?.PropertyName) && attr.PropertyName.Equals(CosmosConstants.CosmosId))));
         }
@@ -130,7 +131,7 @@ namespace Cosmonaut.Extensions
 
         internal static string GetDocumentId<TEntity>(this TEntity entity) where TEntity : class
         {
-            var propertyInfos = entity.GetType().GetTypeInfo().GetProperties();
+            var propertyInfos = InternalTypeCache.Instance.GetPropertiesFromCache(entity.GetType());
 
             var propertyWithJsonPropertyId =
                 propertyInfos.SingleOrDefault(x =>

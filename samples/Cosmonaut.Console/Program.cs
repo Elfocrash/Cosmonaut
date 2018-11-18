@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Cosmonaut.Extensions.Microsoft.DependencyInjection;
-using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.DependencyInjection;
 

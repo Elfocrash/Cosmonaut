@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Reflection;
 
 namespace Cosmonaut.Internal
@@ -18,6 +19,30 @@ namespace Cosmonaut.Internal
 
         internal FieldInfo DocumentFeedOrDbLinkFieldInfo { get; }
 
+        private ConcurrentDictionary<string, PropertyInfo[]> PropertyCache { get; } = new ConcurrentDictionary<string, PropertyInfo[]>();
+
+        internal PropertyInfo[] GetPropertiesFromCache(Type type)
+        {
+            if(type == null)
+                return new PropertyInfo[0];
+
+            var entityName = type.AssemblyQualifiedName;
+
+            if (PropertyCache.ContainsKey(entityName))
+            {
+                PropertyCache.TryGetValue(entityName, out var properties);
+                return properties;
+            }
+
+            var props = type.GetTypeInfo().GetProperties();
+
+            if (IsAnonymousType(type))
+                return props;
+
+            PropertyCache.TryAdd(entityName, props);
+            return props;
+        }
+
         private InternalTypeCache()
         {
             DocumentServiceResponseCtorInfo = Type.GetType($"Microsoft.Azure.Documents.DocumentServiceResponse{LibVersion}")
@@ -36,6 +61,15 @@ namespace Cosmonaut.Internal
                     return _instance ?? (_instance = new InternalTypeCache());
                 }
             }
+        }
+
+        private static bool IsAnonymousType(Type type)
+        {
+            if (type == null)
+                throw new ArgumentNullException(nameof(type));
+
+            // Quick hack to detect anonymous types
+            return type.Name.Contains("AnonymousType") && (type.Name.StartsWith("<>") || type.Name.StartsWith("VB$"));
         }
     }
 }
