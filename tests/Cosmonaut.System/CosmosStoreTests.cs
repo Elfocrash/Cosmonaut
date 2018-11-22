@@ -43,6 +43,77 @@ namespace Cosmonaut.System
             _serviceProvider = serviceCollection.BuildServiceProvider();
         }
 
+
+        [Theory]
+        [InlineData("", "pewpew", "pewpew")]
+        [InlineData(null, "pewpew", "pewpew")]
+        public async Task CosmosStoreCtor_WhenEmptyCollectionPrefixWithNameOverride_ThenReturnsCorrectCollectionName(string prefix, string collectionName, string expected)
+        {
+            // Arrange
+            var cosmosStoreSettings = new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
+                settings => { settings.CollectionPrefix = prefix; });
+
+            // Act
+            var cosmosStore = new CosmosStore<Cat>(cosmosStoreSettings, collectionName);
+
+            // Assert
+            var collection = await cosmosStore.CosmonautClient.GetCollectionAsync(_databaseId, cosmosStore.CollectionName);
+            collection.Should().NotBeNull();
+            cosmosStore.CollectionName.Should().Be(expected);
+        }
+
+        [Theory]
+        [InlineData("prefix", "pewpew", "prefixpewpew")]
+        public async Task CosmosStoreCtor_WhenHasCollectionPrefixWithNameOverride_ThenReturnsCorrectCollectionName(string prefix, string collectionName, string expected)
+        {
+            // Arrange
+            var cosmosStoreSettings = new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
+                settings => { settings.CollectionPrefix = prefix; });
+
+            // Act
+            var cosmosStore = new CosmosStore<Cat>(cosmosStoreSettings, collectionName);
+
+            // Assert
+            var collection = await cosmosStore.CosmonautClient.GetCollectionAsync(_databaseId, cosmosStore.CollectionName);
+            collection.Should().NotBeNull();
+            cosmosStore.CollectionName.Should().Be(expected);
+        }
+
+        [Fact]
+        public async Task CosmosStoreCtor_WhenHasCollectionPrefix_ThenReturnsCorrectCollectionName()
+        {
+            // Arrange
+            var prefix = "prefix";
+            var cosmosStoreSettings = new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
+                settings => { settings.CollectionPrefix = prefix; });
+
+            // Act
+            var cosmosStore = new CosmosStore<Cat>(cosmosStoreSettings);
+
+            // Assert
+            var collection = await cosmosStore.CosmonautClient.GetCollectionAsync(_databaseId, cosmosStore.CollectionName);
+            collection.Should().NotBeNull();
+            cosmosStore.CollectionName.Should().Be(prefix + "cats");
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData(null)]
+        public async Task CosmosStoreCtor_WhenEmptyCollectionPrefix_ThenReturnsCorrectCollectionName(string prefix)
+        {
+            // Arrange
+            var cosmosStoreSettings = new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
+                settings => { settings.CollectionPrefix = prefix; });
+
+            // Act
+            var cosmosStore = new CosmosStore<Cat>(cosmosStoreSettings);
+
+            // Assert
+            var collection = await cosmosStore.CosmonautClient.GetCollectionAsync(_databaseId, cosmosStore.CollectionName);
+            collection.Should().NotBeNull();
+            cosmosStore.CollectionName.Should().Be("cats");
+        }
+
         [Fact]
         public async Task WhenCosmosStoreInitialised_ThenDatabaseAndCollectionIsCreated()
         {
@@ -492,7 +563,6 @@ namespace Cosmonaut.System
 
         public void Dispose()
         {
-            _cosmonautClient.DeleteCollectionAsync(_databaseId, _collectionName).GetAwaiter().GetResult();
             _cosmonautClient.DeleteDatabaseAsync(_databaseId).GetAwaiter().GetResult();
         }
         

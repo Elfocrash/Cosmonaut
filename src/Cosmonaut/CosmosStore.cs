@@ -39,7 +39,6 @@ namespace Cosmonaut
 
         public CosmosStore(CosmosStoreSettings settings, string overriddenCollectionName)
         {
-            CollectionName = overriddenCollectionName;
             Settings = settings ?? throw new ArgumentNullException(nameof(settings));
             DatabaseName = settings.DatabaseName;
             var documentClient = DocumentClientFactory.CreateDocumentClient(settings);
@@ -48,7 +47,7 @@ namespace Cosmonaut
             _collectionCreator = new CosmosCollectionCreator(CosmonautClient);
             _databaseCreator = new CosmosDatabaseCreator(CosmonautClient);
             _cosmosScaler = new CosmosScaler<TEntity>(this);
-            InitialiseCosmosStore();
+            InitialiseCosmosStore(overriddenCollectionName);
         }
 
         public CosmosStore(ICosmonautClient cosmonautClient,
@@ -75,7 +74,6 @@ namespace Cosmonaut
             ICollectionCreator collectionCreator = null,
             bool scaleable = false)
         {
-            CollectionName = overriddenCollectionName;
             DatabaseName = databaseName;
             CosmonautClient = cosmonautClient ?? throw new ArgumentNullException(nameof(cosmonautClient));
             Settings = new CosmosStoreSettings(databaseName, cosmonautClient.DocumentClient.ServiceEndpoint.ToString(), string.Empty, cosmonautClient.DocumentClient.ConnectionPolicy, 
@@ -86,7 +84,7 @@ namespace Cosmonaut
             _collectionCreator = collectionCreator ?? new CosmosCollectionCreator(CosmonautClient);
             _databaseCreator = databaseCreator ?? new CosmosDatabaseCreator(CosmonautClient);
             _cosmosScaler = new CosmosScaler<TEntity>(this);
-            InitialiseCosmosStore();
+            InitialiseCosmosStore(overriddenCollectionName);
         }
 
         public IQueryable<TEntity> Query(FeedOptions feedOptions = null)
@@ -212,12 +210,14 @@ namespace Cosmonaut
             return await FindAsync(id, requestOptions, cancellationToken);
         }
         
-        private void InitialiseCosmosStore()
+        private void InitialiseCosmosStore(string overridenCollectionName)
         {
             IsShared = typeof(TEntity).UsesSharedCollection();
+            var hasOverridenName = !string.IsNullOrEmpty(overridenCollectionName);
 
-            if(string.IsNullOrEmpty(CollectionName))
-                CollectionName = IsShared ? typeof(TEntity).GetSharedCollectionName() : typeof(TEntity).GetCollectionName();
+            CollectionName = IsShared 
+                ? $"{Settings.CollectionPrefix ?? string.Empty}{(hasOverridenName ? overridenCollectionName : typeof(TEntity).GetSharedCollectionName())}"
+                : $"{Settings.CollectionPrefix ?? string.Empty}{(hasOverridenName ? overridenCollectionName : typeof(TEntity).GetCollectionName())}";
 
             Settings.DefaultCollectionThroughput = CollectionThrouput = CosmonautClient.GetOfferV2ForCollectionAsync(DatabaseName, CollectionName).ConfigureAwait(false).GetAwaiter()
                 .GetResult()?.Content?.OfferThroughput ?? typeof(TEntity).GetCollectionThroughputForEntity(Settings.DefaultCollectionThroughput);

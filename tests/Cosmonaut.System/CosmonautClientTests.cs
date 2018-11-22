@@ -543,7 +543,6 @@ namespace Cosmonaut.System
 
         public void Dispose()
         {
-            _cosmonautClient.DeleteCollectionAsync(_databaseId, _collectionName).GetAwaiter().GetResult();
             _cosmonautClient.DeleteDatabaseAsync(_databaseId).GetAwaiter().GetResult();
         }
 
