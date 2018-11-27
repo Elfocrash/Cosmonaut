@@ -26,14 +26,14 @@ namespace Cosmonaut.Extensions
             var porentialJsonPropertyAttribute = partitionKeyProperty.GetCustomAttribute<JsonPropertyAttribute>();
             if (IsCosmosIdThePartitionKey(porentialJsonPropertyAttribute, partitionKeyProperty))
             {
-                return DocumentHelpers.GetPartitionKeyDefinition(CosmosConstants.CosmosId);
+                return CosmonautHelpers.GetPartitionKeyDefinition(CosmosConstants.CosmosId);
             }
 
             if (porentialJsonPropertyAttribute != null &&
                 !string.IsNullOrEmpty(porentialJsonPropertyAttribute.PropertyName))
-                return DocumentHelpers.GetPartitionKeyDefinition(porentialJsonPropertyAttribute.PropertyName);
+                return CosmonautHelpers.GetPartitionKeyDefinition(porentialJsonPropertyAttribute.PropertyName);
 
-            return DocumentHelpers.GetPartitionKeyDefinition(partitionKeyProperty.Name);
+            return CosmonautHelpers.GetPartitionKeyDefinition(partitionKeyProperty.Name);
         }
 
         private static bool IsCosmosIdThePartitionKey(JsonPropertyAttribute porentialJsonPropertyAttribute, PropertyInfo partitionKeyProperty)

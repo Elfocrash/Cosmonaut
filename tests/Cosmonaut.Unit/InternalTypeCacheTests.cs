@@ -1,9 +1,7 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
 using Cosmonaut.Internal;
 using FluentAssertions;
-using Newtonsoft.Json;
 using Xunit;
 
 namespace Cosmonaut.Unit

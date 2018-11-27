@@ -32,7 +32,7 @@ namespace Cosmonaut.Unit
                 Id = id,
                 Name = "Nick"
             };
-            var document = dummy.ConvertObjectToDocument();
+            var document = dummy.ToCosmonautDocument();
             var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
             _mockDocumentClient.Setup(x => x.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri("databaseName", "dummies"),
                     document.ItIsSameDocument(), It.IsAny<RequestOptions>(), false, CancellationToken.None))
@@ -60,7 +60,7 @@ namespace Cosmonaut.Unit
             {
                 Name = "Nick"
             };
-            var document = dummy.ConvertObjectToDocument();
+            var document = dummy.ToCosmonautDocument();
             var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
             _mockDocumentClient.Setup(x => x.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri("databaseName", "dummies"),
                     document.ItIsSameDocument(), It.IsAny<RequestOptions>(), false, CancellationToken.None))

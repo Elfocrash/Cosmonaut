@@ -167,7 +167,7 @@ namespace Cosmonaut
         public async Task<CosmosResponse<TEntity>> UpdateAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
             entity.ValidateEntityForCosmosDb();
-            var document = entity.ConvertObjectToDocument();
+            var document = entity.ToCosmonautDocument();
             return await CosmonautClient.UpdateDocumentAsync(DatabaseName, CollectionName, document,
                 GetRequestOptions(requestOptions, entity), cancellationToken).ExecuteCosmosCommand(entity);
         }
@@ -179,7 +179,7 @@ namespace Cosmonaut
 
         public async Task<CosmosResponse<TEntity>> UpsertAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
-            var document = entity.ConvertObjectToDocument();
+            var document = entity.ToCosmonautDocument();
             return await CosmonautClient.UpsertDocumentAsync(DatabaseName, CollectionName, document,
                 GetRequestOptions(requestOptions, entity), cancellationToken).ExecuteCosmosCommand(entity);
         }

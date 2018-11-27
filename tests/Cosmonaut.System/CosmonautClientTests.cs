@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Cosmonaut.Response;
 using Cosmonaut.System.Models;
+using Cosmonaut.Testing;
 using FluentAssertions;
 using FluentAssertions.Equivalency;
 using Microsoft.Azure.Documents;
@@ -212,7 +213,7 @@ namespace Cosmonaut.System
             var cats = new List<Cat>();
             for (var i = 0; i < 5; i++)
             {
-                var cat = new Cat { Name = $"Cat {i}" }.ConvertObjectToDocument();
+                var cat = new Cat { Name = $"Cat {i}" }.ToCosmonautDocument();
                 var created = await _cosmonautClient.CreateDocumentAsync(_databaseId, _collectionName, cat);
                 cats.Add(JsonConvert.DeserializeObject<Cat>(created.Resource.ToString()));
             }
@@ -361,7 +362,7 @@ namespace Cosmonaut.System
 
             // Act
             cat.Name = "MEGAKITTY";
-            var document = cat.ConvertObjectToDocument();
+            var document = cat.ToCosmonautDocument();
             var updated = await _cosmonautClient.UpdateDocumentAsync(_databaseId, _collectionName, document);
 
             // Assert
@@ -398,7 +399,7 @@ namespace Cosmonaut.System
 
             // Act
             cat.Name = "MEGAKITTY";
-            var document = cat.ConvertObjectToDocument();
+            var document = cat.ToCosmonautDocument();
             var updated = await _cosmonautClient.UpsertDocumentAsync(_databaseId, _collectionName, document);
 
             // Assert
@@ -431,7 +432,7 @@ namespace Cosmonaut.System
 
             // Act
             cat.Name = "MEGAKITTY";
-            var document = cat.ConvertObjectToDocument();
+            var document = cat.ToCosmonautDocument();
             var updated = await _cosmonautClient.UpdateDocumentAsync(_databaseId, _collectionName, document);
 
             // Assert
@@ -465,7 +466,7 @@ namespace Cosmonaut.System
 
             // Act
             cat.Name = "MEGAKITTY";
-            var document = cat.ConvertObjectToDocument();
+            var document = cat.ToCosmonautDocument();
             var updated = await _cosmonautClient.UpsertDocumentAsync(_databaseId, _collectionName, document);
 
             // Assert
@@ -478,7 +479,7 @@ namespace Cosmonaut.System
         {
             // Arrange
             var catId = Guid.NewGuid().ToString();
-            var cat = new Cat { CatId = catId, Name = "Kitty" }.ConvertObjectToDocument();
+            var cat = new Cat { CatId = catId, Name = "Kitty" }.ToCosmonautDocument();
 
             // Act
             var added = await _cosmonautClient.CreateDocumentAsync(_databaseId, _collectionName, cat);
@@ -532,7 +533,7 @@ namespace Cosmonaut.System
         {
             // Arrange
             var catId = Guid.NewGuid().ToString();
-            var cat = new Cat { CatId = catId, Name = "Kitty" }.ConvertObjectToDocument();
+            var cat = new Cat { CatId = catId, Name = "Kitty" }.ToCosmonautDocument();
 
             // Act
             var found = await _cosmonautClient.GetDocumentAsync(_databaseId, _collectionName, cat.Id);
