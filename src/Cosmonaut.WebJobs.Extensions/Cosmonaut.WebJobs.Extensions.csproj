@@ -5,10 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Cosmonaut" Version="2.6.2" />
-    <PackageReference Include="Cosmonaut.Extensions.Microsoft.DependencyInjection" Version="2.3.0" />
     <PackageReference Include="Microsoft.Azure.DocumentDB.ChangeFeedProcessor" Version="2.2.3" />
     <PackageReference Include="Microsoft.Azure.WebJobs" Version="3.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cosmonaut\Cosmonaut.csproj" />
   </ItemGroup>
 
 </Project>

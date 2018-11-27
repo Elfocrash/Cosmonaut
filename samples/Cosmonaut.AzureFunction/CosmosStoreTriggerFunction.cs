@@ -11,7 +11,7 @@ namespace Cosmonaut.AzureFunction
         [FunctionName("CosmosStoreTriggerFunction")]
         public static void Run([CosmosStoreTrigger(
             "localtest",
-            "entities",
+            typeof(Entity),
             ServiceEndpoint = "CosmosEndpoint",
             AuthKey = "CosmosAuthKey",
             LeaseConnectionStringSetting = "LeaseSettings",

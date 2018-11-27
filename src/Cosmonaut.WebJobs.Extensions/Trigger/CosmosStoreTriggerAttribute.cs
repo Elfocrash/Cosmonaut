@@ -1,4 +1,5 @@
 ﻿using System;
+using Cosmonaut.Extensions;
 using Microsoft.Azure.WebJobs.Description;
 
 namespace Cosmonaut.WebJobs.Extensions.Trigger
@@ -17,12 +18,12 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
         {
             if (string.IsNullOrWhiteSpace(collectionName))
             {
-                throw new ArgumentException("Missing information for the collection to monitor", "collectionName");
+                throw new ArgumentException("Missing information for the collection to monitor", nameof(collectionName));
             }
 
             if (string.IsNullOrWhiteSpace(databaseName))
             {
-                throw new ArgumentException("Missing information for the collection to monitor", "databaseName");
+                throw new ArgumentException("Missing information for the collection to monitor", nameof(databaseName));
             }
 
             CollectionName = collectionName;
@@ -30,7 +31,24 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
             LeaseCollectionName = CosmosStoreTriggerConstants.DefaultLeaseCollectionName;
             LeaseDatabaseName = DatabaseName;
         }
-        
+
+        public CosmosStoreTriggerAttribute(string databaseName, Type cosmosEntityType, string overridenCollectionName = null)
+        {
+            if (string.IsNullOrWhiteSpace(databaseName))
+            {
+                throw new ArgumentException("Missing information for the collection to monitor", nameof(databaseName));
+            }
+
+            var isSharedCollection = cosmosEntityType.UsesSharedCollection();
+            var hasOverridenName = !string.IsNullOrEmpty(overridenCollectionName);
+
+            CollectionName = hasOverridenName ? overridenCollectionName :
+                isSharedCollection ? cosmosEntityType.GetSharedCollectionName() : cosmosEntityType.GetCollectionName();
+            DatabaseName = databaseName;
+            LeaseCollectionName = CosmosStoreTriggerConstants.DefaultLeaseCollectionName;
+            LeaseDatabaseName = DatabaseName;
+        }
+
         /// <summary>
         /// Connection string for the service containing the collection to monitor
         /// </summary>
