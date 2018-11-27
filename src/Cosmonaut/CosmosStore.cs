@@ -215,9 +215,9 @@ namespace Cosmonaut
             IsShared = typeof(TEntity).UsesSharedCollection();
             var hasOverridenName = !string.IsNullOrEmpty(overridenCollectionName);
 
-            CollectionName = hasOverridenName ? overridenCollectionName : IsShared
-                ? $"{Settings.CollectionPrefix ?? string.Empty}{typeof(TEntity).GetSharedCollectionName()}"
-                : $"{Settings.CollectionPrefix ?? string.Empty}{typeof(TEntity).GetCollectionName()}";
+            CollectionName = IsShared
+           ? $"{Settings.CollectionPrefix ?? string.Empty}{(hasOverridenName ? overridenCollectionName : typeof(TEntity).GetSharedCollectionName())}"
+                : $"{Settings.CollectionPrefix ?? string.Empty}{(hasOverridenName ? overridenCollectionName : typeof(TEntity).GetCollectionName())}";
 
             Settings.DefaultCollectionThroughput = CollectionThrouput = CosmonautClient.GetOfferV2ForCollectionAsync(DatabaseName, CollectionName).ConfigureAwait(false).GetAwaiter()
                 .GetResult()?.Content?.OfferThroughput ?? typeof(TEntity).GetCollectionThroughputForEntity(Settings.DefaultCollectionThroughput);
