@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using Cosmonaut.Extensions;
 using Cosmonaut.WebJobs.Extensions.Config;
 using Microsoft.Azure.Documents.ChangeFeedProcessor;
 using Microsoft.Azure.Documents.Client;
@@ -72,12 +73,14 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
                     throw new InvalidOperationException("The connection string for the leases collection is in an invalid format, please use AccountEndpoint=XXXXXX;AccountKey=XXXXXX;.");
                 }
 
+                var monitoredCollectionName = GetMonitoredCollectionName(attribute);
+
                 documentCollectionLocation = new DocumentCollectionInfo
                 {
                     Uri = new Uri(_configuration.GetConnectionStringOrSetting(attribute.ServiceEndpoint)),
                     MasterKey = _configuration.GetConnectionStringOrSetting(attribute.AuthKey),
                     DatabaseName = ResolveAttributeValue(attribute.DatabaseName),
-                    CollectionName = ResolveAttributeValue(attribute.CollectionName)
+                    CollectionName = monitoredCollectionName
                 };
 
                 documentCollectionLocation.ConnectionPolicy.UserAgentSuffix = CosmosStoreTriggerUserAgentSuffix;
@@ -134,10 +137,14 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
                     throw new InvalidOperationException("The monitored collection cannot be the same as the collection storing the leases.");
                 }
 
+                var cosmosStore = new CosmosStore<T>(new CosmosStoreSettings(documentCollectionLocation.DatabaseName, 
+                        documentCollectionLocation.Uri, documentCollectionLocation.MasterKey), 
+                    attribute.CollectionName);
+
                 if (attribute.CreateLeaseCollectionIfNotExists)
                 {
-                    var documentClient = new DocumentClient(leasesConnection.ServiceEndpoint, leasesConnection.AuthKey, leaseCollectionLocation.ConnectionPolicy);
-                    await CosmosDBUtility.CreateDatabaseAndCollectionIfNotExistAsync(documentClient, leaseCollectionLocation.DatabaseName, leaseCollectionLocation.CollectionName, null, attribute.LeasesCollectionThroughput);
+                    var leaseClient = new DocumentClient(leasesConnection.ServiceEndpoint, leasesConnection.AuthKey, leaseCollectionLocation.ConnectionPolicy);
+                    await CosmosDBUtility.CreateDatabaseAndCollectionIfNotExistAsync(leaseClient, leaseCollectionLocation.DatabaseName, leaseCollectionLocation.CollectionName, null, attribute.LeasesCollectionThroughput);
                 }
             }
             catch (Exception ex)
@@ -147,6 +154,17 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
             }
 
             return new CosmosStoreTriggerBinding<T>(parameter, documentCollectionLocation, leaseCollectionLocation, leaseHostOptions, changeFeedOptions, _logger);
+        }
+
+        private string GetMonitoredCollectionName(CosmosStoreTriggerAttribute attribute)
+        {
+            if (!string.IsNullOrEmpty(ResolveAttributeValue(attribute.CollectionName)))
+                return ResolveAttributeValue(attribute.CollectionName);
+
+            var entityType = typeof(T);
+            var isSharedCollection = entityType.UsesSharedCollection();
+
+            return isSharedCollection ? entityType.GetSharedCollectionName() : entityType.GetCollectionName();
         }
 
         internal static TimeSpan ResolveTimeSpanFromMilliseconds(string nameOfProperty, TimeSpan baseTimeSpan, int? attributeValue)

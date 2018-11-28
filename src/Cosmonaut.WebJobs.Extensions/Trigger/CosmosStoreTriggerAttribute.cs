@@ -1,5 +1,4 @@
 ﻿using System;
-using Cosmonaut.Extensions;
 using Microsoft.Azure.WebJobs.Description;
 
 namespace Cosmonaut.WebJobs.Extensions.Trigger
@@ -9,41 +8,14 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
     [Binding]
     public sealed class CosmosStoreTriggerAttribute : Attribute
     {
-        /// <summary>
-        /// Triggers an event when changes occur on a monitored collection
-        /// </summary>
-        /// <param name="databaseName">Name of the database of the collection to monitor for changes</param>
-        /// <param name="collectionName">Name of the collection to monitor for changes</param>
-        public CosmosStoreTriggerAttribute(string databaseName, string collectionName)
-        {
-            if (string.IsNullOrWhiteSpace(collectionName))
-            {
-                throw new ArgumentException("Missing information for the collection to monitor", nameof(collectionName));
-            }
-
-            if (string.IsNullOrWhiteSpace(databaseName))
-            {
-                throw new ArgumentException("Missing information for the collection to monitor", nameof(databaseName));
-            }
-
-            CollectionName = collectionName;
-            DatabaseName = databaseName;
-            LeaseCollectionName = CosmosStoreTriggerConstants.DefaultLeaseCollectionName;
-            LeaseDatabaseName = DatabaseName;
-        }
-
-        public CosmosStoreTriggerAttribute(string databaseName, Type cosmosEntityType, string overridenCollectionName = null)
+        public CosmosStoreTriggerAttribute(string databaseName, string overridenCollectionName = null)
         {
             if (string.IsNullOrWhiteSpace(databaseName))
             {
                 throw new ArgumentException("Missing information for the collection to monitor", nameof(databaseName));
             }
 
-            var isSharedCollection = cosmosEntityType.UsesSharedCollection();
-            var hasOverridenName = !string.IsNullOrEmpty(overridenCollectionName);
-
-            CollectionName = hasOverridenName ? overridenCollectionName :
-                isSharedCollection ? cosmosEntityType.GetSharedCollectionName() : cosmosEntityType.GetCollectionName();
+            CollectionName = overridenCollectionName;
             DatabaseName = databaseName;
             LeaseCollectionName = CosmosStoreTriggerConstants.DefaultLeaseCollectionName;
             LeaseDatabaseName = DatabaseName;
@@ -61,12 +33,12 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
         /// <summary>
         /// Name of the collection to monitor for changes
         /// </summary>
-        public string CollectionName { get; private set; }
+        public string CollectionName { get; }
 
         /// <summary>
         /// Name of the database containing the collection to monitor for changes
         /// </summary>
-        public string DatabaseName { get; private set; }
+        public string DatabaseName { get; }
 
         /// <summary>
         /// Connection string for the service containing the lease collection

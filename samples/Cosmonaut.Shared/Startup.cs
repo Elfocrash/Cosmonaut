@@ -11,7 +11,9 @@ namespace Cosmonaut.Shared
     {
         public void Configure(IWebJobsBuilder builder)
         {
-            builder.AddCosmosStoreBinding<Entity>();
+            //builder.AddCosmosStoreBinding<Entity>();
+            //builder.AddCosmosStoreBinding<Alpaca>();
+            builder.AddCosmosStoreBinding<Llama>();
         }
     }
 }

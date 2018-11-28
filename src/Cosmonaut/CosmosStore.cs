@@ -213,11 +213,7 @@ namespace Cosmonaut
         private void InitialiseCosmosStore(string overridenCollectionName)
         {
             IsShared = typeof(TEntity).UsesSharedCollection();
-            var hasOverridenName = !string.IsNullOrEmpty(overridenCollectionName);
-
-            CollectionName = IsShared
-           ? $"{Settings.CollectionPrefix ?? string.Empty}{(hasOverridenName ? overridenCollectionName : typeof(TEntity).GetSharedCollectionName())}"
-                : $"{Settings.CollectionPrefix ?? string.Empty}{(hasOverridenName ? overridenCollectionName : typeof(TEntity).GetCollectionName())}";
+            CollectionName = GetCosmosStoreCollectionName(overridenCollectionName);
 
             Settings.DefaultCollectionThroughput = CollectionThrouput = CosmonautClient.GetOfferV2ForCollectionAsync(DatabaseName, CollectionName).ConfigureAwait(false).GetAwaiter()
                 .GetResult()?.Content?.OfferThroughput ?? typeof(TEntity).GetCollectionThroughputForEntity(Settings.DefaultCollectionThroughput);
@@ -225,6 +221,14 @@ namespace Cosmonaut
             _databaseCreator.EnsureCreatedAsync(DatabaseName).ConfigureAwait(false).GetAwaiter().GetResult();
             _collectionCreator.EnsureCreatedAsync<TEntity>(DatabaseName, CollectionName, CollectionThrouput, Settings.IndexingPolicy)
                 .ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private string GetCosmosStoreCollectionName(string overridenCollectionName)
+        {
+            var hasOverridenName = !string.IsNullOrEmpty(overridenCollectionName);
+            return IsShared
+                ? $"{Settings.CollectionPrefix ?? string.Empty}{(hasOverridenName ? overridenCollectionName : typeof(TEntity).GetSharedCollectionName())}"
+                : $"{Settings.CollectionPrefix ?? string.Empty}{(hasOverridenName ? overridenCollectionName : typeof(TEntity).GetCollectionName())}";
         }
 
         private async Task<CosmosMultipleResponse<TEntity>> ExecuteMultiOperationAsync(IEnumerable<TEntity> entities,

@@ -9,19 +9,20 @@ namespace Cosmonaut.AzureFunction
     public static class CosmosStoreTriggerFunction
     {
         [FunctionName("CosmosStoreTriggerFunction")]
-        public static void Run([CosmosStoreTrigger(
-            "localtest",
-            typeof(Entity),
-            ServiceEndpoint = "CosmosEndpoint",
-            AuthKey = "CosmosAuthKey",
-            LeaseConnectionStringSetting = "LeaseSettings",
-            LeaseCollectionName = "leases",
-            CreateLeaseCollectionIfNotExists = true)]IReadOnlyList<Entity> input, ILogger log)
+        public static void Run(
+            [CosmosStoreTrigger(
+                "localtest",
+                ServiceEndpoint = "CosmosEndpoint",
+                AuthKey = "CosmosAuthKey",
+                LeaseConnectionStringSetting = "LeaseSettings",
+                LeaseCollectionName = "leases",
+                CreateLeaseCollectionIfNotExists = true)]IReadOnlyList<Llama> llamaInput,
+            ILogger log)
         {
-            if (input != null && input.Count > 0)
+            if (llamaInput != null && llamaInput.Count > 0)
             {
-                log.LogInformation("Documents modified " + input.Count);
-                log.LogInformation("First document Id " + input[0].Id);
+                log.LogInformation("Llamas modified " + llamaInput.Count);
+                log.LogInformation("First document Id " + llamaInput[0].Id);
             }
         }
     }
