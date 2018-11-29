@@ -8,7 +8,19 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
     [Binding]
     public sealed class CosmosStoreTriggerAttribute : Attribute
     {
-        public CosmosStoreTriggerAttribute(string databaseName, string overridenCollectionName = null)
+        public CosmosStoreTriggerAttribute(string databaseName)
+        {
+            if (string.IsNullOrWhiteSpace(databaseName))
+            {
+                throw new ArgumentException("Missing information for the collection to monitor", nameof(databaseName));
+            }
+
+            DatabaseName = databaseName;
+            LeaseCollectionName = CosmosStoreTriggerConstants.DefaultLeaseCollectionName;
+            LeaseDatabaseName = DatabaseName;
+        }
+
+        public CosmosStoreTriggerAttribute(string databaseName, string overridenCollectionName)
         {
             if (string.IsNullOrWhiteSpace(databaseName))
             {

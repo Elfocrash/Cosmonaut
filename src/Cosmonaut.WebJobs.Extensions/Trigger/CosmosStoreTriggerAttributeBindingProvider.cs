@@ -236,10 +236,10 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
         private ChangeFeedHostOptions ResolveLeaseOptions(CosmosStoreTriggerAttribute attribute)
         {
             var leasesOptions = _bindingOptions.LeaseOptions;
-
+            var entityType = typeof(T);
             var triggerChangeFeedHostOptions = new ChangeFeedHostOptions
             {
-                LeasePrefix = ResolveAttributeValue(attribute.LeaseCollectionPrefix) ?? leasesOptions.LeasePrefix,
+                LeasePrefix = ResolveAttributeValue(attribute.LeaseCollectionPrefix) ?? (entityType.UsesSharedCollection() ? $"{entityType.GetSharedCollectionName()}_{entityType.GetSharedCollectionEntityName()}_" : $"{entityType.GetCollectionName()}_"),
                 FeedPollDelay = ResolveTimeSpanFromMilliseconds(nameof(CosmosStoreTriggerAttribute.FeedPollDelay), leasesOptions.FeedPollDelay, attribute.FeedPollDelay),
                 LeaseAcquireInterval = ResolveTimeSpanFromMilliseconds(nameof(CosmosStoreTriggerAttribute.LeaseAcquireInterval), leasesOptions.LeaseAcquireInterval, attribute.LeaseAcquireInterval),
                 LeaseExpirationInterval = ResolveTimeSpanFromMilliseconds(nameof(CosmosStoreTriggerAttribute.LeaseExpirationInterval), leasesOptions.LeaseExpirationInterval, attribute.LeaseExpirationInterval),
