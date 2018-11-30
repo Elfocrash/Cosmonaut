@@ -7,14 +7,8 @@ Welcome to Cosmonaut's documentation!
 =====================================
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
-   :caption: Contents:
+   :caption: User Documentation
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   What-is-Cosmonaut
