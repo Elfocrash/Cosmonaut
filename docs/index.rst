@@ -6,9 +6,11 @@
 Welcome to Cosmonaut's documentation!
 =====================================
 
+.. _user-docs:
+
 .. toctree::
    :hidden:
    :maxdepth: 2
    :caption: User Documentation
 
-   What-is-Cosmonaut
+   Getting-started
