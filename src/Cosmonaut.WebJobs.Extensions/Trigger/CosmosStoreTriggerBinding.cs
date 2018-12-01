@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
+using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.ChangeFeedProcessor;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.WebJobs.Host.Bindings;
@@ -17,16 +18,19 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
     {
         private readonly ParameterInfo _parameter;
         private readonly ILogger _logger;
+        private readonly IDocumentClient _monitoredDocumentClient;
+        private readonly IDocumentClient _leaseDocumentClient;
         private readonly IReadOnlyDictionary<string, object> _emptyBindingData = new Dictionary<string, object>();
 
-        public CosmosStoreTriggerBinding(ParameterInfo parameter, DocumentCollectionInfo documentCollectionLocation, DocumentCollectionInfo leaseCollectionLocation, ChangeFeedHostOptions leaseHostOptions, ChangeFeedOptions changeFeedOptions, ILogger logger)
+        public CosmosStoreTriggerBinding(ParameterInfo parameter, DocumentCollectionInfo documentCollectionLocation, DocumentCollectionInfo leaseCollectionLocation, IDocumentClient monitoredDocumentClient, IDocumentClient leaseDocumentClient, ChangeFeedProcessorOptions processorOptions, ILogger logger)
         {
             DocumentCollectionLocation = documentCollectionLocation;
             LeaseCollectionLocation = leaseCollectionLocation;
-            ChangeFeedHostOptions = leaseHostOptions;
+            _monitoredDocumentClient = monitoredDocumentClient;
+            _leaseDocumentClient = leaseDocumentClient;
             _parameter = parameter;
+            ChangeFeedProcessorOptions = processorOptions;
             _logger = logger;
-            ChangeFeedOptions = changeFeedOptions;
         }
 
         public Type TriggerValueType => typeof(IReadOnlyList<T>);
@@ -35,9 +39,7 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
 
         internal DocumentCollectionInfo LeaseCollectionLocation { get; }
 
-        internal ChangeFeedHostOptions ChangeFeedHostOptions { get; }
-
-        internal ChangeFeedOptions ChangeFeedOptions { get; }
+        internal ChangeFeedProcessorOptions ChangeFeedProcessorOptions { get; }
 
         public IReadOnlyDictionary<string, Type> BindingDataContract { get; } = new Dictionary<string, Type>();
 
@@ -54,7 +56,7 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
                 throw new ArgumentNullException(nameof(context), "Missing listener context");
             }
 
-            return Task.FromResult<IListener>(new CosmosStoreTriggerListener<T>(context.Executor, DocumentCollectionLocation, LeaseCollectionLocation, ChangeFeedHostOptions, ChangeFeedOptions, _logger));
+            return Task.FromResult<IListener>(new CosmosStoreTriggerListener<T>(context.Executor, DocumentCollectionLocation, LeaseCollectionLocation, ChangeFeedProcessorOptions, _monitoredDocumentClient, _leaseDocumentClient, _logger));
         }
 
         public ParameterDescriptor ToParameterDescriptor()

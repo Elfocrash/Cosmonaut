@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.ChangeFeedProcessor;
+using Microsoft.Azure.Documents.ChangeFeedProcessor.PartitionManagement;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.WebJobs.Host.Executors;
 using Microsoft.Azure.WebJobs.Host.Listeners;
@@ -11,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Cosmonaut.WebJobs.Extensions.Trigger
 {
-    internal class CosmosStoreTriggerListener<T> : IListener, IChangeFeedObserverFactory
+    internal class CosmosStoreTriggerListener<T> : IListener, Microsoft.Azure.Documents.ChangeFeedProcessor.FeedProcessing.IChangeFeedObserverFactory
     {
         private const int ListenerNotRegistered = 0;
         private const int ListenerRegistering = 1;
@@ -22,21 +23,23 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
         private readonly DocumentCollectionInfo _monitorCollection;
         private readonly DocumentCollectionInfo _leaseCollection;
         private readonly string _hostName;
-        private readonly ChangeFeedOptions _changeFeedOptions;
-        private readonly ChangeFeedHostOptions _leaseHostOptions;
-        private ChangeFeedEventHost _host;
+        private readonly ChangeFeedProcessorOptions _processorOptions;
+        private IChangeFeedProcessor _host;
+        private ChangeFeedProcessorBuilder _hostBuilder;
+        private readonly IDocumentClient _monitoredDocumentClient;
+        private readonly IDocumentClient _leaseDocumentClient;
         private int _listenerStatus;
 
-        public CosmosStoreTriggerListener(ITriggeredFunctionExecutor executor, DocumentCollectionInfo documentCollectionLocation, DocumentCollectionInfo leaseCollectionLocation, ChangeFeedHostOptions leaseHostOptions, ChangeFeedOptions changeFeedOptions, ILogger logger)
+        public CosmosStoreTriggerListener(ITriggeredFunctionExecutor executor, DocumentCollectionInfo documentCollectionLocation, DocumentCollectionInfo leaseCollectionLocation, ChangeFeedProcessorOptions processorOptions, IDocumentClient monitoredDocumentClient, IDocumentClient leaseDocumentClient, ILogger logger)
         {
             _logger = logger;
             _executor = executor;
             _hostName = Guid.NewGuid().ToString();
-
+            _monitoredDocumentClient = monitoredDocumentClient;
+            _leaseDocumentClient = leaseDocumentClient;
             _monitorCollection = documentCollectionLocation;
             _leaseCollection = leaseCollectionLocation;
-            _leaseHostOptions = leaseHostOptions;
-            _changeFeedOptions = changeFeedOptions;
+            _processorOptions = processorOptions;
         }
 
         public void Cancel()
@@ -44,7 +47,7 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
             StopAsync(CancellationToken.None).GetAwaiter().GetResult();
         }
 
-        public IChangeFeedObserver CreateObserver()
+        public Microsoft.Azure.Documents.ChangeFeedProcessor.FeedProcessing.IChangeFeedObserver CreateObserver()
         {
             return new CosmosStoreTriggerObserver<T>(_executor);
         }
@@ -68,11 +71,11 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
                 throw new InvalidOperationException("The listener has already started.");
             }
 
-            InitializeHost();
+            InitializeBuilder();
 
             try
             {
-                await RegisterObserverFactoryAsync();
+                await this.StartProcessorAsync();
                 Interlocked.CompareExchange(ref _listenerStatus, ListenerRegistered, ListenerRegistering);
             }
             catch (Exception ex)
@@ -93,18 +96,13 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
             }
         }
 
-        internal virtual Task RegisterObserverFactoryAsync()
-        {
-            return _host.RegisterObserverFactoryAsync(this);
-        }
-
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             try
             {
                 if (_host != null)
                 {
-                    await _host.UnregisterObserversAsync();
+                    await _host.StopAsync();
                     _listenerStatus = ListenerNotRegistered;
                 }
             }
@@ -114,15 +112,28 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
             }
         }
 
-        private void InitializeHost()
+        internal virtual async Task StartProcessorAsync()
         {
             if (_host == null)
             {
-                _host = new ChangeFeedEventHost(_hostName,
-                    _monitorCollection,
-                    _leaseCollection,
-                    _changeFeedOptions,
-                    _leaseHostOptions);
+                _host = await _hostBuilder.BuildAsync();
+            }
+
+            await _host.StartAsync();
+        }
+
+        private void InitializeBuilder()
+        {
+            if (_hostBuilder == null)
+            {
+                _hostBuilder = new ChangeFeedProcessorBuilder()
+                .WithHostName(_hostName)
+                .WithFeedDocumentClient((DocumentClient) _monitoredDocumentClient)
+                .WithLeaseDocumentClient((DocumentClient) _leaseDocumentClient)
+                .WithFeedCollection(_monitorCollection)
+                .WithLeaseCollection(_leaseCollection)
+                .WithProcessorOptions(_processorOptions)
+                .WithObserverFactory(this);
             }
         }
     }

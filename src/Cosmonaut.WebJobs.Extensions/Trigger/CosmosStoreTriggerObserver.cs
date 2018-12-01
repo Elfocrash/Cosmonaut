@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.ChangeFeedProcessor;
+using Microsoft.Azure.Documents.ChangeFeedProcessor.FeedProcessing;
 using Microsoft.Azure.WebJobs.Host.Executors;
 using Newtonsoft.Json;
 
@@ -20,7 +20,7 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
             _executor = executor;
         }
 
-        public Task CloseAsync(ChangeFeedObserverContext context, ChangeFeedObserverCloseReason reason)
+        public Task CloseAsync(IChangeFeedObserverContext context, ChangeFeedObserverCloseReason reason)
         {
             if (context == null)
             {
@@ -29,7 +29,7 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
             return Task.CompletedTask;
         }
 
-        public Task OpenAsync(ChangeFeedObserverContext context)
+        public Task OpenAsync(IChangeFeedObserverContext context)
         {
             if (context == null)
             {
@@ -38,7 +38,7 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
             return Task.CompletedTask;
         }
 
-        public Task ProcessChangesAsync(ChangeFeedObserverContext context, IReadOnlyList<Document> docs)
+        public Task ProcessChangesAsync(IChangeFeedObserverContext context, IReadOnlyList<Document> docs, CancellationToken cancellationToken)
         {
             var entityType = typeof(T);
             var isSharedCollection = entityType.UsesSharedCollection();
@@ -46,7 +46,7 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
 
             if (string.IsNullOrEmpty(sharedCollectionEntityName))
             {
-                return _executor.TryExecuteAsync(new TriggeredFunctionData() { TriggerValue = ConvertDocsToObjects(docs) }, CancellationToken.None);
+                return _executor.TryExecuteAsync(new TriggeredFunctionData() { TriggerValue = ConvertDocsToObjects(docs) }, cancellationToken);
             }
 
             var docsToProcess = docs.Where(doc =>
@@ -59,7 +59,7 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
             if (!docsToProcess.Any())
                 return Task.CompletedTask;
 
-            return _executor.TryExecuteAsync(new TriggeredFunctionData() { TriggerValue = ConvertDocsToObjects(docsToProcess) }, CancellationToken.None);
+            return _executor.TryExecuteAsync(new TriggeredFunctionData() { TriggerValue = ConvertDocsToObjects(docsToProcess) }, cancellationToken);
         }
 
         private static IReadOnlyList<T> ConvertDocsToObjects(IReadOnlyList<Document> docs)

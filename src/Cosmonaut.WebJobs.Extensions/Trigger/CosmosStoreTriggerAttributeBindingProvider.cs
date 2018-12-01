@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Cosmonaut.WebJobs.Extensions.Config;
+using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.ChangeFeedProcessor;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.WebJobs;
@@ -17,6 +18,8 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
     internal class CosmosStoreTriggerAttributeBindingProvider<T> : ITriggerBindingProvider where T : class
     {
         private const string CosmosStoreTriggerUserAgentSuffix = "CosmosStoreTriggerFunctions";
+        private const string SharedThroughputRequirementException = "Shared throughput collection should have a partition key";
+        private const string LeaseCollectionRequiredPartitionKey = "/id";
         private readonly IConfiguration _configuration;
         private readonly INameResolver _nameResolver;
         private readonly CosmosStoreBindingOptions _bindingOptions;
@@ -50,14 +53,15 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
 
             DocumentCollectionInfo documentCollectionLocation;
             DocumentCollectionInfo leaseCollectionLocation;
-            var leaseHostOptions = ResolveLeaseOptions(attribute);
-
-            var changeFeedOptions = new ChangeFeedOptions();
-            changeFeedOptions.StartFromBeginning = attribute.StartFromBeginning;
+            var processorOptions = BuildProcessorOptions(attribute);
+            processorOptions.StartFromBeginning = attribute.StartFromBeginning;
             if (attribute.MaxItemsPerInvocation > 0)
             {
-                changeFeedOptions.MaxItemCount = attribute.MaxItemsPerInvocation;
+                processorOptions.MaxItemCount = attribute.MaxItemsPerInvocation;
             }
+
+            IDocumentClient monitoredDocumentClient;
+            IDocumentClient leaseDocumentClient;
 
             try
             {
@@ -141,10 +145,13 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
                         documentCollectionLocation.Uri, documentCollectionLocation.MasterKey), 
                     attribute.CollectionName);
 
+                monitoredDocumentClient = cosmosStore.CosmonautClient.DocumentClient;
+
+                leaseDocumentClient = new DocumentClient(leasesConnection.ServiceEndpoint, leasesConnection.AuthKey, leaseCollectionLocation.ConnectionPolicy);
+
                 if (attribute.CreateLeaseCollectionIfNotExists)
                 {
-                    var leaseClient = new DocumentClient(leasesConnection.ServiceEndpoint, leasesConnection.AuthKey, leaseCollectionLocation.ConnectionPolicy);
-                    await CosmosDBUtility.CreateDatabaseAndCollectionIfNotExistAsync(leaseClient, leaseCollectionLocation.DatabaseName, leaseCollectionLocation.CollectionName, null, attribute.LeasesCollectionThroughput);
+                    await CreateLeaseCollectionIfNotExistsAsync(leaseDocumentClient, leaseCollectionLocation.DatabaseName, leaseCollectionLocation.CollectionName, attribute.LeasesCollectionThroughput);
                 }
             }
             catch (Exception ex)
@@ -153,7 +160,7 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
                     $"Cannot create Collection Information for {attribute.CollectionName} in database {attribute.DatabaseName} with lease {attribute.LeaseCollectionName} in database {attribute.LeaseDatabaseName} : {ex.Message}", ex);
             }
 
-            return new CosmosStoreTriggerBinding<T>(parameter, documentCollectionLocation, leaseCollectionLocation, leaseHostOptions, changeFeedOptions, _logger);
+            return new CosmosStoreTriggerBinding<T>(parameter, documentCollectionLocation, leaseCollectionLocation, monitoredDocumentClient, leaseDocumentClient, processorOptions, _logger);
         }
 
         private string GetMonitoredCollectionName(CosmosStoreTriggerAttribute attribute)
@@ -180,6 +187,18 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
             }
 
             return TimeSpan.FromMilliseconds(attributeValue.Value);
+        }
+
+        private static async Task CreateLeaseCollectionIfNotExistsAsync(IDocumentClient leaseDocumentClient, string databaseName, string collectionName, int throughput)
+        {
+            try
+            {
+                await CosmosDBUtility.CreateDatabaseAndCollectionIfNotExistAsync(leaseDocumentClient, databaseName, collectionName, null, throughput);
+            }
+            catch (DocumentClientException ex) when (ex.Message.Contains(SharedThroughputRequirementException))
+            {
+                await CosmosDBUtility.CreateDatabaseAndCollectionIfNotExistAsync(leaseDocumentClient, databaseName, collectionName, LeaseCollectionRequiredPartitionKey, throughput);
+            }
         }
 
         private string ResolveAttributeLeasesConnectionString(CosmosStoreTriggerAttribute attribute)
@@ -233,11 +252,11 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
             return _bindingOptions.ConnectionString;
         }
 
-        private ChangeFeedHostOptions ResolveLeaseOptions(CosmosStoreTriggerAttribute attribute)
+        private ChangeFeedProcessorOptions BuildProcessorOptions(CosmosStoreTriggerAttribute attribute)
         {
             var leasesOptions = _bindingOptions.LeaseOptions;
 
-            var triggerChangeFeedHostOptions = new ChangeFeedHostOptions
+            var processorOptions = new ChangeFeedProcessorOptions
             {
                 LeasePrefix = ResolveAttributeValue(attribute.LeaseCollectionPrefix) ?? leasesOptions.LeasePrefix,
                 FeedPollDelay = ResolveTimeSpanFromMilliseconds(nameof(CosmosStoreTriggerAttribute.FeedPollDelay), leasesOptions.FeedPollDelay, attribute.FeedPollDelay),
@@ -249,15 +268,15 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
 
             if (attribute.CheckpointInterval > 0)
             {
-                triggerChangeFeedHostOptions.CheckpointFrequency.TimeInterval = TimeSpan.FromMilliseconds(attribute.CheckpointInterval);
+                processorOptions.CheckpointFrequency.TimeInterval = TimeSpan.FromMilliseconds(attribute.CheckpointInterval);
             }
 
             if (attribute.CheckpointDocumentCount > 0)
             {
-                triggerChangeFeedHostOptions.CheckpointFrequency.ProcessedDocumentCount = attribute.CheckpointDocumentCount;
+                processorOptions.CheckpointFrequency.ProcessedDocumentCount = attribute.CheckpointDocumentCount;
             }
 
-            return triggerChangeFeedHostOptions;
+            return processorOptions;
         }
 
         private string ResolveAttributeValue(string attributeValue)
