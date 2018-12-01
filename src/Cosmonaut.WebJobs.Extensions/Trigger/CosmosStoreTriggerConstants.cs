@@ -4,7 +4,7 @@
     {
         public const string DefaultLeaseCollectionName = "leases";
 
-        public const string TriggerName = "CosmosDBTrigger";
+        public const string TriggerName = "CosmosStoreTrigger";
 
         public const string TriggerDescription = "New changes on collection {0} at {1}";
 

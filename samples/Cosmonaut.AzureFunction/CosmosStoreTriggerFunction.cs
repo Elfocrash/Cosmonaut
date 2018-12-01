@@ -12,8 +12,7 @@ namespace Cosmonaut.AzureFunction
         public static void Run(
             [CosmosStoreTrigger(
                 "localtest",
-                ServiceEndpoint = "CosmosEndpoint",
-                AuthKey = "CosmosAuthKey",
+                ConnectionStringSetting = "CosmosConnectionString",
                 LeaseConnectionStringSetting = "LeaseSettings",
                 LeaseCollectionName = "leases",
                 CreateLeaseCollectionIfNotExists = true)]IReadOnlyList<Llama> llamaInput,

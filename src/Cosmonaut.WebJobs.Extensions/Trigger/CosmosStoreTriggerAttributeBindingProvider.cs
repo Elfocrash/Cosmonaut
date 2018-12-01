@@ -31,7 +31,7 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
             _configuration = configuration;
             _nameResolver = nameResolver;
             _bindingOptions = bindingOptions;
-            _logger = loggerFactory.CreateLogger(LogCategories.CreateTriggerCategory("CosmosDB"));
+            _logger = loggerFactory.CreateLogger(LogCategories.CreateTriggerCategory("CosmosStore"));
         }
 
         public async Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)
@@ -65,10 +65,13 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
 
             try
             {
-                if (attribute.ServiceEndpoint == null)
+                var monitoredConnectionString = ResolveConnectionString(attribute.ConnectionStringSetting, nameof(CosmosStoreTriggerAttribute.ConnectionStringSetting));
+                if (string.IsNullOrEmpty(monitoredConnectionString))
                 {
                     throw new InvalidOperationException("The connection string for the monitored collection is in an invalid format, please use AccountEndpoint=XXXXXX;AccountKey=XXXXXX;.");
                 }
+
+                var monitoredCosmosDbConnectionString = new CosmosDBConnectionString(monitoredConnectionString);
 
                 var leasesConnectionString = ResolveAttributeLeasesConnectionString(attribute);
                 var leasesConnection = new CosmosDBConnectionString(leasesConnectionString);
@@ -81,13 +84,12 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
 
                 documentCollectionLocation = new DocumentCollectionInfo
                 {
-                    Uri = new Uri(_configuration.GetConnectionStringOrSetting(attribute.ServiceEndpoint)),
-                    MasterKey = _configuration.GetConnectionStringOrSetting(attribute.AuthKey),
+                    Uri = monitoredCosmosDbConnectionString.ServiceEndpoint,
+                    MasterKey = monitoredCosmosDbConnectionString.AuthKey,
                     DatabaseName = ResolveAttributeValue(attribute.DatabaseName),
-                    CollectionName = monitoredCollectionName
+                    CollectionName = monitoredCollectionName,
+                    ConnectionPolicy = {UserAgentSuffix = CosmosStoreTriggerUserAgentSuffix}
                 };
-
-                documentCollectionLocation.ConnectionPolicy.UserAgentSuffix = CosmosStoreTriggerUserAgentSuffix;
 
                 if (desiredConnectionMode.HasValue)
                 {
@@ -204,13 +206,10 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
         private string ResolveAttributeLeasesConnectionString(CosmosStoreTriggerAttribute attribute)
         {
             // If the lease connection string is not set, use the trigger's
-            var keyToResolve = attribute.LeaseConnectionStringSetting;
-            if (string.IsNullOrEmpty(keyToResolve))
-            {
-                keyToResolve = $"AccountEndpoint={attribute.ServiceEndpoint};AccountKey={attribute.AuthKey}";
-            }
 
-            var connectionString = ResolveConnectionString(keyToResolve, nameof(CosmosStoreTriggerAttribute.LeaseConnectionStringSetting));
+            var connectionString = !string.IsNullOrEmpty(attribute.LeaseConnectionStringSetting) ? 
+                ResolveConnectionString(attribute.LeaseConnectionStringSetting, nameof(CosmosStoreTriggerAttribute.LeaseConnectionStringSetting)) :
+                ResolveConnectionString(attribute.ConnectionStringSetting, nameof(CosmosStoreTriggerAttribute.ConnectionStringSetting));
 
             if (string.IsNullOrEmpty(connectionString))
             {
@@ -230,7 +229,7 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
             var leaseString = "lease ";
 
             throw new InvalidOperationException(
-                $"The CosmosDBTrigger {leaseString}connection string must be set either via a '{Constants.DefaultConnectionStringName}' configuration connection string, via the {attributeProperty} property or via {optionsProperty}.");
+                $"The CosmosStoreTrigger {leaseString}connection string must be set either via a '{Constants.DefaultConnectionStringName}' configuration connection string, via the {attributeProperty} property or via {optionsProperty}.");
         }
 
         internal string ResolveConnectionString(string unresolvedConnectionString, string propertyName)
@@ -255,10 +254,10 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
         private ChangeFeedProcessorOptions BuildProcessorOptions(CosmosStoreTriggerAttribute attribute)
         {
             var leasesOptions = _bindingOptions.LeaseOptions;
-
+            var entityType = typeof(T);
             var processorOptions = new ChangeFeedProcessorOptions
             {
-                LeasePrefix = ResolveAttributeValue(attribute.LeaseCollectionPrefix) ?? leasesOptions.LeasePrefix,
+                LeasePrefix = ResolveAttributeValue(attribute.LeaseCollectionPrefix) ?? (entityType.UsesSharedCollection() ? $"{entityType.GetSharedCollectionName()}_{entityType.GetSharedCollectionEntityName()}_" : $"{entityType.GetCollectionName()}_"),
                 FeedPollDelay = ResolveTimeSpanFromMilliseconds(nameof(CosmosStoreTriggerAttribute.FeedPollDelay), leasesOptions.FeedPollDelay, attribute.FeedPollDelay),
                 LeaseAcquireInterval = ResolveTimeSpanFromMilliseconds(nameof(CosmosStoreTriggerAttribute.LeaseAcquireInterval), leasesOptions.LeaseAcquireInterval, attribute.LeaseAcquireInterval),
                 LeaseExpirationInterval = ResolveTimeSpanFromMilliseconds(nameof(CosmosStoreTriggerAttribute.LeaseExpirationInterval), leasesOptions.LeaseExpirationInterval, attribute.LeaseExpirationInterval),
