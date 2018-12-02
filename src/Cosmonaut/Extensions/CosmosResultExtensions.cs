@@ -137,13 +137,28 @@ namespace Cosmonaut.Extensions
         private static async Task<List<T>> GetSingleOrFirstFromQueryable<T>(IQueryable<T> queryable,
             CancellationToken cancellationToken)
         {
-            var feedOptions = queryable.GetFeedOptionsForQueryable();
+            SetFeedOptionsForSingleOperation(ref queryable, out var feedOptions);
+
             if (feedOptions?.RequestContinuation == null)
             {
                 return await GetResultsFromQueryToList(queryable, true, cancellationToken);
             }
 
             return await GetPaginatedResultsFromQueryable(queryable, cancellationToken, feedOptions);
+        }
+
+        private static void SetFeedOptionsForSingleOperation<T>(ref IQueryable<T> queryable, out FeedOptions feedOptions)
+        {
+            feedOptions = queryable.GetFeedOptionsForQueryable();
+            if (feedOptions != null)
+            {
+                feedOptions.MaxItemCount = 1;
+                queryable.SetFeedOptionsForQueryable(feedOptions);
+                return;
+            }
+
+            feedOptions = new FeedOptions {MaxItemCount = 1};
+            queryable.SetFeedOptionsForQueryable(feedOptions);
         }
 
         private static async Task<CosmosPagedResults<T>> GetPagedListFromQueryable<T>(IQueryable<T> queryable,

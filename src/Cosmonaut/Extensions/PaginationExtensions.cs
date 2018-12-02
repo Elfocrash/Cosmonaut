@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using Cosmonaut.Internal;
 using Microsoft.Azure.Documents.Client;
 
 namespace Cosmonaut.Extensions
@@ -67,8 +68,7 @@ namespace Cosmonaut.Extensions
             if (!queryable.GetType().Name.Equals("DocumentQuery`1"))
                 return null;
 
-            return (FeedOptions)queryable.Provider.GetType().GetTypeInfo().GetField("feedOptions", BindingFlags.Instance | BindingFlags.NonPublic)
-                .GetValue(queryable.Provider);
+            return (FeedOptions) InternalTypeCache.Instance.FeedOptionsFieldInfo.GetValue(queryable.Provider);
         }
 
         internal static void SetFeedOptionsForQueryable<T>(this IQueryable<T> queryable, FeedOptions feedOptions)
@@ -76,10 +76,8 @@ namespace Cosmonaut.Extensions
             if (!queryable.GetType().Name.Equals("DocumentQuery`1"))
                 return;
 
-            queryable.GetType().GetTypeInfo().GetField("feedOptions", BindingFlags.Instance | BindingFlags.NonPublic)
-                .SetValue(queryable, feedOptions);
-            queryable.Provider.GetType().GetTypeInfo().GetField("feedOptions", BindingFlags.Instance | BindingFlags.NonPublic)
-                .SetValue(queryable.Provider, feedOptions);
+            InternalTypeCache.Instance.GetFieldInfoFromCache(queryable.GetType(), "feedOptions", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(queryable, feedOptions);
+            InternalTypeCache.Instance.FeedOptionsFieldInfo.SetValue(queryable.Provider, feedOptions);
         }
     }
 }

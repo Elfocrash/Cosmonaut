@@ -103,7 +103,7 @@ namespace Cosmonaut.Console
 
             var aCarId = addedCars.SuccessfulEntities.First().Entity.Id;
 
-            var firstAddedCar = await carStore.QueryMultipleAsync("select * from c where c.id = @id", new { id = aCarId });
+            var firstAddedCar = await carStore.Query().FirstOrDefaultAsync();
             var allTheCars = await carStore.QueryMultipleAsync<Car>("select * from c");
 
             var carPageOne = await carStore.Query("select * from c order by c.Name asc").WithPagination(1, 5).ToPagedListAsync();

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Cosmonaut.Response;
 using Cosmonaut.System.Models;
-using Cosmonaut.Testing;
 using FluentAssertions;
 using FluentAssertions.Equivalency;
 using Microsoft.Azure.Documents;

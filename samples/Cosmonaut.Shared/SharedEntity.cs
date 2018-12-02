@@ -1,6 +1,5 @@
 ﻿using Cosmonaut.Attributes;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 namespace Cosmonaut.Shared
 {
