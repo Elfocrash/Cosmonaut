@@ -8,6 +8,8 @@ namespace Cosmonaut.Extensions
 {
     public static class PaginationExtensions
     {
+        private const string DocumentQueryTypeName = "DocumentQuery`1";
+
         /// <summary>
         /// Adds pagination for your CosmosDB query. This is an inefficient and expensive form of pagination because it goes
         /// though all the documents to get to the page you want. The usage of WithPagination with the ContinuationToken is recommended. 
@@ -53,7 +55,7 @@ namespace Cosmonaut.Extensions
 
         private static IQueryable<T> GetQueryableWithPaginationSettings<T>(IQueryable<T> queryable, string continuationInfo, int pageSize)
         {
-            if (!queryable.GetType().Name.Equals("DocumentQuery`1"))
+            if (!queryable.GetType().Name.Equals(DocumentQueryTypeName))
                 return queryable;
 
             var feedOptions = queryable.GetFeedOptionsForQueryable() ?? new FeedOptions();
@@ -65,7 +67,7 @@ namespace Cosmonaut.Extensions
 
         internal static FeedOptions GetFeedOptionsForQueryable<T>(this IQueryable<T> queryable)
         {
-            if (!queryable.GetType().Name.Equals("DocumentQuery`1"))
+            if (!queryable.GetType().Name.Equals(DocumentQueryTypeName))
                 return null;
 
             return (FeedOptions) InternalTypeCache.Instance.FeedOptionsFieldInfo.GetValue(queryable.Provider);
@@ -73,7 +75,7 @@ namespace Cosmonaut.Extensions
 
         internal static void SetFeedOptionsForQueryable<T>(this IQueryable<T> queryable, FeedOptions feedOptions)
         {
-            if (!queryable.GetType().Name.Equals("DocumentQuery`1"))
+            if (!queryable.GetType().Name.Equals(DocumentQueryTypeName))
                 return;
 
             InternalTypeCache.Instance.GetFieldInfoFromCache(queryable.GetType(), "feedOptions", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(queryable, feedOptions);

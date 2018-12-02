@@ -128,7 +128,7 @@ namespace Cosmonaut.Extensions
             var feedOptions = queryable.GetFeedOptionsForQueryable();
             if (feedOptions?.RequestContinuation == null)
             {
-                return await GetResultsFromQueryToList(queryable, false, cancellationToken);
+                return await GetResultsFromQueryToList(queryable, cancellationToken);
             }
 
             return await GetPaginatedResultsFromQueryable(queryable, cancellationToken, feedOptions);
@@ -141,7 +141,7 @@ namespace Cosmonaut.Extensions
 
             if (feedOptions?.RequestContinuation == null)
             {
-                return await GetResultsFromQueryToList(queryable, true, cancellationToken);
+                return await GetResultsFromQueryForSingleOrFirst(queryable, cancellationToken);
             }
 
             return await GetPaginatedResultsFromQueryable(queryable, cancellationToken, feedOptions);
@@ -172,7 +172,7 @@ namespace Cosmonaut.Extensions
             return await GetPaginatedResultsFromQueryable(queryable, cancellationToken, feedOptions);
         }
 
-        private static async Task<List<T>> GetResultsFromQueryToList<T>(IQueryable<T> queryable, bool stopOnAny, CancellationToken cancellationToken)
+        private static async Task<List<T>> GetResultsFromQueryToList<T>(IQueryable<T> queryable, CancellationToken cancellationToken)
         {
             var query = queryable.AsDocumentQuery();
             var results = new List<T>();
@@ -181,12 +181,25 @@ namespace Cosmonaut.Extensions
                 var items = await query.InvokeExecuteNextAsync(() => query.ExecuteNextAsync<T>(cancellationToken),
                     query.ToString(), target: GetAltLocationFromQueryable(queryable));
                 results.AddRange(items);
-                if (stopOnAny && results.Any())
+            }
+            return results;
+        }
+
+        private static async Task<List<T>> GetResultsFromQueryForSingleOrFirst<T>(IQueryable<T> queryable, CancellationToken cancellationToken)
+        {
+            var query = queryable.AsDocumentQuery();
+            var results = new List<T>();
+            while (query.HasMoreResults)
+            {
+                var items = await query.InvokeExecuteNextAsync(() => query.ExecuteNextAsync<T>(cancellationToken),
+                    query.ToString(), target: GetAltLocationFromQueryable(queryable));
+                results.AddRange(items);
+                if (results.Any())
                     return results;
             }
             return results;
         }
-        
+
         private static async Task<CosmosPagedResults<T>> GetSkipTakePagedResultsFromQueryToList<T>(IQueryable<T> queryable, int pageNumber, int pageSize, CancellationToken cancellationToken)
         {
             var query = queryable.AsDocumentQuery();
