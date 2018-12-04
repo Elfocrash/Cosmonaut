@@ -34,7 +34,7 @@ namespace Cosmonaut.Unit
             };
             var expectedName = "NewTest";
             addedDummy.ValidateEntityForCosmosDb();
-            var document = addedDummy.ConvertObjectToDocument();
+            var document = addedDummy.ToCosmonautDocument();
             var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
             document.SetPropertyValue(nameof(addedDummy.Name), expectedName);
             _mockDocumentClient.Setup(x => x.ReplaceDocumentAsync(It.IsAny<Uri>(), document.ItIsSameDocument(), It.IsAny<RequestOptions>(), CancellationToken.None)).ReturnsAsync(resourceResponse);
@@ -61,7 +61,7 @@ namespace Cosmonaut.Unit
                 Name = "Test"
             };
             addedDummy.ValidateEntityForCosmosDb();
-            var document = addedDummy.ConvertObjectToDocument();
+            var document = addedDummy.ToCosmonautDocument();
             var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
             document.SetPropertyValue(nameof(addedDummy.Name), "newTest");
             _mockDocumentClient.Setup(x => x.ReplaceDocumentAsync(It.IsAny<Uri>(), document.ItIsSameDocument(), It.IsAny<RequestOptions>(), CancellationToken.None))
@@ -70,7 +70,7 @@ namespace Cosmonaut.Unit
             var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
             addedDummy.Name = "newTest";
             // Act
-            var result = await entityStore.UpdateRangeAsync(addedDummy);
+            var result = await entityStore.UpdateRangeAsync(new []{ addedDummy });
 
             // Assert
             result.FailedEntities.Should().BeEmpty();
@@ -90,7 +90,7 @@ namespace Cosmonaut.Unit
                 Name = "Test"
             };
 
-            var document = addedDummy.ConvertObjectToDocument();
+            var document = addedDummy.ToCosmonautDocument();
             var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
             document.SetPropertyValue(nameof(addedDummy.Name), "newTest");
             _mockDocumentClient.Setup(x => x.UpsertDocumentAsync(It.IsAny<Uri>(), document.ItIsSameDocument(), It.IsAny<RequestOptions>(), false, CancellationToken.None))
@@ -117,7 +117,7 @@ namespace Cosmonaut.Unit
                 Id = id,
                 Name = "Test"
             };
-            var document = addedDummy.ConvertObjectToDocument();
+            var document = addedDummy.ToCosmonautDocument();
             var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
             document.SetPropertyValue(nameof(addedDummy.Name), "newTest");
             _mockDocumentClient.Setup(x => x.UpsertDocumentAsync(It.IsAny<Uri>(), document.ItIsSameDocument(), It.IsAny<RequestOptions>(), false, CancellationToken.None))
@@ -126,7 +126,7 @@ namespace Cosmonaut.Unit
             var entityStore = new CosmosStore<Dummy>(new CosmonautClient(_mockDocumentClient.Object), "databaseName");
             addedDummy.Name = "newTest";
             // Act
-            var result = await entityStore.UpsertRangeAsync(addedDummy);
+            var result = await entityStore.UpsertRangeAsync(new []{ addedDummy });
 
             // Assert
             result.FailedEntities.Should().BeEmpty();

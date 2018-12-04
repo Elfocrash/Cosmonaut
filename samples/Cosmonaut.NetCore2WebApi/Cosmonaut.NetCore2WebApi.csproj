@@ -9,7 +9,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Cosmonaut" Version="2.4.2" />
+        <PackageReference Include="Cosmonaut" Version="2.5.0" />
         <PackageReference Include="Cosmonaut.Extensions.Microsoft.DependencyInjection" Version="2.3.0" />
         <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.9" />
     </ItemGroup>

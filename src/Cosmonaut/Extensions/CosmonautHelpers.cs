@@ -4,24 +4,13 @@ using Newtonsoft.Json.Linq;
 
 namespace Cosmonaut.Extensions
 {
-    internal static class DocumentHelpers
+    public static class CosmonautHelpers
     {
-        internal static PartitionKeyDefinition GetPartitionKeyDefinition(string partitionKeyName)
-        {
-            return new PartitionKeyDefinition
-            {
-                Paths =
-                {
-                    $"/{partitionKeyName}"
-                }
-            };
-        }
-
-        internal static Document ConvertObjectToDocument<TEntity>(this TEntity obj) where TEntity : class
+        public static Document ToCosmonautDocument<TEntity>(this TEntity obj) where TEntity : class
         {
             obj.ValidateEntityForCosmosDb();
             var document = JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(obj));
-            
+
             using (JsonReader reader = new JTokenReader(document))
             {
                 var actualDocument = new Document();
@@ -36,7 +25,18 @@ namespace Cosmonaut.Extensions
             }
         }
 
-        private static void RemoveDuplicateIds(ref Document actualDocument)
+        internal static PartitionKeyDefinition GetPartitionKeyDefinition(string partitionKeyName)
+        {
+            return new PartitionKeyDefinition
+            {
+                Paths =
+                {
+                    $"/{partitionKeyName}"
+                }
+            };
+        }
+        
+        internal static void RemoveDuplicateIds(ref Document actualDocument)
         {
             actualDocument.SetPropertyValue("Id", null);
             actualDocument.SetPropertyValue("ID", null);

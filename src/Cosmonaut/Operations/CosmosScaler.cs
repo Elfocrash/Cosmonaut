@@ -80,7 +80,7 @@ namespace Cosmonaut.Operations
         {
             var collectionOffer = await _cosmosStore.CosmonautClient.GetOfferV2ForCollectionAsync(databaseId, collectionId);
             _cosmosStore.CollectionThrouput = requestUnits;
-            var replaced = await _cosmosStore.CosmonautClient.DocumentClient.ReplaceOfferAsync(new OfferV2(collectionOffer, _cosmosStore.CollectionThrouput));
+            var replaced = await _cosmosStore.CosmonautClient.UpdateOfferAsync(new OfferV2(collectionOffer, _cosmosStore.CollectionThrouput));
             _cosmosStore.IsUpscaled = replaced.StatusCode == HttpStatusCode.OK;
         }
     }

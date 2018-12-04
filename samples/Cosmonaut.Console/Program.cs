@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Cosmonaut.Extensions.Microsoft.DependencyInjection;
-using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -104,7 +103,7 @@ namespace Cosmonaut.Console
 
             var aCarId = addedCars.SuccessfulEntities.First().Entity.Id;
 
-            var firstAddedCar = await carStore.QueryMultipleAsync("select * from c where c.id = @id", new { id = aCarId });
+            var firstAddedCar = await carStore.Query().FirstOrDefaultAsync();
             var allTheCars = await carStore.QueryMultipleAsync<Car>("select * from c");
 
             var carPageOne = await carStore.Query("select * from c order by c.Name asc").WithPagination(1, 5).ToPagedListAsync();
@@ -133,7 +132,11 @@ namespace Cosmonaut.Console
                 addedre.AnotherRandomProp += " Nick";
             }
 
-            var updated = await booksStore.UpsertRangeAsync(addedRetrieved);
+            var updated = await booksStore.UpsertRangeAsync(addedRetrieved, x => new RequestOptions { AccessCondition = new AccessCondition
+            {
+                Type = AccessConditionType.IfMatch,
+                Condition = x.Etag
+            }});
             System.Console.WriteLine($"Updated {updated.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
             watch.Restart();
 

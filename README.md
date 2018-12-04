@@ -16,6 +16,8 @@ Cosmonaut is a supercharged SDK with object mapping capabilities that enables .N
 - [CosmosDB Fluent Pagination with Cosmonaut](http://chapsas.com/cosmosdb-fluent-pagination-with-cosmonaut/)
 - [Implementing server side CosmosDB pagination in a Blazor Web App (Part 1: Page Number and Page Size)
 ](https://chapsas.com/implementing-skiptake-server-side-cosmosdb-pagination-in-a-blazor-web-app/)
+- [Implementing server side CosmosDB pagination in a Blazor Web App (Part 2: Next/Previous Page)
+](https://chapsas.com/implementing-server-side-cosmosdb-pagination-in-a-blazor-web-app-part-2-next-page-previous-page/)
 
 ### Samples
  - The `samples` folder in this project
@@ -27,15 +29,13 @@ This entity will be used to create a collection or use part of a one in CosmosDB
 
 Registering the CosmosStores in ServiceCollection for DI support
 ```csharp
- var cosmosSettings = new CosmosStoreSettings("<<databaseName>>", 
-    "<<cosmosUri>>"), 
-    "<<authkey>>");
+ var cosmosSettings = new CosmosStoreSettings("<<databaseName>>", "<<cosmosUri>>", "<<authkey>>");
                 
 serviceCollection.AddCosmosStore<Book>(cosmosSettings);
 
 //or just by using the Action extension
 
-serviceCollection.AddCosmosStore<Book>("<<databaseName>>", "<<cosmosUri>>"), "<<authkey>>", settings =>
+serviceCollection.AddCosmosStore<Book>("<<databaseName>>", "<<cosmosUri>>", "<<authkey>>", settings =>
 {
     settings.ConnectionPolicy = connectionPolicy;
     settings.DefaultCollectionThroughput = 5000;
@@ -83,6 +83,26 @@ var user = await cosmoStore.QueryMultipleAsync("select * from c w.Firstname = 'S
 // or parameterised sql query
 var user = await cosmoStore.QueryMultipleAsync("select * from c w.Firstname = @name", new { name = "Smith" });
 ```
+
+#### Collection sharing
+Cosmonaut is all about making the integration with CosmosDB easy as well as making things like cost optimisation part of the library.
+
+That's why Cosmonaut support collection sharing between different types of entities.
+
+Why would you do that?
+
+Cosmos is charging you based on how many RU/s your individual collection is provisioned at. This means that if you don't need to have one collection per entity because you won't use it that much, even on the minimum 400 RU/s, you will be charged money. That's where the magic of schemaless comes in.
+
+How can you do that?
+
+Well it's actually pretty simple. Just implement the `ISharedCosmosEntity` interface and decorate your object with the `SharedCosmosCollection` attribute.
+
+The attribute accepts two properties, `SharedCollectionName` which is mandatory and `EntityName` which is optional.
+The `SharedCollectionName` property will be used to name the collection that the entity will share with other entities. 
+
+The `EntityName` will be used to make the object identifiable for Cosmosnaut. Be default it will pluralize the name of the class, but you can specify it to override this behavior. You can override this by providing your own name by setting the `EntityName` value at the attribute level.
+
+Once you set this up you can add individual CosmosStores with shared collections.
 
 ##### Pagination
 
@@ -145,27 +165,15 @@ await cosmoStore.RemoveAsync(entity);// Removes the specific entity
 await cosmoStore.RemoveByIdAsync("<<anId>>");// Removes an entity with the specified ID
 ```
 
-#### Collection sharing
-Cosmonaut is all about making the integration with CosmosDB easy as well as making things like cost optimisation part of the library.
+#### Response Handling
+Cosmonaut follows a different approach when it comes to error handling. The CosmosDB SDK is throwing exceptions for almost every type of error. Cosmonaut follows a different approach.
 
-That's why Cosmonaut support collection sharing between different types of entities.
+In Cosmonaut methods that return `CosmosResponse` or `CosmosMultipleResponse` won't throw exceptions for the following errors: `ResourceNotFound`, `PreconditionFailed` and `Conflict`. 
+They will instead return a `CosmosResponse` with the `IsSuccess` flag to `false`, the `CosmosOperationStatus` enum explaining what the error was and the `Exception` object containing the exceptions that caused the request to fail.
 
-Why would you do that?
+On top of that, any methods that return `ResourceResponse<T>` in the CosmonautClient will not throw an exception for `ResourceNotFound` and they will instead return `null`.
 
-Cosmos is charging you based on how many RU/s your individual collection is provisioned at. This means that if you don't need to have one collection per entity because you won't use it that much, even on the minimum 400 RU/s, you will be charged money. That's where the magic of schemaless comes in.
-
-How can you do that?
-
-Well it's actually pretty simple. Just implement the `ISharedCosmosEntity` interface and decorate your object with the `SharedCosmosCollection` attribute.
-
-The attribute accepts two properties, `SharedCollectionName` which is mandatory and `EntityName` which is optional.
-The `SharedCollectionName` property will be used to name the collection that the entity will share with other entities. 
-
-The `EntityName` will be used to make the object identifiable for Cosmosnaut. Be default it will pluralize the name of the class, but you can specify it to override this behavior. You can override this by providing your own name by setting the `EntityName` value at the attribute level.
-
-Once you set this up you can add individual CosmosStores with shared collections.
-
-### Restrictions
+#### Restrictions
 Because of the way the internal `id` property of Cosmosdb works, there is a mandatory restriction made.
 You cannot have a property named Id or a property with the attribute `[JsonProperty("id")]` without it being a string.
 A cosmos id needs to exist somehow on your entity model. For that reason if it isn't part of your entity you can just extend the `CosmosEntity` class.

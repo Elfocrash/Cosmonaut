@@ -29,6 +29,8 @@ namespace Cosmonaut
 
         public bool InfiniteRetries { get; set; } = true;
 
+        public string CollectionPrefix { get; set; } = string.Empty;
+
         public CosmosStoreSettings(string databaseName,
             string endpointUrl,
             string authKey,

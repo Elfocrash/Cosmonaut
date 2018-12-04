@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using Cosmonaut.Internal;
 using Microsoft.Azure.Documents.Client;
 
 namespace Cosmonaut.Extensions
 {
     public static class PaginationExtensions
     {
+        private const string DocumentQueryTypeName = "DocumentQuery`1";
+
         /// <summary>
         /// Adds pagination for your CosmosDB query. This is an inefficient and expensive form of pagination because it goes
         /// though all the documents to get to the page you want. The usage of WithPagination with the ContinuationToken is recommended. 
@@ -52,7 +55,7 @@ namespace Cosmonaut.Extensions
 
         private static IQueryable<T> GetQueryableWithPaginationSettings<T>(IQueryable<T> queryable, string continuationInfo, int pageSize)
         {
-            if (!queryable.GetType().Name.Equals("DocumentQuery`1"))
+            if (!queryable.GetType().Name.Equals(DocumentQueryTypeName))
                 return queryable;
 
             var feedOptions = queryable.GetFeedOptionsForQueryable() ?? new FeedOptions();
@@ -64,22 +67,19 @@ namespace Cosmonaut.Extensions
 
         internal static FeedOptions GetFeedOptionsForQueryable<T>(this IQueryable<T> queryable)
         {
-            if (!queryable.GetType().Name.Equals("DocumentQuery`1"))
+            if (!queryable.GetType().Name.Equals(DocumentQueryTypeName))
                 return null;
 
-            return (FeedOptions)queryable.Provider.GetType().GetTypeInfo().GetField("feedOptions", BindingFlags.Instance | BindingFlags.NonPublic)
-                .GetValue(queryable.Provider);
+            return (FeedOptions) InternalTypeCache.Instance.FeedOptionsFieldInfo.GetValue(queryable.Provider);
         }
 
         internal static void SetFeedOptionsForQueryable<T>(this IQueryable<T> queryable, FeedOptions feedOptions)
         {
-            if (!queryable.GetType().Name.Equals("DocumentQuery`1"))
+            if (!queryable.GetType().Name.Equals(DocumentQueryTypeName))
                 return;
 
-            queryable.GetType().GetTypeInfo().GetField("feedOptions", BindingFlags.Instance | BindingFlags.NonPublic)
-                .SetValue(queryable, feedOptions);
-            queryable.Provider.GetType().GetTypeInfo().GetField("feedOptions", BindingFlags.Instance | BindingFlags.NonPublic)
-                .SetValue(queryable.Provider, feedOptions);
+            InternalTypeCache.Instance.GetFieldInfoFromCache(queryable.GetType(), "feedOptions", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(queryable, feedOptions);
+            InternalTypeCache.Instance.FeedOptionsFieldInfo.SetValue(queryable.Provider, feedOptions);
         }
     }
 }

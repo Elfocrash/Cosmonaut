@@ -225,7 +225,7 @@ namespace Cosmonaut
         public async Task<CosmosResponse<T>> CreateDocumentAsync<T>(string databaseId, string collectionId, T obj,
             RequestOptions requestOptions = null, CancellationToken cancellationToken = default) where T : class
         {
-            var safeDocument = obj.ConvertObjectToDocument();
+            var safeDocument = obj.ToCosmonautDocument();
             var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
             return await this.InvokeCosmosOperationAsync(() =>
                     DocumentClient.CreateDocumentAsync(collectionUri, safeDocument, requestOptions, cancellationToken: cancellationToken), obj.GetDocumentId())
@@ -252,7 +252,7 @@ namespace Cosmonaut
         public async Task<CosmosResponse<T>> UpdateDocumentAsync<T>(string databaseId, string collectionId, T document,
             RequestOptions requestOptions = null, CancellationToken cancellationToken = default) where T : class
         {
-            var safeDocument = document.ConvertObjectToDocument();
+            var safeDocument = document.ToCosmonautDocument();
             var documentUri = UriFactory.CreateDocumentUri(databaseId, collectionId, safeDocument.Id);
             return await this.InvokeCosmosOperationAsync(() =>
                     DocumentClient.ReplaceDocumentAsync(documentUri, safeDocument, requestOptions, cancellationToken), document.GetDocumentId())
@@ -271,7 +271,7 @@ namespace Cosmonaut
         public async Task<CosmosResponse<T>> UpsertDocumentAsync<T>(string databaseId, string collectionId,
             T document, RequestOptions requestOptions = null, CancellationToken cancellationToken = default) where T : class
         {
-            var safeDocument = document.ConvertObjectToDocument();
+            var safeDocument = document.ToCosmonautDocument();
             var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
             return await this.InvokeCosmosOperationAsync(() =>
                     DocumentClient.UpsertDocumentAsync(collectionUri, safeDocument, requestOptions, cancellationToken: cancellationToken), document.GetDocumentId())

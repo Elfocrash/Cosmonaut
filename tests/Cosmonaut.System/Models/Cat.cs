@@ -8,5 +8,8 @@ namespace Cosmonaut.System.Models
         [JsonProperty("id")]
         [CosmosPartitionKey]
         public string CatId { get; set; }
+
+        [JsonProperty("_etag")]
+        public string Etag { get; set; }
     }
 }
