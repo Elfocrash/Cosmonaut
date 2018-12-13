@@ -104,20 +104,19 @@ The `EntityName` will be used to make the object identifiable for Cosmosnaut. Be
 
 Once you set this up you can add individual CosmosStores with shared collections.
 
-##### Specifying a different collection name
 
-By default you are required to specify your collection name in the attribute level for both non-shared and shared entities like this:
+#### Collection naming
 
-Non-Shared:
-```c#
-[CosmosCollection("cars")]
-public class Car
-{
-    public string Id { get; set; }
-}
+Your collections will automatically be named based on the plural of the object you are using in the generic type.
+However you can override that by decorating the class with the `CosmosCollection` attribute.
+
+Example:
+```csharp
+[CosmosCollection("somename")]
 ```
 
-Shared:
+By default you are required to specify your collection name in the attribute level shared entities like this:
+
 ```c#
 [SharedCosmosCollection("shared")]
 public class Car : ISharedCosmosEntity
@@ -304,15 +303,6 @@ Partitions are great but you should these 3 very important things about them and
 * If you use the the Upsert method to update an entity that had the value of the property that is the partition key changed, then CosmosDB won't update the document but instead it will create a whole different document with the same id but the changed partition key value.
 
 More on the third issue here [Unique keys in Azure Cosmos DB](https://docs.microsoft.com/en-us/azure/cosmos-db/unique-keys)
-
-#### Collection naming
-Your collections will automatically be named based on the plural of the object you are using in the generic type.
-However you can override that by decorating the class with the `CosmosCollection` attribute.
-
-Example:
-```csharp
-[CosmosCollection("somename")]
-```
 
 ### Logging
 
