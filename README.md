@@ -106,7 +106,7 @@ Once you set this up you can add individual CosmosStores with shared collections
 
 ##### Specifying a different collection name
 
-By default you are required to specify your collection name in the attribute level for both non-shared and shared entity like this:
+By default you are required to specify your collection name in the attribute level for both non-shared and shared entities like this:
 
 Non-Shared:
 ```c#
@@ -128,7 +128,9 @@ public class Car : ISharedCosmosEntity
 ```
 
 Even though this is convinient I understand that you might need to have a dynamic way of setting this. 
-That's why the `CosmosStore` class has some extra constructors what allow you to specify the `overriddenCollectionName` property. This property will override any collection name specified in the attribute level and it will use that one instead.
+That's why the `CosmosStore` class has some extra constructors that allow you to specify the `overriddenCollectionName` property. This property will override any collection name specified at the attribute level and will use that one instead.
+
+Note: If you have specified a `CollectionPrefix` at the `CosmosStoreSettings` level it will still be added. You are only overriding the collection name that the attribute would normally set.
 
 Example
 
