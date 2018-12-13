@@ -14,3 +14,19 @@ Welcome to Cosmonaut's documentation!
    :caption: User Documentation
 
    Getting-started
+   The-CosmosStore
+   CosmonautClient
+
+.. _feature-docs:
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Feature Documentation
+
+   Reading-and-Querying
+   Document-manipulation
+   Collection-sharing
+   Pagination
+   Response-handling
+   Dependency-injection
+   Logging
