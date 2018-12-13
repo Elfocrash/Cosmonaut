@@ -85,9 +85,9 @@ var user = await cosmoStore.QueryMultipleAsync("select * from c w.Firstname = @n
 ```
 
 #### Collection sharing
-Cosmonaut is all about making the integration with CosmosDB easy as well as making things like cost optimisation part of the library.
+Cosmonaut is all about making integrating with Cosmos DB easy as well as making things such as cost optimisation part of the library.
 
-That's why Cosmonaut support collection sharing between different types of entities.
+That's why Cosmonaut supports transparent collection sharing between different types of entities.
 
 Why would you do that?
 
@@ -104,7 +104,53 @@ The `EntityName` will be used to make the object identifiable for Cosmosnaut. Be
 
 Once you set this up you can add individual CosmosStores with shared collections.
 
-##### Pagination
+##### Specifying a different collection name
+
+By default you are required to specify your collection name in the attribute level for both non-shared and shared entity like this:
+
+Non-Shared:
+```c#
+[CosmosCollection("cars")]
+public class Car
+{
+    public string Id { get; set; }
+}
+```
+
+Shared:
+```c#
+[SharedCosmosCollection("shared")]
+public class Car : ISharedCosmosEntity
+{
+    public string Id { get; set; }
+    public string CosmosEntityName { get; set; }
+}
+```
+
+Even though this is convinient I understand that you might need to have a dynamic way of setting this. 
+That's why the `CosmosStore` class has some extra constructors what allow you to specify the `overriddenCollectionName` property. This property will override any collection name specified in the attribute level and it will use that one instead.
+
+Example
+
+Class implementation:
+```c#
+[SharedCosmosCollection("shared")]
+public class Car : ISharedCosmosEntity
+{
+    public string Id { get; set; }
+    public string CosmosEntityName { get; set; }
+}
+```
+
+CosmosStore initialisation:
+```c#
+var cosmosStore = new CosmosStore<Car>(someSettings, "oldcars");
+```
+
+The outcome of this would be a collection named `oldcars` becase the `shared` collection name is overriden in the constructor. 
+There are also method overloads for the same property at the dependency injection extension level.
+
+#### Pagination
 
 Cosmonaut supports two types of pagination.
 
