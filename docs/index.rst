@@ -24,7 +24,7 @@ Welcome to Cosmonaut's documentation!
    :caption: Feature Documentation
 
    Reading-and-Querying
-   Document-manipulation
+   Document-operations
    Collection-sharing
    Pagination
    Response-handling
