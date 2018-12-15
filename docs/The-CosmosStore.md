@@ -19,6 +19,12 @@ The CosmosStore's boundaries can be one of two.
 
 The choice to go with one or the other is completely up to you and it comes down to partitioning strategy, cost and flexibility when it comes to scaleability.
 
+### A single mandatory property
+
+In order for an entity to be able to be stored, manipulated and retrieved in a CosmosStore it is required to have a mandatory property. This is the `id` property.
+
+It needs to be a `string` property with name Id (or any capitalisation you want). Even though not neccessary, you should also decorate it with the `[JsonProperty("id")]` attribute. This is neccessary if you want to do any querying based on the id (querying NOT reading). It will also help with unintented behavour when it comes to object mapping and LINQ to SQL transformations.
+
 ### CosmosStore's lifetime
 
 CosmosStores should be registered as *singletons* in your system. This will achieve optimal performance. If you are using a dependency injection framework make sure they are registered as singletons and if you don't, just make sure you don't dispose them and you keep reusing them.

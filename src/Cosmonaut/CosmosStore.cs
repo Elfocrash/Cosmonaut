@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
-using Cosmonaut.Operations;
 using Cosmonaut.Response;
 using Cosmonaut.Storage;
 using Microsoft.Azure.Documents;
@@ -15,10 +14,6 @@ namespace Cosmonaut
 {
     public sealed class CosmosStore<TEntity> : ICosmosStore<TEntity> where TEntity : class
     {
-        public int CollectionThrouput { get; internal set; } = CosmosConstants.MinimumCosmosThroughput;
-
-        public bool IsUpscaled { get; internal set; }
-
         public bool IsShared { get; internal set; }
 
         public string CollectionName { get; private set; }
@@ -31,7 +26,6 @@ namespace Cosmonaut
 
         private readonly IDatabaseCreator _databaseCreator;
         private readonly ICollectionCreator _collectionCreator;
-        private readonly CosmosScaler<TEntity> _cosmosScaler;
 
         public CosmosStore(CosmosStoreSettings settings) : this(settings, string.Empty)
         {
@@ -46,7 +40,6 @@ namespace Cosmonaut
             if (string.IsNullOrEmpty(Settings.DatabaseName)) throw new ArgumentNullException(nameof(Settings.DatabaseName));
             _collectionCreator = new CosmosCollectionCreator(CosmonautClient);
             _databaseCreator = new CosmosDatabaseCreator(CosmonautClient);
-            _cosmosScaler = new CosmosScaler<TEntity>(this);
             InitialiseCosmosStore(overriddenCollectionName);
         }
 
@@ -71,19 +64,16 @@ namespace Cosmonaut
             string databaseName,
             string overriddenCollectionName,
             IDatabaseCreator databaseCreator = null,
-            ICollectionCreator collectionCreator = null,
-            bool scaleable = false)
+            ICollectionCreator collectionCreator = null)
         {
             DatabaseName = databaseName;
             CosmonautClient = cosmonautClient ?? throw new ArgumentNullException(nameof(cosmonautClient));
-            Settings = new CosmosStoreSettings(databaseName, cosmonautClient.DocumentClient.ServiceEndpoint.ToString(), string.Empty, cosmonautClient.DocumentClient.ConnectionPolicy, 
-                scaleCollectionRUsAutomatically: scaleable);
+            Settings = new CosmosStoreSettings(databaseName, cosmonautClient.DocumentClient.ServiceEndpoint.ToString(), string.Empty, cosmonautClient.DocumentClient.ConnectionPolicy);
             if (Settings.InfiniteRetries)
                 CosmonautClient.DocumentClient.SetupInfiniteRetries();
             if (string.IsNullOrEmpty(Settings.DatabaseName)) throw new ArgumentNullException(nameof(Settings.DatabaseName));
             _collectionCreator = collectionCreator ?? new CosmosCollectionCreator(CosmonautClient);
             _databaseCreator = databaseCreator ?? new CosmosDatabaseCreator(CosmonautClient);
-            _cosmosScaler = new CosmosScaler<TEntity>(this);
             InitialiseCosmosStore(overriddenCollectionName);
         }
 
@@ -214,12 +204,9 @@ namespace Cosmonaut
         {
             IsShared = typeof(TEntity).UsesSharedCollection();
             CollectionName = GetCosmosStoreCollectionName(overridenCollectionName);
-
-            Settings.DefaultCollectionThroughput = CollectionThrouput = CosmonautClient.GetOfferV2ForCollectionAsync(DatabaseName, CollectionName).ConfigureAwait(false).GetAwaiter()
-                .GetResult()?.Content?.OfferThroughput ?? typeof(TEntity).GetCollectionThroughputForEntity(Settings.DefaultCollectionThroughput);
-
+            
             _databaseCreator.EnsureCreatedAsync(DatabaseName).ConfigureAwait(false).GetAwaiter().GetResult();
-            _collectionCreator.EnsureCreatedAsync<TEntity>(DatabaseName, CollectionName, CollectionThrouput, Settings.IndexingPolicy)
+            _collectionCreator.EnsureCreatedAsync<TEntity>(DatabaseName, CollectionName, Settings.DefaultCollectionThroughput, Settings.IndexingPolicy)
                 .ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
@@ -234,24 +221,16 @@ namespace Cosmonaut
         private async Task<CosmosMultipleResponse<TEntity>> ExecuteMultiOperationAsync(IEnumerable<TEntity> entities,
             Func<TEntity, Task<CosmosResponse<TEntity>>> operationFunc)
         {
+            var multipleResponse = new CosmosMultipleResponse<TEntity>();
+
             var entitiesList = entities.ToList();
             if (!entitiesList.Any())
-                return new CosmosMultipleResponse<TEntity>();
-
-            try
-            {
-                var multipleResponse = await _cosmosScaler.UpscaleCollectionIfConfiguredAsSuch(entitiesList, DatabaseName, CollectionName, operationFunc);
-                var results = (await entitiesList.Select(operationFunc).WhenAllTasksAsync()).ToList();
-                multipleResponse.SuccessfulEntities.AddRange(results.Where(x => x.IsSuccess));
-                multipleResponse.FailedEntities.AddRange(results.Where(x => !x.IsSuccess));
-                await _cosmosScaler.DownscaleCollectionRequestUnitsToDefault(DatabaseName, CollectionName);
                 return multipleResponse;
-            }
-            catch (Exception)
-            {
-                await _cosmosScaler.DownscaleCollectionRequestUnitsToDefault(DatabaseName, CollectionName);
-                throw;
-            }
+            
+            var results = (await entitiesList.Select(operationFunc).WhenAllTasksAsync()).ToList();
+            multipleResponse.SuccessfulEntities.AddRange(results.Where(x => x.IsSuccess));
+            multipleResponse.FailedEntities.AddRange(results.Where(x => !x.IsSuccess));
+            return multipleResponse;
         }
 
         private RequestOptions GetRequestOptions(RequestOptions requestOptions, TEntity entity)

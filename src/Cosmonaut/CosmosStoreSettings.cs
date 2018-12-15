@@ -21,10 +21,6 @@ namespace Cosmonaut
 
         public int DefaultCollectionThroughput { get; set; } =  CosmosConstants.MinimumCosmosThroughput;
 
-        public bool ScaleCollectionRUsAutomatically { get; set; }
-
-        public int MaximumUpscaleRequestUnits { get; set; } = CosmosConstants.DefaultMaximumUpscaleThroughput;
-
         public JsonSerializerSettings JsonSerializerSettings { get; set; }
 
         public bool InfiniteRetries { get; set; } = true;
@@ -48,24 +44,20 @@ namespace Cosmonaut
             AuthKey = authKey ?? throw new ArgumentNullException(nameof(authKey));
             settings?.Invoke(this);
         }
-        
+
         public CosmosStoreSettings(
             string databaseName,
             string endpointUrl,
             string authKey,
             ConnectionPolicy connectionPolicy = null,
             IndexingPolicy indexingPolicy = null,
-            int defaultCollectionThroughput = CosmosConstants.MinimumCosmosThroughput,
-            bool scaleCollectionRUsAutomatically = false,
-            int maximumUpscaleRequestUnits = CosmosConstants.DefaultMaximumUpscaleThroughput)
+            int defaultCollectionThroughput = CosmosConstants.MinimumCosmosThroughput)
             : this(databaseName, 
                   new Uri(endpointUrl), 
                   authKey,
                   connectionPolicy,
                   indexingPolicy,
-                  defaultCollectionThroughput,
-                  scaleCollectionRUsAutomatically,
-                  maximumUpscaleRequestUnits)
+                  defaultCollectionThroughput)
         {
         }
         
@@ -75,17 +67,13 @@ namespace Cosmonaut
             string authKey,
             ConnectionPolicy connectionPolicy = null,
             IndexingPolicy indexingPolicy = null,
-            int defaultCollectionThroughput = CosmosConstants.MinimumCosmosThroughput,
-            bool scaleCollectionRUsAutomatically = false,
-            int maximumUpscaleRequestUnits = CosmosConstants.DefaultMaximumUpscaleThroughput)
+            int defaultCollectionThroughput = CosmosConstants.MinimumCosmosThroughput)
         {
             DatabaseName = databaseName ?? throw new ArgumentNullException(nameof(databaseName));
             EndpointUrl = endpointUrl ?? throw new ArgumentNullException(nameof(endpointUrl));
             AuthKey = authKey ?? throw new ArgumentNullException(nameof(authKey));
             ConnectionPolicy = connectionPolicy;
             DefaultCollectionThroughput = defaultCollectionThroughput;
-            ScaleCollectionRUsAutomatically = scaleCollectionRUsAutomatically;
-            MaximumUpscaleRequestUnits = maximumUpscaleRequestUnits;
             IndexingPolicy = indexingPolicy ?? CosmosConstants.DefaultIndexingPolicy;
         }
     }

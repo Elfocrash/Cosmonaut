@@ -47,7 +47,6 @@ namespace Cosmonaut.Unit
             settings.ConsistencyLevel.Should().BeNull();
             settings.IndexingPolicy.Should().Be(CosmosConstants.DefaultIndexingPolicy);
             settings.DefaultCollectionThroughput.Should().Be(CosmosConstants.MinimumCosmosThroughput);
-            settings.MaximumUpscaleRequestUnits.Should().Be(CosmosConstants.DefaultMaximumUpscaleThroughput);
         }
 
         [Fact]
@@ -64,7 +63,6 @@ namespace Cosmonaut.Unit
             settings.ConsistencyLevel.Should().BeNull();
             settings.IndexingPolicy.Should().Be(CosmosConstants.DefaultIndexingPolicy);
             settings.DefaultCollectionThroughput.Should().Be(CosmosConstants.MinimumCosmosThroughput);
-            settings.MaximumUpscaleRequestUnits.Should().Be(CosmosConstants.DefaultMaximumUpscaleThroughput);
         }
 
         [Fact]
@@ -74,7 +72,6 @@ namespace Cosmonaut.Unit
             var settings = new CosmosStoreSettings("test", "http://test.com", "key", setting =>
             {
                 setting.DefaultCollectionThroughput = 5000;
-                setting.MaximumUpscaleRequestUnits = 5000;
                 setting.IndexingPolicy = new IndexingPolicy();
                 setting.ConsistencyLevel = ConsistencyLevel.Eventual;
                 setting.ConnectionPolicy = ConnectionPolicy.Default;
@@ -88,7 +85,6 @@ namespace Cosmonaut.Unit
             settings.ConsistencyLevel.Should().BeEquivalentTo(ConsistencyLevel.Eventual);
             settings.IndexingPolicy.Should().NotBeNull();
             settings.DefaultCollectionThroughput.Should().Be(5000);
-            settings.MaximumUpscaleRequestUnits.Should().Be(5000);
         }
     }
 }

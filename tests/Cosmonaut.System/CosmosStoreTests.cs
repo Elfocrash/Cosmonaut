@@ -5,7 +5,6 @@ using System.Net;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Cosmonaut.Extensions.Microsoft.DependencyInjection;
-using Cosmonaut.Operations;
 using Cosmonaut.Response;
 using Cosmonaut.System.Models;
 using FluentAssertions;
@@ -368,95 +367,6 @@ namespace Cosmonaut.System
             lionFound.Should().BeNull();
             birdFound.Should().BeNull();
             alpacaFound.Should().BeNull();
-        }
-
-        [Fact]
-        public async Task WhenCollectionIsUpScaled_AndAutomaticScalingIsTurnedOff_ThenOfferDoesNotChange()
-        {
-            var catStore = new CosmosStore<Cat>(new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey), _collectionName);
-            var cosmosScaler = new CosmosScaler<Cat>(catStore);
-
-            await cosmosScaler.UpscaleCollectionRequestUnitsForRequest(_databaseId, _collectionName, 100, 5);
-
-            var offer = await catStore.CosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);
-
-            offer.Content.OfferThroughput.Should().Be(400);
-        }
-
-        [Fact]
-        public async Task WhenCollectionIsUpScaled_AndAutomaticScalingIsTurnedOn_ThenOfferIsUpscaled()
-        {
-            var catStore = new CosmosStore<Cat>(new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
-                settings =>
-                {
-                    settings.DefaultCollectionThroughput = 500;
-                    settings.ScaleCollectionRUsAutomatically = true;
-                }), _collectionName);
-            var cosmosScaler = new CosmosScaler<Cat>(catStore);
-
-            await cosmosScaler.UpscaleCollectionRequestUnitsForRequest(_databaseId, _collectionName, 100, 5);
-
-            var offer = await catStore.CosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);
-
-            offer.Content.OfferThroughput.Should().Be(500);
-        }
-
-        [Fact]
-        public async Task WhenCollectionIsDownScaled_AndAutomaticScalingIsTurnedOff_ThenOfferDoesNotChange()
-        {
-            var catStore = new CosmosStore<Cat>(new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
-                settings =>
-                {
-                    settings.DefaultCollectionThroughput = 500;
-                }), _collectionName);
-            var cosmosScaler = new CosmosScaler<Cat>(catStore);
-
-            var preScaleOffer = await catStore.CosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);
-
-            await cosmosScaler.DownscaleCollectionRequestUnitsToDefault(_databaseId, _collectionName);
-
-            var postScaleOffer = await catStore.CosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);
-
-            preScaleOffer.Content.OfferThroughput.Should().Be(500);
-            postScaleOffer.Content.OfferThroughput.Should().Be(500);
-        }
-
-        [Fact]
-        public async Task WhenCollectionIsDownScaled_AndAutomaticScalingIsTurnedOn_ThenOfferIsDownscaled()
-        {
-            var catStore = new CosmosStore<Cat>(new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
-                settings =>
-                {
-                    settings.DefaultCollectionThroughput = 500;
-                    settings.ScaleCollectionRUsAutomatically = true;
-                }), _collectionName);
-            var cosmosScaler = new CosmosScaler<Cat>(catStore);
-
-            await cosmosScaler.UpscaleCollectionRequestUnitsForRequest(_databaseId, _collectionName, 100, 6);
-            var preScaleOffer = await catStore.CosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);
-
-            await cosmosScaler.DownscaleCollectionRequestUnitsToDefault(_databaseId, _collectionName);
-
-            var postScaleOffer = await catStore.CosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);
-
-            preScaleOffer.Content.OfferThroughput.Should().Be(600);
-            postScaleOffer.Content.OfferThroughput.Should().Be(500);
-        }
-
-        [Fact]
-        public async Task WhenRUIntenseOperationHappens_AndAutomaticScalingIsTurnedOn_ThenOfferUpscaledAndDownscaled()
-        {
-            var catStore = new CosmosStore<Cat>(new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
-                settings =>
-                {
-                    settings.DefaultCollectionThroughput = 400;
-                    settings.ScaleCollectionRUsAutomatically = true;
-                }), _collectionName);
-            await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 400);
-
-
-            var postScaleOffer = await catStore.CosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);
-            postScaleOffer.Content.OfferThroughput.Should().Be(400);
         }
 
         [Fact]
