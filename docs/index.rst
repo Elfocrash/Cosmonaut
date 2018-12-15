@@ -27,6 +27,5 @@ Welcome to Cosmonaut's documentation!
    Document-operations
    Collection-sharing
    Pagination
-   Response-handling
    Dependency-injection
    Logging
