@@ -264,7 +264,7 @@ namespace Cosmonaut
         Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(IEnumerable<TEntity> entities, Func<TEntity, RequestOptions> requestOptions = null, CancellationToken cancellationToken = default);
         
         /// <summary>
-        ///     Removes the entity with he specified Id from the cosmos db store.
+        ///     Removes the entity with the specified Id from the cosmos db store.
         /// </summary>
         /// <typeparam name="TEntity">The type of the entity.</typeparam>
         /// <param name="id">The id of the entity attempting to remove. </param>
@@ -276,6 +276,20 @@ namespace Cosmonaut
         ///     various response information such as whether it was successful or what (if anything) went wrong.
         /// </returns>
         Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id, RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        ///     Removes the entity with the specified Id from the cosmos db store.
+        /// </summary>
+        /// <typeparam name="TEntity">The type of the entity.</typeparam>
+        /// <param name="id">The id of the entity attempting to remove. </param>
+        /// <param name="partitionKeyValue">The partition key value.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
+        /// <returns> 
+        ///     A task that represents the asynchronous RemoveById operation. The task result contains the
+        ///     <see cref="CosmosResponse{TEntity}"/> for the entity. The response provides access to 
+        ///     various response information such as whether it was successful or what (if anything) went wrong.
+        /// </returns>
+        Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id, object partitionKeyValue, CancellationToken cancellationToken = default);
 
         /// <summary>
         ///     Returns an entity by document/entity id from the cosmos db store. If the collection is partitioned you will need to provide the

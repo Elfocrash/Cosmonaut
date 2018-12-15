@@ -186,6 +186,15 @@ namespace Cosmonaut
             return new CosmosResponse<TEntity>(response);
         }
 
+        public async Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id, object partitionKeyValue, CancellationToken cancellationToken = default)
+        {
+            var requestOptions = partitionKeyValue != null
+                ? new RequestOptions { PartitionKey = new PartitionKey(partitionKeyValue) }
+                : null;
+
+            return await RemoveByIdAsync(id, requestOptions, cancellationToken);
+        }
+
         public async Task<TEntity> FindAsync(string id, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
             return await CosmonautClient.GetDocumentAsync<TEntity>(DatabaseName, CollectionName, id,
