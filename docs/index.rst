@@ -6,6 +6,7 @@ It eliminates the need for most of the data-access code that developers usually 
 for all of it's operations and ORM support.
 
 Github page: https://github.com/Elfocrash/Cosmonaut
+
 Nuget: https://www.nuget.org/packages/Cosmonaut
 
 New to Cosmonaut? Check out the :doc:`Getting-started` page first.
