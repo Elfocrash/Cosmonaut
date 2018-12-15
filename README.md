@@ -78,12 +78,12 @@ var users = await cosmoStore.Query().Where(x => x.HairColor == HairColor.Black).
 
 ```csharp
 // plain sql query
-var user = await cosmoStore.Query("select * from c w.Firstname = 'Smith'").ToListAsync();
+var user = await cosmoStore.Query("select * from c where c.Firstname = 'Smith'").ToListAsync();
 or
-var user = await cosmoStore.QueryMultipleAsync("select * from c w.Firstname = 'Smith'");
+var user = await cosmoStore.QueryMultipleAsync("select * from c where c.Firstname = 'Smith'");
 
 // or parameterised sql query
-var user = await cosmoStore.QueryMultipleAsync("select * from c w.Firstname = @name", new { name = "Smith" });
+var user = await cosmoStore.QueryMultipleAsync("select * from c where c.Firstname = @name", new { name = "Smith" });
 ```
 
 #### Collection sharing
