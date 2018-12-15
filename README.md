@@ -78,6 +78,8 @@ var users = await cosmoStore.Query().Where(x => x.HairColor == HairColor.Black).
 
 ```csharp
 // plain sql query
+var user = await cosmoStore.Query("select * from c w.Firstname = 'Smith'").ToListAsync();
+or
 var user = await cosmoStore.QueryMultipleAsync("select * from c w.Firstname = 'Smith'");
 
 // or parameterised sql query
