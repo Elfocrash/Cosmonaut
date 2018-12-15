@@ -16,6 +16,7 @@ Welcome to Cosmonaut's documentation!
    Getting-started
    The-CosmosStore
    CosmonautClient
+   Preparing-your-classes-for-the-CosmosStore
 
 .. _feature-docs:
 

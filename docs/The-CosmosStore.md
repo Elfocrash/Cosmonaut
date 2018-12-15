@@ -23,7 +23,7 @@ The choice to go with one or the other is completely up to you and it comes down
 
 In order for an entity to be able to be stored, manipulated and retrieved in a CosmosStore it is required to have a mandatory property. This is the `id` property.
 
-It needs to be a `string` property with name Id (or any capitalisation you want). Even though not neccessary, you should also decorate it with the `[JsonProperty("id")]` attribute. This is neccessary if you want to do any querying based on the id (querying NOT reading). It will also help with unintented behavour when it comes to object mapping and LINQ to SQL transformations.
+It needs to be a `string` property with the name either being `Id` (with any capitalisation) or any other name but decorated with the `[JsonProperty("id")]` attribute. Even though not neccessary, when the property is named Id, you should also decorate it with the `[JsonProperty("id")]` attribute. This is neccessary if you want to do any querying based on the id (querying NOT reading). It will also help with unintented behavour when it comes to object mapping and LINQ to SQL transformations.
 
 ### CosmosStore's lifetime
 
