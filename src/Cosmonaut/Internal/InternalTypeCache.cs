@@ -8,7 +8,7 @@ namespace Cosmonaut.Internal
     {
         private static InternalTypeCache _instance;
         private static readonly object Padlock = new object();
-        private const string LibVersion = ", Microsoft.Azure.DocumentDB.Core, Version=2.1.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35";
+        private const string LibVersion = ", Microsoft.Azure.DocumentDB.Core, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35";
 
         internal ConstructorInfo DocumentServiceResponseCtorInfo { get; }
 
