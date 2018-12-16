@@ -331,20 +331,86 @@ namespace Cosmonaut.System
             var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
             var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
             var birdStore = _serviceProvider.GetService<ICosmosStore<Bird>>();
-            var addedCats = await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 1);
-            var addedDogs = await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list), 1);
-            var addedLions = await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list), 1);
-            var addedBirds = await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list), 1);
+            var addedCat = (await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedDog = (await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedLion = (await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedBird = (await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
 
             var catFound = await catStore.Query().FirstAsync();
             var dogFound = await dogStore.Query().FirstOrDefaultAsync();
             var lionFound = await lionStore.Query().SingleAsync();
             var birdFound = await birdStore.Query(new FeedOptions{MaxItemCount = 100}).SingleOrDefaultAsync();
 
-            catFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Cat>(addedCats.SuccessfulEntities.Single().ResourceResponse.Resource.ToString()));
-            dogFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Dog>(addedDogs.SuccessfulEntities.Single().ResourceResponse.Resource.ToString()));
-            lionFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Lion>(addedLions.SuccessfulEntities.Single().ResourceResponse.Resource.ToString()));
-            birdFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Bird>(addedBirds.SuccessfulEntities.Single().ResourceResponse.Resource.ToString()));
+            catFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Cat>(addedCat.ResourceResponse.Resource.ToString()));
+            dogFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Dog>(addedDog.ResourceResponse.Resource.ToString()));
+            lionFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Lion>(addedLion.ResourceResponse.Resource.ToString()));
+            birdFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Bird>(addedBird.ResourceResponse.Resource.ToString()));
+        }
+
+        [Fact]
+        public async Task WhenExistingEntitiesAreRemovedById_ThenTheyAreRemovedSuccessfully()
+        {
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
+            var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            var birdStore = _serviceProvider.GetService<ICosmosStore<Bird>>();
+            var alpacaStore = _serviceProvider.GetService<ICosmosStore<Alpaca>>();
+            var addedCat = (await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedDog = (await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedLion = (await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedBird = (await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedAlpaca = (await ExecuteMultipleAddOperationsForType<Alpaca>(list => alpacaStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+
+            var removedCat = await catStore.RemoveByIdAsync(addedCat.Entity.CatId);
+            var removedDog = await dogStore.RemoveByIdAsync(addedDog.Entity.Id);
+            var removedLion = await lionStore.RemoveByIdAsync(addedLion.Entity.Id, addedLion.Entity.Id);
+            var removedBird = await birdStore.RemoveByIdAsync(addedBird.Entity.Id, addedBird.Entity.Id);
+            var removedAlpaca = await alpacaStore.RemoveByIdAsync(addedAlpaca.Entity.Id);
+
+            removedCat.IsSuccess.Should().BeTrue();
+            removedDog.IsSuccess.Should().BeTrue();
+            removedLion.IsSuccess.Should().BeTrue();
+            removedBird.IsSuccess.Should().BeTrue();
+            removedAlpaca.IsSuccess.Should().BeTrue();
+
+            removedCat.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            removedDog.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            removedLion.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            removedBird.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            removedAlpaca.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        }
+
+        [Fact]
+        public async Task WhenExistingEntitiesAreRemovedByEntity_ThenTheyAreRemovedSuccessfully()
+        {
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
+            var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            var birdStore = _serviceProvider.GetService<ICosmosStore<Bird>>();
+            var alpacaStore = _serviceProvider.GetService<ICosmosStore<Alpaca>>();
+            var addedCat = (await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedDog = (await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedLion = (await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedBird = (await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedAlpaca = (await ExecuteMultipleAddOperationsForType<Alpaca>(list => alpacaStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+
+            var removedCat = await catStore.RemoveAsync(addedCat);
+            var removedDog = await dogStore.RemoveAsync(addedDog);
+            var removedLion = await lionStore.RemoveAsync(addedLion);
+            var removedBird = await birdStore.RemoveAsync(addedBird);
+            var removedAlpaca = await alpacaStore.RemoveAsync(addedAlpaca);
+
+            removedCat.IsSuccess.Should().BeTrue();
+            removedDog.IsSuccess.Should().BeTrue();
+            removedLion.IsSuccess.Should().BeTrue();
+            removedBird.IsSuccess.Should().BeTrue();
+            removedAlpaca.IsSuccess.Should().BeTrue();
+
+            removedCat.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            removedDog.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            removedLion.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            removedBird.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            removedAlpaca.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
         }
 
         [Fact]
