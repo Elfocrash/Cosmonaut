@@ -249,6 +249,40 @@ namespace Cosmonaut.System
         }
 
         [Fact]
+        public async Task WhenInValidEntitiesAreUpdated_ThenUpdatedResultsAreUnsuccessful()
+        {
+            void ValidateBadUpdateResponse<T>(CosmosMultipleResponse<T> cosmosMultipleResponse) where T : class
+            {
+                cosmosMultipleResponse.IsSuccess.Should().BeFalse();
+                cosmosMultipleResponse.SuccessfulEntities.Should().BeEmpty();
+                cosmosMultipleResponse.FailedEntities.ForEach(x =>
+                {
+                    x.CosmosOperationStatus.Should().Be(CosmosOperationStatus.ResourceNotFound);
+                    x.IsSuccess.Should().BeFalse();
+                });
+            }
+
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
+            var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            var birdStore = _serviceProvider.GetService<ICosmosStore<Bird>>();
+            var addedCats = new List<Cat> {new Cat {CatId = Guid.NewGuid().ToString()}};
+            var addedDogs = new List<Dog> { new Dog { Id = Guid.NewGuid().ToString() } };
+            var addedLions = new List<Lion> { new Lion { Id = Guid.NewGuid().ToString() } };
+            var addedBirds = new List<Bird> { new Bird { Id = Guid.NewGuid().ToString() } };
+
+            var catResults = await catStore.UpdateRangeAsync(addedCats);
+            var dogResults = await dogStore.UpdateRangeAsync(addedDogs);
+            var lionResults = await lionStore.UpdateRangeAsync(addedLions);
+            var birdResults = await birdStore.UpdateRangeAsync(addedBirds);
+
+            ValidateBadUpdateResponse(catResults);
+            ValidateBadUpdateResponse(dogResults);
+            ValidateBadUpdateResponse(lionResults);
+            ValidateBadUpdateResponse(birdResults);
+        }
+        
+        [Fact]
         public async Task WhenValidEntitiesAreUpserted_ThenUpsertedResultsAreSuccessful()
         {
             var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();

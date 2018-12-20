@@ -66,7 +66,7 @@ namespace Cosmonaut.Extensions
             try
             {
                 var response = await operationTask;
-                return new CosmosResponse<TEntity>(entity, response);
+                return response == null ? new CosmosResponse<TEntity>(entity, null, CosmosOperationStatus.ResourceNotFound) : new CosmosResponse<TEntity>(entity, response);
             }
             catch (DocumentClientException exception)
             {
