@@ -8,6 +8,8 @@
 
 Cosmonaut is a supercharged SDK with object mapping capabilities that enables .NET developers to work with CosmosDB. It eliminates the need for most of the data-access code that developers usually need to write.
 
+### [Documentation](https://cosmonaut.readthedocs.io/en/latest)
+
 ### Getting started
 
 - [How to easily start using CosmosDB in your C# application in no time with Cosmonaut](http://chapsas.com/how-to-easily-start-using-cosmosdb-in-your-c-application-in-no-time-with-cosmonaut/)
