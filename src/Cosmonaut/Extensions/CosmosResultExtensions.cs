@@ -149,15 +149,8 @@ namespace Cosmonaut.Extensions
 
         private static void SetFeedOptionsForSingleOperation<T>(ref IQueryable<T> queryable, out FeedOptions feedOptions)
         {
-            feedOptions = queryable.GetFeedOptionsForQueryable();
-            if (feedOptions != null)
-            {
-                feedOptions.MaxItemCount = 1;
-                queryable.SetFeedOptionsForQueryable(feedOptions);
-                return;
-            }
-
-            feedOptions = new FeedOptions {MaxItemCount = 1};
+            feedOptions = queryable.GetFeedOptionsForQueryable() ?? new FeedOptions();
+            feedOptions.MaxItemCount = 1;
             queryable.SetFeedOptionsForQueryable(feedOptions);
         }
 
