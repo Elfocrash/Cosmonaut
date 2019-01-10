@@ -46,6 +46,12 @@ namespace Cosmonaut
         Task<OfferV2> GetOfferV2ForCollectionAsync(string databaseId, string collectionId,
             FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
 
+        Task<Offer> GetOfferForDatabaseAsync(string databaseId, FeedOptions feedOptions = null,
+            CancellationToken cancellationToken = default);
+
+        Task<OfferV2> GetOfferV2ForDatabaseAsync(string databaseId, FeedOptions feedOptions = null,
+            CancellationToken cancellationToken = default);
+
         Task<IEnumerable<Offer>> QueryOffersAsync(Expression<Func<Offer, bool>> predicate = null,
             FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
 

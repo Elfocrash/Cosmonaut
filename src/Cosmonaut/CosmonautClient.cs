@@ -151,6 +151,23 @@ namespace Cosmonaut
             return (OfferV2) await GetOfferForCollectionAsync(databaseId, collectionId, feedOptions, cancellationToken);
         }
 
+        public async Task<Offer> GetOfferForDatabaseAsync(string databaseId, FeedOptions feedOptions = null,
+            CancellationToken cancellationToken = default)
+        {
+            var database = await GetDatabaseAsync(databaseId);
+
+            if (database == null)
+                return null;
+
+            return await DocumentClient.CreateOfferQuery(feedOptions).SingleOrDefaultAsync(x => x.ResourceLink == database.SelfLink, cancellationToken);
+        }
+
+        public async Task<OfferV2> GetOfferV2ForDatabaseAsync(string databaseId, FeedOptions feedOptions = null,
+            CancellationToken cancellationToken = default)
+        {
+            return (OfferV2)await GetOfferForDatabaseAsync(databaseId, feedOptions, cancellationToken);
+        }
+
         public async Task<IEnumerable<Offer>> QueryOffersAsync(Expression<Func<Offer, bool>> predicate = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
             if (predicate == null) predicate = x => true;

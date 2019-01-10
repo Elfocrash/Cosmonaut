@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -20,6 +21,7 @@ namespace Cosmonaut.System
         private readonly ICosmonautClient _cosmonautClient;
         private readonly Uri _emulatorUri = new Uri("https://localhost:8081");
         private readonly string _databaseId = $"DB{nameof(CosmonautClientTests)}";
+        private readonly string _scaleableDbId = $"SDB{nameof(CosmonautClientTests)}";
         private readonly string _collectionName = $"COL{nameof(CosmonautClientTests)}";
         private readonly string _emulatorKey =
             "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
@@ -38,6 +40,66 @@ namespace Cosmonaut.System
                 Id = _collectionName,
                 IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.Number, -1), new RangeIndex(DataType.String, -1))
             }).GetAwaiter().GetResult();
+        }
+
+        [Fact]
+        public async Task CreateDatabaseAsync_WhenUsingWithOffer_ThenDatabaseIsCreatedWithDbLevelScaling()
+        {
+            // Arrange
+            var expectedThroughput = 10000;
+
+            // Act
+            await _cosmonautClient.CreateDatabaseAsync(new Database { Id = _scaleableDbId },
+                new RequestOptions { OfferThroughput = 10000 });
+
+            // Assert
+            var offer = await _cosmonautClient.GetOfferV2ForDatabaseAsync(_scaleableDbId);
+            offer.Content.OfferThroughput.Should().Be(expectedThroughput);
+        }
+
+        [Fact]
+        public async Task UpdateOfferAsync_WhenUsingDbOffer_ThenDbOfferIsUpdated()
+        {
+            // Arrange
+            var expectedThroughput = 20000;
+            await _cosmonautClient.CreateDatabaseAsync(new Database { Id = _scaleableDbId },
+                new RequestOptions { OfferThroughput = 10000 });
+            var offer = await _cosmonautClient.GetOfferV2ForDatabaseAsync(_scaleableDbId);
+
+            // Act
+            var newOffer = new OfferV2(offer, expectedThroughput);
+            var updatedOffer = await _cosmonautClient.UpdateOfferAsync(newOffer);
+
+            // Assert
+            updatedOffer.StatusCode.Should().Be(HttpStatusCode.OK);
+            var dbOffer = await _cosmonautClient.GetOfferV2ForDatabaseAsync(_scaleableDbId);
+            dbOffer.Content.OfferThroughput.Should().Be(expectedThroughput);
+        }
+
+        [Fact]
+        public async Task GetOfferV2ForDatabaseAsync_WhenDatabaseIsNotDbLevelScaleable_ThenDbOfferShouldNotExist()
+        {
+            // Act
+            var dbOffer = await _cosmonautClient.GetOfferV2ForDatabaseAsync(_databaseId);
+
+            // Assert
+            dbOffer.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task GetOfferV2ForCollectionAsync_WhenDatabaseIsDbLevelScaleable_ThenCollectionOfferShouldNotExist()
+        {
+            // Arrange
+            await _cosmonautClient.CreateDatabaseAsync(new Database { Id = _scaleableDbId },
+                new RequestOptions { OfferThroughput = 10000 });
+            await _cosmonautClient.CreateCollectionAsync(_scaleableDbId, new DocumentCollection { Id = _collectionName,
+                PartitionKey = new PartitionKeyDefinition(){Paths = new Collection<string>(new List<string>{"/id"})}});
+
+            // Act
+            var collectionOffer = await _cosmonautClient.GetOfferV2ForCollectionAsync(_scaleableDbId, _collectionName);
+
+            // Assert
+            collectionOffer.Should().BeNull();
         }
 
         [Fact]
@@ -544,6 +606,7 @@ namespace Cosmonaut.System
         public void Dispose()
         {
             _cosmonautClient.DeleteDatabaseAsync(_databaseId).GetAwaiter().GetResult();
+            _cosmonautClient.DeleteDatabaseAsync(_scaleableDbId).GetAwaiter().GetResult();
         }
 
         private static Func<EquivalencyAssertionOptions<Cat>, EquivalencyAssertionOptions<Cat>> ExcludeEtagCheck()
