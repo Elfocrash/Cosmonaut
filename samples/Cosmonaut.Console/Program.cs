@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Cosmonaut.Extensions.Microsoft.DependencyInjection;
+using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,12 +15,15 @@ namespace Cosmonaut.Console
     {
         static async Task Main(string[] args)
         {
+            //Uncomment to enable Serilog logging
+            //SerilogEventListener.Instance.Initialize();
+
             var connectionPolicy = new ConnectionPolicy
             {
                 ConnectionProtocol = Protocol.Tcp,
                 ConnectionMode = ConnectionMode.Direct
             };
-
+            
             var cosmosSettings = new CosmosStoreSettings("localtest", 
                 "https://localhost:8081", 
                 "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
@@ -47,6 +51,18 @@ namespace Cosmonaut.Console
             var carStore = provider.GetService<ICosmosStore<Car>>();
             
             System.Console.WriteLine($"Started");
+
+            var scaleableDb = await cosmonautClient.GetDatabaseAsync("scaleabledb");
+
+            if(scaleableDb == null)
+                scaleableDb = await cosmonautClient.CreateDatabaseAsync(new Database {Id = "scaleabledb"},
+                new RequestOptions {OfferThroughput = 10000});
+
+            var dbOffer = await cosmonautClient.GetOfferForDatabaseAsync("scaleabledb");
+            var dbOfferV2 = await cosmonautClient.GetOfferV2ForDatabaseAsync("scaleabledb");
+
+            var newOffer = new OfferV2(dbOffer, 20000);
+            var offerResponse = await cosmonautClient.UpdateOfferAsync(newOffer);
 
             var database = await cosmonautClient.GetDatabaseAsync("localtest");
             System.Console.WriteLine($"Retrieved database with id {database.Id}");

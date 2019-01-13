@@ -74,21 +74,7 @@ namespace Cosmonaut.Diagnostics
         {
             return CosmosEventDataConverter.ConvertToDependencyFromEventData(eventData);
         }
-
-        internal static string GetAgentName(this object invoker)
-        {
-            var type = invoker.GetType();
-
-            if (!type.IsConstructedGenericType)
-            {
-                return type.Name;
-            }
-
-            var i = type.Name.IndexOf('`');
-
-            return i <= -1 ? type.Name.Substring(0, i) : type.Name;
-        }
-
+        
         internal static CosmosEventCall CreateCosmosEventCall(
             this object agent,
             string data,
@@ -98,7 +84,7 @@ namespace Cosmonaut.Diagnostics
         {
             var dependencyData = new CosmosEventMetadata()
             {
-                DependencyTypeName = GetAgentName(agent),
+                DependencyTypeName = "Cosmos DB",
                 Target = target,
                 DependencyName = name,
                 Data = data,

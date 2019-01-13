@@ -5,7 +5,6 @@ using System.Net;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Cosmonaut.Extensions.Microsoft.DependencyInjection;
-using Cosmonaut.Operations;
 using Cosmonaut.Response;
 using Cosmonaut.System.Models;
 using FluentAssertions;
@@ -250,6 +249,40 @@ namespace Cosmonaut.System
         }
 
         [Fact]
+        public async Task WhenInValidEntitiesAreUpdated_ThenUpdatedResultsAreUnsuccessful()
+        {
+            void ValidateBadUpdateResponse<T>(CosmosMultipleResponse<T> cosmosMultipleResponse) where T : class
+            {
+                cosmosMultipleResponse.IsSuccess.Should().BeFalse();
+                cosmosMultipleResponse.SuccessfulEntities.Should().BeEmpty();
+                cosmosMultipleResponse.FailedEntities.ForEach(x =>
+                {
+                    x.CosmosOperationStatus.Should().Be(CosmosOperationStatus.ResourceNotFound);
+                    x.IsSuccess.Should().BeFalse();
+                });
+            }
+
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
+            var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            var birdStore = _serviceProvider.GetService<ICosmosStore<Bird>>();
+            var addedCats = new List<Cat> {new Cat {CatId = Guid.NewGuid().ToString()}};
+            var addedDogs = new List<Dog> { new Dog { Id = Guid.NewGuid().ToString() } };
+            var addedLions = new List<Lion> { new Lion { Id = Guid.NewGuid().ToString() } };
+            var addedBirds = new List<Bird> { new Bird { Id = Guid.NewGuid().ToString() } };
+
+            var catResults = await catStore.UpdateRangeAsync(addedCats);
+            var dogResults = await dogStore.UpdateRangeAsync(addedDogs);
+            var lionResults = await lionStore.UpdateRangeAsync(addedLions);
+            var birdResults = await birdStore.UpdateRangeAsync(addedBirds);
+
+            ValidateBadUpdateResponse(catResults);
+            ValidateBadUpdateResponse(dogResults);
+            ValidateBadUpdateResponse(lionResults);
+            ValidateBadUpdateResponse(birdResults);
+        }
+        
+        [Fact]
         public async Task WhenValidEntitiesAreUpserted_ThenUpsertedResultsAreSuccessful()
         {
             var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
@@ -332,20 +365,86 @@ namespace Cosmonaut.System
             var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
             var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
             var birdStore = _serviceProvider.GetService<ICosmosStore<Bird>>();
-            var addedCats = await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 1);
-            var addedDogs = await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list), 1);
-            var addedLions = await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list), 1);
-            var addedBirds = await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list), 1);
+            var addedCat = (await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedDog = (await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedLion = (await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedBird = (await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
 
             var catFound = await catStore.Query().FirstAsync();
             var dogFound = await dogStore.Query().FirstOrDefaultAsync();
             var lionFound = await lionStore.Query().SingleAsync();
             var birdFound = await birdStore.Query(new FeedOptions{MaxItemCount = 100}).SingleOrDefaultAsync();
 
-            catFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Cat>(addedCats.SuccessfulEntities.Single().ResourceResponse.Resource.ToString()));
-            dogFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Dog>(addedDogs.SuccessfulEntities.Single().ResourceResponse.Resource.ToString()));
-            lionFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Lion>(addedLions.SuccessfulEntities.Single().ResourceResponse.Resource.ToString()));
-            birdFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Bird>(addedBirds.SuccessfulEntities.Single().ResourceResponse.Resource.ToString()));
+            catFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Cat>(addedCat.ResourceResponse.Resource.ToString()));
+            dogFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Dog>(addedDog.ResourceResponse.Resource.ToString()));
+            lionFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Lion>(addedLion.ResourceResponse.Resource.ToString()));
+            birdFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Bird>(addedBird.ResourceResponse.Resource.ToString()));
+        }
+
+        [Fact]
+        public async Task WhenExistingEntitiesAreRemovedById_ThenTheyAreRemovedSuccessfully()
+        {
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
+            var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            var birdStore = _serviceProvider.GetService<ICosmosStore<Bird>>();
+            var alpacaStore = _serviceProvider.GetService<ICosmosStore<Alpaca>>();
+            var addedCat = (await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedDog = (await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedLion = (await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedBird = (await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedAlpaca = (await ExecuteMultipleAddOperationsForType<Alpaca>(list => alpacaStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+
+            var removedCat = await catStore.RemoveByIdAsync(addedCat.Entity.CatId);
+            var removedDog = await dogStore.RemoveByIdAsync(addedDog.Entity.Id);
+            var removedLion = await lionStore.RemoveByIdAsync(addedLion.Entity.Id, addedLion.Entity.Id);
+            var removedBird = await birdStore.RemoveByIdAsync(addedBird.Entity.Id, addedBird.Entity.Id);
+            var removedAlpaca = await alpacaStore.RemoveByIdAsync(addedAlpaca.Entity.Id);
+
+            removedCat.IsSuccess.Should().BeTrue();
+            removedDog.IsSuccess.Should().BeTrue();
+            removedLion.IsSuccess.Should().BeTrue();
+            removedBird.IsSuccess.Should().BeTrue();
+            removedAlpaca.IsSuccess.Should().BeTrue();
+
+            removedCat.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            removedDog.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            removedLion.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            removedBird.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            removedAlpaca.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        }
+
+        [Fact]
+        public async Task WhenExistingEntitiesAreRemovedByEntity_ThenTheyAreRemovedSuccessfully()
+        {
+            var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
+            var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
+            var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
+            var birdStore = _serviceProvider.GetService<ICosmosStore<Bird>>();
+            var alpacaStore = _serviceProvider.GetService<ICosmosStore<Alpaca>>();
+            var addedCat = (await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedDog = (await ExecuteMultipleAddOperationsForType<Dog>(list => dogStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedLion = (await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedBird = (await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+            var addedAlpaca = (await ExecuteMultipleAddOperationsForType<Alpaca>(list => alpacaStore.AddRangeAsync(list), 1)).SuccessfulEntities.Single();
+
+            var removedCat = await catStore.RemoveAsync(addedCat);
+            var removedDog = await dogStore.RemoveAsync(addedDog);
+            var removedLion = await lionStore.RemoveAsync(addedLion);
+            var removedBird = await birdStore.RemoveAsync(addedBird);
+            var removedAlpaca = await alpacaStore.RemoveAsync(addedAlpaca);
+
+            removedCat.IsSuccess.Should().BeTrue();
+            removedDog.IsSuccess.Should().BeTrue();
+            removedLion.IsSuccess.Should().BeTrue();
+            removedBird.IsSuccess.Should().BeTrue();
+            removedAlpaca.IsSuccess.Should().BeTrue();
+
+            removedCat.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            removedDog.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            removedLion.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            removedBird.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            removedAlpaca.ResourceResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
         }
 
         [Fact]
@@ -368,95 +467,6 @@ namespace Cosmonaut.System
             lionFound.Should().BeNull();
             birdFound.Should().BeNull();
             alpacaFound.Should().BeNull();
-        }
-
-        [Fact]
-        public async Task WhenCollectionIsUpScaled_AndAutomaticScalingIsTurnedOff_ThenOfferDoesNotChange()
-        {
-            var catStore = new CosmosStore<Cat>(new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey), _collectionName);
-            var cosmosScaler = new CosmosScaler<Cat>(catStore);
-
-            await cosmosScaler.UpscaleCollectionRequestUnitsForRequest(_databaseId, _collectionName, 100, 5);
-
-            var offer = await catStore.CosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);
-
-            offer.Content.OfferThroughput.Should().Be(400);
-        }
-
-        [Fact]
-        public async Task WhenCollectionIsUpScaled_AndAutomaticScalingIsTurnedOn_ThenOfferIsUpscaled()
-        {
-            var catStore = new CosmosStore<Cat>(new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
-                settings =>
-                {
-                    settings.DefaultCollectionThroughput = 500;
-                    settings.ScaleCollectionRUsAutomatically = true;
-                }), _collectionName);
-            var cosmosScaler = new CosmosScaler<Cat>(catStore);
-
-            await cosmosScaler.UpscaleCollectionRequestUnitsForRequest(_databaseId, _collectionName, 100, 5);
-
-            var offer = await catStore.CosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);
-
-            offer.Content.OfferThroughput.Should().Be(500);
-        }
-
-        [Fact]
-        public async Task WhenCollectionIsDownScaled_AndAutomaticScalingIsTurnedOff_ThenOfferDoesNotChange()
-        {
-            var catStore = new CosmosStore<Cat>(new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
-                settings =>
-                {
-                    settings.DefaultCollectionThroughput = 500;
-                }), _collectionName);
-            var cosmosScaler = new CosmosScaler<Cat>(catStore);
-
-            var preScaleOffer = await catStore.CosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);
-
-            await cosmosScaler.DownscaleCollectionRequestUnitsToDefault(_databaseId, _collectionName);
-
-            var postScaleOffer = await catStore.CosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);
-
-            preScaleOffer.Content.OfferThroughput.Should().Be(500);
-            postScaleOffer.Content.OfferThroughput.Should().Be(500);
-        }
-
-        [Fact]
-        public async Task WhenCollectionIsDownScaled_AndAutomaticScalingIsTurnedOn_ThenOfferIsDownscaled()
-        {
-            var catStore = new CosmosStore<Cat>(new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
-                settings =>
-                {
-                    settings.DefaultCollectionThroughput = 500;
-                    settings.ScaleCollectionRUsAutomatically = true;
-                }), _collectionName);
-            var cosmosScaler = new CosmosScaler<Cat>(catStore);
-
-            await cosmosScaler.UpscaleCollectionRequestUnitsForRequest(_databaseId, _collectionName, 100, 6);
-            var preScaleOffer = await catStore.CosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);
-
-            await cosmosScaler.DownscaleCollectionRequestUnitsToDefault(_databaseId, _collectionName);
-
-            var postScaleOffer = await catStore.CosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);
-
-            preScaleOffer.Content.OfferThroughput.Should().Be(600);
-            postScaleOffer.Content.OfferThroughput.Should().Be(500);
-        }
-
-        [Fact]
-        public async Task WhenRUIntenseOperationHappens_AndAutomaticScalingIsTurnedOn_ThenOfferUpscaledAndDownscaled()
-        {
-            var catStore = new CosmosStore<Cat>(new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
-                settings =>
-                {
-                    settings.DefaultCollectionThroughput = 400;
-                    settings.ScaleCollectionRUsAutomatically = true;
-                }), _collectionName);
-            await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 400);
-
-
-            var postScaleOffer = await catStore.CosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);
-            postScaleOffer.Content.OfferThroughput.Should().Be(400);
         }
 
         [Fact]

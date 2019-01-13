@@ -52,12 +52,5 @@ namespace Cosmonaut.Extensions
 
             return hasSharedCosmosCollectionAttribute;
         }
-
-        internal static int GetCollectionThroughputForEntity(this Type entityType,
-            int collectionThroughput)
-        {
-            if (collectionThroughput < CosmosConstants.MinimumCosmosThroughput) throw new IllegalCosmosThroughputException();
-            return collectionThroughput;
-        }
     }
 }

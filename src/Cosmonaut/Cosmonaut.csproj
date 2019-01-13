@@ -12,7 +12,7 @@
     <RepositoryUrl>https://github.com/Elfocrash/Cosmonaut</RepositoryUrl>
     <PackageTags>azure entitystore entity db orm microsoft cosmos cosmosdb documentdb docdb nosql azureofficial dotnetcore netcore netstandard</PackageTags>
     <PackageReleaseNotes>Please report any issues on Github.</PackageReleaseNotes>
-    <Version>2.6.1</Version>
+    <Version>2.8.0</Version>
     <NeutralLanguage></NeutralLanguage>
     <Company>Nick Chapsas</Company>
     <PackageIconUrl>https://raw.githubusercontent.com/Elfocrash/Cosmonaut/develop/logo.png</PackageIconUrl>
@@ -27,8 +27,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Humanizer.Core.uk" Version="2.5.1" />
-    <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="2.1.3" />
+    <PackageReference Include="Humanizer.Core.uk" Version="2.5.16" />
+    <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="2.2.1" />
   </ItemGroup>
 
 </Project>

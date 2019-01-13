@@ -1,4 +1,4 @@
-[![Build Status](https://dev.azure.com/nickchapsas/Cosmonaut/_apis/build/status/Elfocrash.Cosmonaut)](https://dev.azure.com/nickchapsas/Cosmonaut/_build/latest?definitionId=2) [![NuGet Package](https://img.shields.io/nuget/v/Cosmonaut.svg)](https://www.nuget.org/packages/Cosmonaut) [![Licensed under the MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/Elfocrash/Cosmonaut/blob/master/LICENSE)
+[![Build Status](https://dev.azure.com/nickchapsas/Cosmonaut/_apis/build/status/Elfocrash.Cosmonaut)](https://dev.azure.com/nickchapsas/Cosmonaut/_build/latest?definitionId=2) [![NuGet Package](https://img.shields.io/nuget/v/Cosmonaut.svg)](https://www.nuget.org/packages/Cosmonaut) [![Documentation Status](https://readthedocs.org/projects/cosmonaut/badge/?version=latest)](https://cosmonaut.readthedocs.io/en/latest/?badge=latest) [![Licensed under the MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/Elfocrash/Cosmonaut/blob/master/LICENSE)
 
 # Cosmonaut
 
@@ -7,6 +7,8 @@
 > The word was derived from "kosmos" (Ancient Greek: κόσμος) which means world/universe and "nautes" (Ancient Greek: ναῦς) which means sailor/navigator
 
 Cosmonaut is a supercharged SDK with object mapping capabilities that enables .NET developers to work with CosmosDB. It eliminates the need for most of the data-access code that developers usually need to write.
+
+### [Documentation](https://cosmonaut.readthedocs.io/en/latest)
 
 ### Getting started
 
@@ -78,16 +80,18 @@ var users = await cosmoStore.Query().Where(x => x.HairColor == HairColor.Black).
 
 ```csharp
 // plain sql query
-var user = await cosmoStore.QueryMultipleAsync("select * from c w.Firstname = 'Smith'");
+var user = await cosmoStore.Query("select * from c where c.Firstname = 'Smith'").ToListAsync();
+or
+var user = await cosmoStore.QueryMultipleAsync("select * from c where c.Firstname = 'Smith'");
 
 // or parameterised sql query
-var user = await cosmoStore.QueryMultipleAsync("select * from c w.Firstname = @name", new { name = "Smith" });
+var user = await cosmoStore.QueryMultipleAsync("select * from c where c.Firstname = @name", new { name = "Smith" });
 ```
 
 #### Collection sharing
-Cosmonaut is all about making the integration with CosmosDB easy as well as making things like cost optimisation part of the library.
+Cosmonaut is all about making integrating with Cosmos DB easy as well as making things such as cost optimisation part of the library.
 
-That's why Cosmonaut support collection sharing between different types of entities.
+That's why Cosmonaut supports transparent collection sharing between different types of entities.
 
 Why would you do that?
 
@@ -104,7 +108,54 @@ The `EntityName` will be used to make the object identifiable for Cosmosnaut. Be
 
 Once you set this up you can add individual CosmosStores with shared collections.
 
-##### Pagination
+
+#### Collection naming
+
+Your collections will automatically be named based on the plural of the object you are using in the generic type.
+However you can override that by decorating the class with the `CosmosCollection` attribute.
+
+Example:
+```csharp
+[CosmosCollection("somename")]
+```
+
+By default you are required to specify your collection name in the attribute level shared entities like this:
+
+```c#
+[SharedCosmosCollection("shared")]
+public class Car : ISharedCosmosEntity
+{
+    public string Id { get; set; }
+    public string CosmosEntityName { get; set; }
+}
+```
+
+Even though this is convinient I understand that you might need to have a dynamic way of setting this. 
+That's why the `CosmosStore` class has some extra constructors that allow you to specify the `overriddenCollectionName` property. This property will override any collection name specified at the attribute level and will use that one instead.
+
+Note: If you have specified a `CollectionPrefix` at the `CosmosStoreSettings` level it will still be added. You are only overriding the collection name that the attribute would normally set.
+
+Example
+
+Class implementation:
+```c#
+[SharedCosmosCollection("shared")]
+public class Car : ISharedCosmosEntity
+{
+    public string Id { get; set; }
+    public string CosmosEntityName { get; set; }
+}
+```
+
+CosmosStore initialisation:
+```c#
+var cosmosStore = new CosmosStore<Car>(someSettings, "oldcars");
+```
+
+The outcome of this would be a collection named `oldcars` becase the `shared` collection name is overriden in the constructor. 
+There are also method overloads for the same property at the dependency injection extension level.
+
+#### Pagination
 
 Cosmonaut supports two types of pagination.
 
@@ -256,15 +307,6 @@ Partitions are great but you should these 3 very important things about them and
 * If you use the the Upsert method to update an entity that had the value of the property that is the partition key changed, then CosmosDB won't update the document but instead it will create a whole different document with the same id but the changed partition key value.
 
 More on the third issue here [Unique keys in Azure Cosmos DB](https://docs.microsoft.com/en-us/azure/cosmos-db/unique-keys)
-
-#### Collection naming
-Your collections will automatically be named based on the plural of the object you are using in the generic type.
-However you can override that by decorating the class with the `CosmosCollection` attribute.
-
-Example:
-```csharp
-[CosmosCollection("somename")]
-```
 
 ### Logging
 
