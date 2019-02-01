@@ -37,3 +37,5 @@ Even though this is convinient I understand that you might need to have a more d
 > Note: If you have specified a CollectionPrefix at the CosmosStoreSettings level it will still be added. You are only overriding the collection name that the attribute would normally set.
 
 If you want your shared collection to be partitioned then make sure than the partition key definition is the same in all the objects that are hosted in this collection.
+
+You can also use the `SharedCosmosCollection` constructor overload that uses the `UseEntityFullName` boolean. By using that constructor Cosmonaut will automatically assign the full namespace of the entity as the discriminator value.
