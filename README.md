@@ -243,53 +243,6 @@ There is currently no way to reliably do transactions with the current CosmosDB 
 
 Every operational call (Add, Update, Upsert, Delete) however returns it's status back alongside the reason it failed, if it failed, and the entity so you can add your own retry logic.
 
-#### Indexing
-By default CosmosDB is created with the following indexing rules
-
-```javascript
-{
-    "indexingMode": "consistent",
-    "automatic": true,
-    "includedPaths": [
-        {
-            "path": "/*",
-            "indexes": [
-                {
-                    "kind": "Range",
-                    "dataType": "Number",
-                    "precision": -1
-                },
-                {
-                    "kind": "Range",
-                    "dataType": "String",
-                    "precision": -1
-                }
-                {
-                    "kind": "Spatial",
-                    "dataType": "Point"
-                }
-            ]
-        }
-    ],
-    "excludedPaths": []
-}
-```
-
-Indexing in necessary for things like querying the collections.
-Keep in mind that when you manage indexing policy, you can make fine-grained trade-offs between index storage overhead, write and query throughput, and query consistency.
-
-For example if the String datatype is Hash then exact matches like the following,
-`cosmoStore.Query().FirstOrDefaultAsync(x => x.SomeProperty.Equals($"Nick Chapsas")`
-will return the item if it exists in CosmosDB but 
-`cosmoStore.Query().FirstOrDefaultAsync(x => x.SomeProperty.StartsWith($"Nick Ch")`
-will throw an error. Changing the Hash to Range will work.
-
-However you can get around that by setting the `FeedOptions.EnableScanInQuery` to `true` for this `Query()`
-
-Same goes for ordering. If you use `OrderBy` on a string property you need to have this property's path set up as `Range` and precision `-1`.
-
-More about CosmosDB Indexing [here](https://docs.microsoft.com/en-us/azure/cosmos-db/indexing-policies)
-
 #### Partitioning
 Cosmonaut supports partitions out of the box. You can specify which property you want to be your Partition Key by adding the `[CosmosPartitionKey]` attribute above it.
 
