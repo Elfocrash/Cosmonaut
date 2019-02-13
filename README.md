@@ -66,7 +66,7 @@ var user = await cosmosStore.FindAsync("userId", "partitionKey");
 var user = await cosmosStore.FindAsync("userId", new RequestOptions());
 ```
 
-##### Quering for entities using LINQ
+##### Querying for entities using LINQ
 
 In order to query for entities all you have to do is call the `.Query()` method and then use LINQ to create the query you want.
 It is HIGHLY recommended that you use one of the `Async` methods to get the results back, such as `ToListAsync` or `FirstOrDefaultAsync` , when available.
@@ -76,7 +76,7 @@ var user = await cosmoStore.Query().FirstOrDefaultAsync(x => x.Username == "elfo
 var users = await cosmoStore.Query().Where(x => x.HairColor == HairColor.Black).ToListAsync(cancellationToken);
 ```
 
-##### Quering for entities using SQL
+##### Querying for entities using SQL
 
 ```csharp
 // plain sql query
@@ -104,7 +104,7 @@ Well it's actually pretty simple. Just implement the `ISharedCosmosEntity` inter
 The attribute accepts two properties, `SharedCollectionName` which is mandatory and `EntityName` which is optional.
 The `SharedCollectionName` property will be used to name the collection that the entity will share with other entities. 
 
-The `EntityName` will be used to make the object identifiable for Cosmosnaut. Be default it will pluralize the name of the class, but you can specify it to override this behavior. You can override this by providing your own name by setting the `EntityName` value at the attribute level.
+The `EntityName` will be used to make the object identifiable for Cosmosnaut. By default it will pluralize the name of the class, but you can specify it to override this behavior. You can override this by providing your own name by setting the `EntityName` value at the attribute level.
 
 Once you set this up you can add individual CosmosStores with shared collections.
 
@@ -130,7 +130,7 @@ public class Car : ISharedCosmosEntity
 }
 ```
 
-Even though this is convinient I understand that you might need to have a dynamic way of setting this. 
+Even though this is convenient I understand that you might need to have a dynamic way of setting this. 
 That's why the `CosmosStore` class has some extra constructors that allow you to specify the `overriddenCollectionName` property. This property will override any collection name specified at the attribute level and will use that one instead.
 
 Note: If you have specified a `CollectionPrefix` at the `CosmosStoreSettings` level it will still be added. You are only overriding the collection name that the attribute would normally set.
@@ -152,7 +152,7 @@ CosmosStore initialisation:
 var cosmosStore = new CosmosStore<Car>(someSettings, "oldcars");
 ```
 
-The outcome of this would be a collection named `oldcars` becase the `shared` collection name is overriden in the constructor. 
+The outcome of this would be a collection named `oldcars` because the `shared` collection name is overridden in the constructor. 
 There are also method overloads for the same property at the dependency injection extension level.
 
 #### Pagination
@@ -162,7 +162,7 @@ Cosmonaut supports two types of pagination.
 * Page number + Page size
 * ContinuationToken + Page size
 
-Both of there methods work by adding the `.WithPagination()` method after you used any of the `Query` methods.
+Both of these methods work by adding the `.WithPagination()` method after you used any of the `Query` methods.
 
 ```csharp
 var firstPage = await booksStore.Query().WithPagination(1, 10).OrderBy(x=>x.Name).ToListAsync();
@@ -233,7 +233,7 @@ It is **HIGHLY RECOMMENDED** that you decorate your Id property with the `[JsonP
 
 #### CosmonautClient
 
-Cosmonaut has it's own version of a `DocumentClient` called `CosmonautClient`. The difference is that the `CosmonautClient` interface is more user friendly and it looks more like something you would use in a real life scenario. It won't throw not found exceptions if an item is not found but it will return `null` instead. It will also retry automatically when you get 429s (too many requests).
+Cosmonaut has its own version of a `DocumentClient` called `CosmonautClient`. The difference is that the `CosmonautClient` interface is more user friendly and it looks more like something you would use in a real life scenario. It won't throw not found exceptions if an item is not found but it will return `null` instead. It will also retry automatically when you get 429s (too many requests).
 
 It also has support for logging and monitoring as you are going to see in the logging section of this page.
 
