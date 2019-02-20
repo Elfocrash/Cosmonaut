@@ -12,7 +12,7 @@ namespace Cosmonaut.Interception
         public bool Applied { get; private set; }
 
         private readonly Expression<Func<TEntity, bool>> _predicate;
-        private ConstantExpression _constant;
+        private readonly ConstantExpression _constant;
 
         public QueryInterceptor(Expression<Func<TEntity, bool>> interceptor)
         {
@@ -46,7 +46,7 @@ namespace Cosmonaut.Interception
 
         private MethodInfo GetLinqWhere()
         {
-            var method = typeof(Queryable).GetMethods()
+            var method = typeof(Queryable).GetRuntimeMethods()
                 .Where(x => x.Name == nameof(Queryable.Where))
                 .Select(x => x.MakeGenericMethod(new[] { typeof(TEntity) }))
                 .Single(methodInfo =>

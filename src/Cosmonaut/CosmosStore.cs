@@ -3,7 +3,6 @@ using Cosmonaut.Response;
 using Cosmonaut.Storage;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
-using QueryInterceptor.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -81,9 +80,8 @@ namespace Cosmonaut
         public IQueryable<TEntity> Query(FeedOptions feedOptions = null)
         {
             var queryable =
-                CosmonautClient.Query<TEntity>(DatabaseName, CollectionName, GetFeedOptionsForQuery(feedOptions));
-
-            queryable = ApplyInterception(queryable);
+                CosmonautClient.Query<TEntity>(DatabaseName, CollectionName, GetFeedOptionsForQuery(feedOptions))
+                .ApplyInterception(Settings.Interceptors);
 
             return IsShared ? queryable.Where(ExpressionExtensions.SharedCollectionExpression<TEntity>()) : queryable;
         }
@@ -210,19 +208,6 @@ namespace Cosmonaut
                 ? new RequestOptions { PartitionKey = new PartitionKey(partitionKeyValue) }
                 : null;
             return await FindAsync(id, requestOptions, cancellationToken);
-        }
-
-        private IQueryable<TEntity> ApplyInterception(IQueryable<TEntity> queryable)
-        {
-            var interceptors = Settings.Interceptors?.Where(x => x.Type == typeof(TEntity));
-
-            if (!interceptors?.Any() ?? true)
-            {
-                return queryable;
-            }
-            
-            var visitors = Settings.Interceptors.Cast<ExpressionVisitor>();
-            return queryable.InterceptWith(visitors.ToArray());
         }
 
         private void InitialiseCosmosStore(string overridenCollectionName)

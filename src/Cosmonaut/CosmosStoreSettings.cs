@@ -30,7 +30,7 @@ namespace Cosmonaut
 
         public string CollectionPrefix { get; set; } = string.Empty;
 
-        public IReadOnlyList<IQueryInterceptor> Interceptors { get; }
+        public List<IQueryInterceptor> Interceptors { get; }
 
         public CosmosStoreSettings(string databaseName,
             string endpointUrl,
