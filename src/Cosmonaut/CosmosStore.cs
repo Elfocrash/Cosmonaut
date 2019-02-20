@@ -1,14 +1,14 @@
-﻿using System;
+﻿using Cosmonaut.Extensions;
+using Cosmonaut.Response;
+using Cosmonaut.Storage;
+using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Cosmonaut.Extensions;
-using Cosmonaut.Response;
-using Cosmonaut.Storage;
-using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Client;
 
 namespace Cosmonaut
 {
@@ -17,11 +17,11 @@ namespace Cosmonaut
         public bool IsShared { get; internal set; }
 
         public string CollectionName { get; private set; }
-        
+
         public string DatabaseName { get; }
 
         public CosmosStoreSettings Settings { get; }
-        
+
         public ICosmonautClient CosmonautClient { get; }
 
         private readonly IDatabaseCreator _databaseCreator;
@@ -80,7 +80,8 @@ namespace Cosmonaut
         public IQueryable<TEntity> Query(FeedOptions feedOptions = null)
         {
             var queryable =
-                CosmonautClient.Query<TEntity>(DatabaseName, CollectionName, GetFeedOptionsForQuery(feedOptions));
+                CosmonautClient.Query<TEntity>(DatabaseName, CollectionName, GetFeedOptionsForQuery(feedOptions))
+                .ApplyInterception(Settings.Interceptors);
 
             return IsShared ? queryable.Where(ExpressionExtensions.SharedCollectionExpression<TEntity>()) : queryable;
         }
@@ -105,7 +106,7 @@ namespace Cosmonaut
             var queryable = CosmonautClient.Query<T>(DatabaseName, CollectionName, collectionSharingFriendlySql, parameters, GetFeedOptionsForQuery(feedOptions));
             return await queryable.SingleOrDefaultAsync(cancellationToken);
         }
-        
+
         public async Task<IEnumerable<TEntity>> QueryMultipleAsync(string sql, object parameters = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
             var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
@@ -125,14 +126,14 @@ namespace Cosmonaut
             return await CosmonautClient.CreateDocumentAsync(DatabaseName, CollectionName, entity,
                 GetRequestOptions(requestOptions, entity), cancellationToken);
         }
-        
+
         public async Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(IEnumerable<TEntity> entities, Func<TEntity, RequestOptions> requestOptions = null, CancellationToken cancellationToken = default)
         {
             return await ExecuteMultiOperationAsync(entities, x => AddAsync(x, requestOptions?.Invoke(x), cancellationToken));
         }
-        
+
         public async Task<CosmosMultipleResponse<TEntity>> RemoveAsync(
-            Expression<Func<TEntity, bool>> predicate, 
+            Expression<Func<TEntity, bool>> predicate,
             FeedOptions feedOptions = null,
             Func<TEntity, RequestOptions> requestOptions = null,
             CancellationToken cancellationToken = default)
@@ -148,7 +149,7 @@ namespace Cosmonaut
             return await CosmonautClient.DeleteDocumentAsync(DatabaseName, CollectionName, documentId,
                 GetRequestOptions(requestOptions, entity), cancellationToken).ExecuteCosmosCommand(entity);
         }
-        
+
         public async Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(IEnumerable<TEntity> entities, Func<TEntity, RequestOptions> requestOptions = null, CancellationToken cancellationToken = default)
         {
             return await ExecuteMultiOperationAsync(entities, x => RemoveAsync(x, requestOptions?.Invoke(x), cancellationToken));
@@ -161,7 +162,7 @@ namespace Cosmonaut
             return await CosmonautClient.UpdateDocumentAsync(DatabaseName, CollectionName, document,
                 GetRequestOptions(requestOptions, entity), cancellationToken).ExecuteCosmosCommand(entity);
         }
-        
+
         public async Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(IEnumerable<TEntity> entities, Func<TEntity, RequestOptions> requestOptions = null, CancellationToken cancellationToken = default)
         {
             return await ExecuteMultiOperationAsync(entities, x => UpdateAsync(x, requestOptions?.Invoke(x), cancellationToken));
@@ -178,7 +179,7 @@ namespace Cosmonaut
         {
             return await ExecuteMultiOperationAsync(entities, x => UpsertAsync(x, requestOptions?.Invoke(x), cancellationToken));
         }
-        
+
         public async Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
             var response = await CosmonautClient.DeleteDocumentAsync(DatabaseName, CollectionName, id,
@@ -208,12 +209,12 @@ namespace Cosmonaut
                 : null;
             return await FindAsync(id, requestOptions, cancellationToken);
         }
-        
+
         private void InitialiseCosmosStore(string overridenCollectionName)
         {
             IsShared = typeof(TEntity).UsesSharedCollection();
             CollectionName = GetCosmosStoreCollectionName(overridenCollectionName);
-            
+
             _databaseCreator.EnsureCreatedAsync(DatabaseName).ConfigureAwait(false).GetAwaiter().GetResult();
             _collectionCreator.EnsureCreatedAsync<TEntity>(DatabaseName, CollectionName, Settings.DefaultCollectionThroughput, Settings.IndexingPolicy)
                 .ConfigureAwait(false).GetAwaiter().GetResult();
@@ -235,7 +236,7 @@ namespace Cosmonaut
             var entitiesList = entities.ToList();
             if (!entitiesList.Any())
                 return multipleResponse;
-            
+
             var results = (await entitiesList.Select(operationFunc).WhenAllTasksAsync()).ToList();
             multipleResponse.SuccessfulEntities.AddRange(results.Where(x => x.IsSuccess));
             multipleResponse.FailedEntities.AddRange(results.Where(x => !x.IsSuccess));
@@ -277,7 +278,7 @@ namespace Cosmonaut
 
         private FeedOptions GetFeedOptionsForQuery(FeedOptions feedOptions)
         {
-            var shouldEnablePartitionQuery = (typeof(TEntity).HasPartitionKey() && feedOptions?.PartitionKey == null) 
+            var shouldEnablePartitionQuery = (typeof(TEntity).HasPartitionKey() && feedOptions?.PartitionKey == null)
                                              || (feedOptions != null && feedOptions.EnableCrossPartitionQuery);
 
             if (feedOptions == null)

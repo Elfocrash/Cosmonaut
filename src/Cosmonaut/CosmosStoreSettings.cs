@@ -1,7 +1,10 @@
-﻿using System;
+﻿using Cosmonaut.Interception;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace Cosmonaut
 {
@@ -19,13 +22,15 @@ namespace Cosmonaut
 
         public IndexingPolicy IndexingPolicy { get; set; } = CosmosConstants.DefaultIndexingPolicy;
 
-        public int DefaultCollectionThroughput { get; set; } =  CosmosConstants.MinimumCosmosThroughput;
+        public int DefaultCollectionThroughput { get; set; } = CosmosConstants.MinimumCosmosThroughput;
 
         public JsonSerializerSettings JsonSerializerSettings { get; set; }
 
         public bool InfiniteRetries { get; set; } = true;
 
         public string CollectionPrefix { get; set; } = string.Empty;
+
+        public List<IQueryInterceptor> Interceptors { get; }
 
         public CosmosStoreSettings(string databaseName,
             string endpointUrl,
@@ -42,6 +47,7 @@ namespace Cosmonaut
             DatabaseName = databaseName ?? throw new ArgumentNullException(nameof(databaseName));
             EndpointUrl = endpointUrl ?? throw new ArgumentNullException(nameof(endpointUrl));
             AuthKey = authKey ?? throw new ArgumentNullException(nameof(authKey));
+            Interceptors = new List<IQueryInterceptor>();
             settings?.Invoke(this);
         }
 
@@ -52,18 +58,18 @@ namespace Cosmonaut
             ConnectionPolicy connectionPolicy = null,
             IndexingPolicy indexingPolicy = null,
             int defaultCollectionThroughput = CosmosConstants.MinimumCosmosThroughput)
-            : this(databaseName, 
-                  new Uri(endpointUrl), 
+            : this(databaseName,
+                  new Uri(endpointUrl),
                   authKey,
                   connectionPolicy,
                   indexingPolicy,
                   defaultCollectionThroughput)
         {
         }
-        
+
         public CosmosStoreSettings(
-            string databaseName, 
-            Uri endpointUrl, 
+            string databaseName,
+            Uri endpointUrl,
             string authKey,
             ConnectionPolicy connectionPolicy = null,
             IndexingPolicy indexingPolicy = null,
@@ -75,6 +81,17 @@ namespace Cosmonaut
             ConnectionPolicy = connectionPolicy;
             DefaultCollectionThroughput = defaultCollectionThroughput;
             IndexingPolicy = indexingPolicy ?? CosmosConstants.DefaultIndexingPolicy;
+            Interceptors = new List<IQueryInterceptor>();
         }
+
+        public void AddInterceptor<T>(Expression<Func<T, bool>> filter) where T : class
+        {
+            Interceptors.Add(new QueryInterceptor<T>(filter));
+        }
+    }
+
+    public interface IQueryInterceptor
+    {
+        Type Type { get; }
     }
 }
