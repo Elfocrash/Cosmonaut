@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
-using Cosmonaut.Extensions;
+﻿using Cosmonaut.Extensions;
 using Cosmonaut.Extensions.Microsoft.DependencyInjection;
 using Cosmonaut.Response;
 using Cosmonaut.System.Models;
@@ -13,6 +8,11 @@ using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Cosmonaut.System
@@ -163,7 +163,7 @@ namespace Cosmonaut.System
             addedResults.SuccessfulEntities.Count.Should().Be(0);
             addedResults.FailedEntities.Select(x => x.Exception).Should().AllBeAssignableTo<DocumentClientException>();
             addedResults.FailedEntities.Select(x => x.Exception).Cast<DocumentClientException>().Select(x => x.StatusCode).Should().AllBeEquivalentTo(HttpStatusCode.Conflict);
-            addedResults.FailedEntities.Select(x=>x.CosmosOperationStatus).Should().AllBeEquivalentTo(CosmosOperationStatus.Conflict);
+            addedResults.FailedEntities.Select(x => x.CosmosOperationStatus).Should().AllBeEquivalentTo(CosmosOperationStatus.Conflict);
         }
 
         [Fact]
@@ -171,17 +171,20 @@ namespace Cosmonaut.System
         {
             var cosmosStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
             var response = await ExecuteMultipleAddOperationsForType<Cat>(list => cosmosStore.AddRangeAsync(list), 10);
-            
+
             var addedCats = response.SuccessfulEntities
                 .Select(x => JsonConvert.DeserializeObject<Cat>(x.ResourceResponse.Resource.ToString())).ToList();
-                addedCats.ForEach(x => x.Name = "different Name");
+            addedCats.ForEach(x => x.Name = "different Name");
             await cosmosStore.UpdateRangeAsync(addedCats);
 
-            var updatedResults = await cosmosStore.UpdateRangeAsync(addedCats, cat => new RequestOptions{AccessCondition = new AccessCondition
+            var updatedResults = await cosmosStore.UpdateRangeAsync(addedCats, cat => new RequestOptions
             {
-                Type = AccessConditionType.IfMatch,
-                Condition = cat.Etag
-            }});
+                AccessCondition = new AccessCondition
+                {
+                    Type = AccessConditionType.IfMatch,
+                    Condition = cat.Etag
+                }
+            });
 
             response.IsSuccess.Should().BeTrue();
             response.FailedEntities.Count.Should().Be(0);
@@ -190,7 +193,7 @@ namespace Cosmonaut.System
             updatedResults.FailedEntities.Count.Should().Be(10);
             updatedResults.SuccessfulEntities.Count.Should().Be(0);
             updatedResults.FailedEntities.Select(x => x.Exception).Should().AllBeAssignableTo<DocumentClientException>();
-            updatedResults.FailedEntities.Select(x => x.Exception).Cast<DocumentClientException>().Select(x=>x.StatusCode).Should().AllBeEquivalentTo(HttpStatusCode.PreconditionFailed);
+            updatedResults.FailedEntities.Select(x => x.Exception).Cast<DocumentClientException>().Select(x => x.StatusCode).Should().AllBeEquivalentTo(HttpStatusCode.PreconditionFailed);
             updatedResults.FailedEntities.Select(x => x.CosmosOperationStatus).Should().AllBeEquivalentTo(CosmosOperationStatus.PreconditionFailed);
         }
 
@@ -206,7 +209,7 @@ namespace Cosmonaut.System
             var addedLions = await ExecuteMultipleAddOperationsForType<Lion>(list => lionStore.AddRangeAsync(list));
             var addedBirds = await ExecuteMultipleAddOperationsForType<Bird>(list => birdStore.AddRangeAsync(list));
 
-            await ExecuteMultipleAddOperationsForType(() => catStore.RemoveRangeAsync(addedCats.SuccessfulEntities.Select(x=>x.Entity)), HttpStatusCode.NoContent, addedCats.SuccessfulEntities.Select(x => x.Entity).ToList());
+            await ExecuteMultipleAddOperationsForType(() => catStore.RemoveRangeAsync(addedCats.SuccessfulEntities.Select(x => x.Entity)), HttpStatusCode.NoContent, addedCats.SuccessfulEntities.Select(x => x.Entity).ToList());
             await ExecuteMultipleAddOperationsForType(() => dogStore.RemoveRangeAsync(addedDogs.SuccessfulEntities.Select(x => x.Entity)), HttpStatusCode.NoContent, addedDogs.SuccessfulEntities.Select(x => x.Entity).ToList());
             await ExecuteMultipleAddOperationsForType(() => lionStore.RemoveRangeAsync(addedLions.SuccessfulEntities.Select(x => x.Entity)), HttpStatusCode.NoContent, addedLions.SuccessfulEntities.Select(x => x.Entity).ToList());
             await ExecuteMultipleAddOperationsForType(() => birdStore.RemoveRangeAsync(addedBirds.SuccessfulEntities.Select(x => x.Entity)), HttpStatusCode.NoContent, addedBirds.SuccessfulEntities.Select(x => x.Entity).ToList());
@@ -266,7 +269,7 @@ namespace Cosmonaut.System
             var dogStore = _serviceProvider.GetService<ICosmosStore<Dog>>();
             var lionStore = _serviceProvider.GetService<ICosmosStore<Lion>>();
             var birdStore = _serviceProvider.GetService<ICosmosStore<Bird>>();
-            var addedCats = new List<Cat> {new Cat {CatId = Guid.NewGuid().ToString()}};
+            var addedCats = new List<Cat> { new Cat { CatId = Guid.NewGuid().ToString() } };
             var addedDogs = new List<Dog> { new Dog { Id = Guid.NewGuid().ToString() } };
             var addedLions = new List<Lion> { new Lion { Id = Guid.NewGuid().ToString() } };
             var addedBirds = new List<Bird> { new Bird { Id = Guid.NewGuid().ToString() } };
@@ -281,7 +284,7 @@ namespace Cosmonaut.System
             ValidateBadUpdateResponse(lionResults);
             ValidateBadUpdateResponse(birdResults);
         }
-        
+
         [Fact]
         public async Task WhenValidEntitiesAreUpserted_ThenUpsertedResultsAreSuccessful()
         {
@@ -317,7 +320,7 @@ namespace Cosmonaut.System
             var lions = await lionStore.QueryMultipleAsync("select * from c");
             var birds = await birdStore.Query().ToListAsync();
 
-            cats.Should().BeEquivalentTo(addedCats.SuccessfulEntities.Select(x=>x.Entity), ExcludeEtagCheck());
+            cats.Should().BeEquivalentTo(addedCats.SuccessfulEntities.Select(x => x.Entity), ExcludeEtagCheck());
             dogs.Should().BeEquivalentTo(addedDogs.SuccessfulEntities.Select(x => x.Entity));
             lions.Should().BeEquivalentTo(addedLions.SuccessfulEntities.Select(x => x.Entity), config =>
             {
@@ -373,7 +376,7 @@ namespace Cosmonaut.System
             var catFound = await catStore.Query().FirstAsync();
             var dogFound = await dogStore.Query().FirstOrDefaultAsync();
             var lionFound = await lionStore.Query().SingleAsync();
-            var birdFound = await birdStore.Query(new FeedOptions{MaxItemCount = 100}).SingleOrDefaultAsync();
+            var birdFound = await birdStore.Query(new FeedOptions { MaxItemCount = 100 }).SingleOrDefaultAsync();
 
             catFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Cat>(addedCat.ResourceResponse.Resource.ToString()));
             dogFound.Should().BeEquivalentTo(JsonConvert.DeserializeObject<Dog>(addedDog.ResourceResponse.Resource.ToString()));
@@ -474,9 +477,9 @@ namespace Cosmonaut.System
         {
             var catStore = _serviceProvider.GetService<ICosmosStore<Cat>>();
             var addedCats = (await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 15))
-                .SuccessfulEntities.Select(x=>x.Entity).OrderBy(x=>x.Name).ToList();
+                .SuccessfulEntities.Select(x => x.Entity).OrderBy(x => x.Name).ToList();
 
-            var firstPage = await catStore.Query().WithPagination(1, 5).OrderBy(x=>x.Name).ToListAsync();
+            var firstPage = await catStore.Query().WithPagination(1, 5).OrderBy(x => x.Name).ToListAsync();
             var secondPage = await catStore.Query().WithPagination(2, 5).OrderBy(x => x.Name).ToListAsync();
             var thirdPage = await catStore.Query().WithPagination(3, 5).OrderBy(x => x.Name).ToListAsync();
             var fourthPage = await catStore.Query().WithPagination(4, 5).OrderBy(x => x.Name).ToListAsync();
@@ -512,7 +515,7 @@ namespace Cosmonaut.System
             var addedCats = (await ExecuteMultipleAddOperationsForType<Cat>(list => catStore.AddRangeAsync(list), 15))
                 .SuccessfulEntities.Select(x => x.Entity).OrderBy(x => x.Name).ToList();
 
-            var firstPage = await catStore.Query(new FeedOptions{ RequestContinuation = "SomethingBad", MaxItemCount = 666}).WithPagination(1, 5).OrderBy(x => x.Name).ToPagedListAsync();
+            var firstPage = await catStore.Query(new FeedOptions { RequestContinuation = "SomethingBad", MaxItemCount = 666 }).WithPagination(1, 5).OrderBy(x => x.Name).ToPagedListAsync();
             var secondPage = await firstPage.GetNextPageAsync();
             var thirdPage = await secondPage.GetNextPageAsync();
             var fourthPage = await thirdPage.GetNextPageAsync();
@@ -554,12 +557,12 @@ namespace Cosmonaut.System
         }
 
         private async Task<CosmosMultipleResponse<T>> ExecuteMultipleAddOperationsForType<T>(
-            Func<IEnumerable<T>, Task<CosmosMultipleResponse<T>>> operationFunc, int itemCount = 50) 
+            Func<IEnumerable<T>, Task<CosmosMultipleResponse<T>>> operationFunc, int itemCount = 50)
             where T : Animal, new()
         {
             var items = new List<T>();
-            
-            for (var i = 0; i < itemCount; i++){items.Add(new T { Name = Guid.NewGuid().ToString() });}
+
+            for (var i = 0; i < itemCount; i++) { items.Add(new T { Name = Guid.NewGuid().ToString() }); }
 
             var addedCats = await operationFunc(items);
 
@@ -598,7 +601,7 @@ namespace Cosmonaut.System
         {
             _cosmonautClient.DeleteDatabaseAsync(_databaseId).GetAwaiter().GetResult();
         }
-        
+
         private void AddCosmosStores(ServiceCollection serviceCollection)
         {
             serviceCollection
