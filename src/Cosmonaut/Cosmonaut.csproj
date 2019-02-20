@@ -32,8 +32,4 @@
     <PackageReference Include="QueryInterceptor.Core" Version="1.0.7" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Interception\" />
-  </ItemGroup>
-
 </Project>
