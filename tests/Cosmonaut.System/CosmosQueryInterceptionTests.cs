@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
+using Cosmonaut.Extensions;
 
 namespace Cosmonaut.System
 {
@@ -31,7 +32,7 @@ namespace Cosmonaut.System
         }
 
         [Fact]
-        public void WhenInteceptorIsAppliedToQuery_ThenResultsShouldHaveOneItem()
+        public async Task WhenInteceptorIsAppliedToQuery_ThenResultsShouldHaveOneItem()
         {
             var cosmosStoreSettings = new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
                 settings =>
@@ -40,12 +41,12 @@ namespace Cosmonaut.System
                 });
 
             var cosmosStore = new CosmosStore<Cat>(cosmosStoreSettings, _collectionName);
-
-            cosmosStore.Query().ToList().Should().HaveCount(1);
+            var results = await cosmosStore.Query().ToListAsync();
+            results.ToList().Should().HaveCount(1);
         }
 
         [Fact]
-        public void WhenInteceptorIsAppliedToAnotherType_ThenResultsShouldBeUnaffected()
+        public async Task WhenInteceptorIsAppliedToAnotherType_ThenResultsShouldBeUnaffected()
         {
             var cosmosStoreSettings = new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
                 settings =>
@@ -55,11 +56,12 @@ namespace Cosmonaut.System
 
             var cosmosStore = new CosmosStore<Cat>(cosmosStoreSettings, _collectionName);
 
-            cosmosStore.Query().ToList().Should().HaveCount(_cats.Count);
+            var results = await cosmosStore.Query().ToListAsync();
+            results.Should().HaveCount(_cats.Count);
         }
 
         [Fact]
-        public void WhenInteceptorIsAppliedAndQueryHaveFilterLogic_ThenThereShouldBeOneResult()
+        public async Task WhenInteceptorIsAppliedAndQueryHaveFilterLogic_ThenThereShouldBeOneResult()
         {
             var cosmosStoreSettings = new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
                 settings =>
@@ -69,12 +71,15 @@ namespace Cosmonaut.System
 
             var cosmosStore = new CosmosStore<Cat>(cosmosStoreSettings, _collectionName);
 
-            var results = cosmosStore.Query().Where(x => x.Name == "Nick").ToList();
+            var results = await cosmosStore.Query()
+                .Where(x => x.Name == "Nick")
+                .ToListAsync();
+
             results.Should().HaveCount(1);
         }
 
         [Fact]
-        public void WhenInteceptorIsAppliedAndHasMultipleQueryHaveFilterLogic_ThenThereShouldBeOneResult()
+        public async Task WhenInteceptorIsAppliedAndHasMultipleQueryHaveFilterLogic_ThenThereShouldBeOneResult()
         {
             var cosmosStoreSettings = new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
                 settings =>
@@ -84,61 +89,72 @@ namespace Cosmonaut.System
 
             var cosmosStore = new CosmosStore<Cat>(cosmosStoreSettings, _collectionName);
 
-            var results = cosmosStore.Query().Where(x => x.Name == "Nick").Where(x => x.Name == "Nick").ToList();
-            results.Should().HaveCount(1);
-            results.Single().Name.Should().BeEquivalentTo("Nick");
-        }
+            var results = await cosmosStore.Query()
+                .Where(x => x.Name == "Nick")
+                .Where(x => x.Name == "Nick")
+                .ToListAsync();
 
-        [Fact]
-        public void WhenInteceptorIsAppliedAndHasSelect_ThenThereShouldBeOneResults()
-        {
-            var cosmosStoreSettings = new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
-                settings =>
-                {
-                    settings.AddInterceptor<Cat>(x => x.Name == "Nick");
-                });
-
-            var cosmosStore = new CosmosStore<Cat>(cosmosStoreSettings, _collectionName);
-
-            var results = cosmosStore.Query().Select(x => x.Name).ToList();
-            results.Should().HaveCount(1);
-            results.Single().Equals("Nick");
-        }
-
-        [Fact]
-        public void WhenInteceptorIsAppliedAndHasWhereAndSelect_ThenThereShouldBeOneResults()
-        {
-            var cosmosStoreSettings = new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
-                settings =>
-                {
-                    settings.AddInterceptor<Cat>(x => x.Name == "Nick");
-                });
-
-            var cosmosStore = new CosmosStore<Cat>(cosmosStoreSettings, _collectionName);
-
-            var results = cosmosStore.Query().Where(x => x.Name == "Nick").Select(x => x.Name).ToList();
-            results.Should().HaveCount(1);
-            results.Single().Equals("Nick");
-        }
-
-        [Fact]
-        public void WhenQueryInterceptorIsAppliedAndHasOrderBy_EnsureOneResult()
-        {
-            var cosmosStoreSettings = new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
-                settings =>
-                {
-                    settings.AddInterceptor<Cat>(x => x.Name == "Nick");
-                });
-
-            var cosmosStore = new CosmosStore<Cat>(cosmosStoreSettings, _collectionName);
-
-            var results = cosmosStore.Query().OrderBy(x => x.Name).ToList();
             results.Should().HaveCount(1);
             results.Single().Name.Should().BeEquivalentTo("Nick");
         }
 
         [Fact]
-        public void WhenInceptorUsesDateArithmetic_EnsureResultsAreFiltered()
+        public async Task WhenInteceptorIsAppliedAndHasSelect_ThenThereShouldBeOneResults()
+        {
+            var cosmosStoreSettings = new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
+                settings =>
+                {
+                    settings.AddInterceptor<Cat>(x => x.Name == "Nick");
+                });
+
+            var cosmosStore = new CosmosStore<Cat>(cosmosStoreSettings, _collectionName);
+
+            var results = await cosmosStore.Query().Select(x => x.Name).ToListAsync();
+            results.Should().HaveCount(1);
+            results.Single().Equals("Nick");
+        }
+
+        [Fact]
+        public async Task WhenInteceptorIsAppliedAndHasWhereAndSelect_ThenThereShouldBeOneResults()
+        {
+            var cosmosStoreSettings = new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
+                settings =>
+                {
+                    settings.AddInterceptor<Cat>(x => x.Name == "Nick");
+                });
+
+            var cosmosStore = new CosmosStore<Cat>(cosmosStoreSettings, _collectionName);
+
+            var results = await cosmosStore.Query()
+                .Where(x => x.Name == "Nick")
+                .Select(x => x.Name)
+                .ToListAsync();
+
+            results.Should().HaveCount(1);
+            results.Single().Equals("Nick");
+        }
+
+        [Fact]
+        public async Task WhenQueryInterceptorIsAppliedAndHasOrderBy_EnsureOneResult()
+        {
+            var cosmosStoreSettings = new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
+                settings =>
+                {
+                    settings.AddInterceptor<Cat>(x => x.Name == "Nick");
+                });
+
+            var cosmosStore = new CosmosStore<Cat>(cosmosStoreSettings, _collectionName);
+
+            var results = await cosmosStore.Query()
+                .OrderBy(x => x.Name)
+                .ToListAsync();
+
+            results.Should().HaveCount(1);
+            results.Single().Name.Should().BeEquivalentTo("Nick");
+        }
+
+        [Fact]
+        public async Task WhenInceptorUsesDateArithmetic_EnsureResultsAreFiltered()
         {
             var cosmosStoreSettings = new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey,
                 settings =>
@@ -147,7 +163,7 @@ namespace Cosmonaut.System
                 });
 
             var cosmosStore = new CosmosStore<Cat>(cosmosStoreSettings, _collectionName);
-            var results = cosmosStore.Query().ToList();
+            var results = await cosmosStore.Query().ToListAsync();
             results.Should().HaveCount(2);
             results.Should().Contain(x => x.Name == "Darren");
             results.Should().Contain(x => x.Name == "Nick");
