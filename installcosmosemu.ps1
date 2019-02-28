@@ -1,10 +1,10 @@
 Invoke-WebRequest -Uri 'https://aka.ms/cosmosdb-emulator' -OutFile 'cosmos-db.msi'
 cmd /c start /wait msiexec /i cosmos-db.msi /qn /quiet /norestart /log install.log  
-Set-Content -Value '"C:\Program Files\Azure Cosmos DB Emulator\CosmosDB.Emulator.exe" /NoUI /NoFirewall' -Path .\startCosmosDb.cmd
+Set-Content -Value '"C:\Program Files\Azure Cosmos DB Emulator\CosmosDB.Emulator.exe" /NoFirewall' -Path .\startCosmosDb.cmd
 Start-Process -FilePath .\startCosmosDb.cmd
 
 $attempt = 0
-$max = 3
+$max = 5
 while(!$client.Connected -and $attempt -lt $max) {
   try {    
     $client = New-Object System.Net.Sockets.TcpClient([System.Net.Sockets.AddressFamily]::InterNetwork)
