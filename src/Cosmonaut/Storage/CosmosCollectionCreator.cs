@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Cosmonaut.Configuration;
 using Cosmonaut.Extensions;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
@@ -24,9 +25,11 @@ namespace Cosmonaut.Storage
             string databaseId,
             string collectionId,
             int collectionThroughput,
-            IndexingPolicy indexingPolicy = null) where TEntity : class
+            IndexingPolicy indexingPolicy = null,
+            ThroughputBehaviour onDatabaseBehaviour = ThroughputBehaviour.UseDatabaseThroughput) where TEntity : class
         {
             var collectionResource = await _cosmonautClient.GetCollectionAsync(databaseId, collectionId);
+            var databaseHasOffer = (await _cosmonautClient.GetOfferV2ForDatabaseAsync(databaseId)) != null;
 
             if (collectionResource != null)
                 return true;
@@ -39,9 +42,11 @@ namespace Cosmonaut.Storage
 
             SetPartitionKeyDefinitionForCollection(typeof(TEntity), newCollection);
 
+            var finalCollectionThroughput = databaseHasOffer ? onDatabaseBehaviour == ThroughputBehaviour.DedicateCollectionThroughput ? (int?)collectionThroughput : null : collectionThroughput;
+
             newCollection = await _cosmonautClient.CreateCollectionAsync(databaseId, newCollection, new RequestOptions
             {
-                OfferThroughput = collectionThroughput
+                OfferThroughput = finalCollectionThroughput
             });
 
             return newCollection != null;

@@ -224,6 +224,27 @@ namespace Cosmonaut.System
         }
 
         [Fact]
+        public async Task QueryDocumentsAsync_WhenQueryingWithSQLAndDictionary_ThenObjectsGetReturned()
+        {
+            // Arrange
+            var cats = new List<Cat>();
+            for (var i = 0; i < 5; i++)
+            {
+                var cat = new Cat { Name = $"Cat {i}" };
+                var created = await _cosmonautClient.CreateDocumentAsync(_databaseId, _collectionName, cat);
+                cats.Add(created.Entity);
+            }
+
+            // Act
+            var results = await _cosmonautClient.QueryDocumentsAsync<Cat>(_databaseId, _collectionName,
+                "select * from c where STARTSWITH(c.Name, @catName)", new Dictionary<string, object> {{"catName", "Cat"}},
+                new FeedOptions { EnableScanInQuery = true });
+
+            // Assert
+            results.Should().BeEquivalentTo(cats, ExcludeEtagCheck());
+        }
+
+        [Fact]
         public async Task QueryDocumentsAsync_WhenQueryingAllObjects_ThenAllObjectsGetReturned()
         {
             // Arrange

@@ -119,6 +119,15 @@ namespace Cosmonaut
             return await DocumentClient.CreateDocumentQuery<T>(collectionUri, sqlQuerySpec, feedOptions).ToListAsync(cancellationToken);
         }
 
+        public async Task<IEnumerable<T>> QueryDocumentsAsync<T>(string databaseId, string collectionId, string sql, IDictionary<string, object> parameters,
+            FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
+        {
+            var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
+            var sqlParameters = parameters.ConvertDictionaryToSqlParameterCollection();
+            var sqlQuerySpec = sqlParameters != null && sqlParameters.Any() ? new SqlQuerySpec(sql, sqlParameters) : new SqlQuerySpec(sql);
+            return await DocumentClient.CreateDocumentQuery<T>(collectionUri, sqlQuerySpec, feedOptions).ToListAsync(cancellationToken);
+        }
+
         public async Task<IEnumerable<Document>> QueryDocumentsAsync(string databaseId, string collectionId, 
             Expression<Func<Document, bool>> predicate = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
         {
@@ -212,6 +221,13 @@ namespace Cosmonaut
         {
             var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
             var sqlParameters = parameters.ConvertToSqlParameterCollection();
+            return GetSqlBasedQueryableForType<T>(collectionUri, sql, sqlParameters, feedOptions);
+        }
+
+        public IQueryable<T> Query<T>(string databaseId, string collectionId, string sql, IDictionary<string, object> parameters, FeedOptions feedOptions = null)
+        {
+            var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
+            var sqlParameters = parameters.ConvertDictionaryToSqlParameterCollection();
             return GetSqlBasedQueryableForType<T>(collectionUri, sql, sqlParameters, feedOptions);
         }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using Cosmonaut.Configuration;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Newtonsoft.Json;
@@ -20,6 +21,10 @@ namespace Cosmonaut
         public IndexingPolicy IndexingPolicy { get; set; } = CosmosConstants.DefaultIndexingPolicy;
 
         public int DefaultCollectionThroughput { get; set; } =  CosmosConstants.MinimumCosmosThroughput;
+
+        public int? DefaultDatabaseThroughput { get; set; }
+
+        public ThroughputBehaviour OnDatabaseThroughput { get; set; } = ThroughputBehaviour.UseDatabaseThroughput;
 
         public JsonSerializerSettings JsonSerializerSettings { get; set; }
 
@@ -74,6 +79,7 @@ namespace Cosmonaut
             AuthKey = authKey ?? throw new ArgumentNullException(nameof(authKey));
             ConnectionPolicy = connectionPolicy;
             DefaultCollectionThroughput = defaultCollectionThroughput;
+
             IndexingPolicy = indexingPolicy ?? CosmosConstants.DefaultIndexingPolicy;
         }
     }

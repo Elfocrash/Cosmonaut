@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
 
 namespace Cosmonaut.Storage
 {
@@ -17,7 +18,7 @@ namespace Cosmonaut.Storage
             _cosmonautClient = new CosmonautClient(documentClient);
         }
 
-        public async Task<bool> EnsureCreatedAsync(string databaseId)
+        public async Task<bool> EnsureCreatedAsync(string databaseId, int? databaseThroughput = null)
         {
             var database = await _cosmonautClient.GetDatabaseAsync(databaseId);
 
@@ -25,7 +26,10 @@ namespace Cosmonaut.Storage
 
             var newDatabase = new Database {Id = databaseId};
 
-            database = await _cosmonautClient.CreateDatabaseAsync(newDatabase);
+            database = await _cosmonautClient.CreateDatabaseAsync(newDatabase, new RequestOptions
+            {
+                OfferThroughput = databaseThroughput
+            });
             return database != null;
         }
     }

@@ -64,6 +64,23 @@ namespace Cosmonaut.Extensions
             return sqlParameterCollection;
         }
 
+        internal static SqlParameterCollection ConvertDictionaryToSqlParameterCollection(this IDictionary<string, object> dictionary)
+        {
+            var sqlParameterCollection = new SqlParameterCollection();
+
+            if (dictionary == null)
+                return sqlParameterCollection;
+
+            foreach (var pair in dictionary)
+            {
+                var key = pair.Key.StartsWith("@") ? pair.Key : $"@{pair.Key}";
+                var sqlparameter = new SqlParameter(key, pair.Value);
+                sqlParameterCollection.Add(sqlparameter);
+            }
+            
+            return sqlParameterCollection;
+        }
+
         private static string GetQueryWithExistingWhereClauseInjectedWithSharedCollection(string sql,
             string identifier, string cosmosEntityNameValue)
         {

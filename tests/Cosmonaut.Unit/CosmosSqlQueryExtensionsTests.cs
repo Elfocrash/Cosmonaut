@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Cosmonaut.Exceptions;
 using Cosmonaut.Extensions;
 using FluentAssertions;
@@ -116,17 +117,41 @@ namespace Cosmonaut.Unit
         public void ConvertToSqlParameterCollection_WhenValidObject_ReturnsCorrectCollection()
         {
             // Arrange
-            var obj = new {Cosmonaut = "Nick", Position = "Software Engineer"};
+            var obj = new {Cosmonaut = "Nick", Position = "Software Engineer", @Rank = 1};
 
             // Act
             var collection = obj.ConvertToSqlParameterCollection();
 
             // Assert
-            collection.Count.Should().Be(2);
+            collection.Count.Should().Be(3);
             collection[0].Name.Should().BeEquivalentTo($"@{nameof(obj.Cosmonaut)}");
             collection[0].Value.Should().BeEquivalentTo("Nick");
             collection[1].Name.Should().BeEquivalentTo($"@{nameof(obj.Position)}");
             collection[1].Value.Should().BeEquivalentTo("Software Engineer");
+            collection[2].Name.Should().BeEquivalentTo($"@{nameof(obj.Rank)}");
+            collection[2].Value.Should().BeEquivalentTo(1);
+        }
+
+        [Fact]
+        public void ConvertDictionaryToSqlParameterCollection_WhenValidObject_ReturnsCorrectCollection()
+        {
+            // Arrange
+            var dictionary = new Dictionary<string, object>
+            {
+                {"Cosmonaut", "Nick"}, {"@Position", "Software Engineer"}, {"Rank", 1}
+            };
+
+            // Act
+            var collection = dictionary.ConvertDictionaryToSqlParameterCollection();
+
+            // Assert
+            collection.Count.Should().Be(3);
+            collection[0].Name.Should().BeEquivalentTo("@Cosmonaut");
+            collection[0].Value.Should().BeEquivalentTo("Nick");
+            collection[1].Name.Should().BeEquivalentTo("@Position");
+            collection[1].Value.Should().BeEquivalentTo("Software Engineer");
+            collection[2].Name.Should().BeEquivalentTo("@Rank");
+            collection[2].Value.Should().BeEquivalentTo(1);
         }
     }
 }
