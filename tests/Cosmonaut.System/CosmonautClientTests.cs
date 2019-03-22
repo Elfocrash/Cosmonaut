@@ -19,7 +19,8 @@ namespace Cosmonaut.System
     public class CosmonautClientTests : IDisposable
     {
         private readonly ICosmonautClient _cosmonautClient;
-        private readonly Uri _emulatorUri = new Uri("https://localhost:8081");
+
+        private readonly string _emulatorUri = Environment.GetEnvironmentVariable("CosmosDBEndpoint") ?? "https://localhost:8081";
         private readonly string _databaseId = $"DB{nameof(CosmonautClientTests)}";
         private readonly string _scaleableDbId = $"SDB{nameof(CosmonautClientTests)}";
         private readonly string _collectionName = $"COL{nameof(CosmonautClientTests)}";

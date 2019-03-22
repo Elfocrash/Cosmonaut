@@ -18,4 +18,4 @@ steps:
   displayName: 'Running unit tests'
 - script: dotnet test tests\Cosmonaut.System
   displayName: 'Running integration tests'
-  
+  env: { 'CosmosDBEndpoint': "$(CosmosDbEmulator.Endpoint)" }
