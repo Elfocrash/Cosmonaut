@@ -10,11 +10,12 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-- powershell: .\installcosmosemu.ps1
+- task: azure-cosmosdb.emulator-public-preview.run-cosmosdbemulatorcontainer.CosmosDbEmulator@2
+  displayName: 'Run Azure Cosmos DB Emulator container'
 - script: dotnet build --configuration $(buildConfiguration)
   displayName: 'dotnet build $(buildConfiguration)'
 - script: dotnet test tests\Cosmonaut.Unit
   displayName: 'Running unit tests'
 - script: dotnet test tests\Cosmonaut.System
   displayName: 'Running integration tests'
-  
+  env: { 'CosmosDBEndpoint': "$(CosmosDbEmulator.Endpoint)" }

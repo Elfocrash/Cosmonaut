@@ -20,7 +20,7 @@ namespace Cosmonaut.System
     public class CosmosStoreTests : IDisposable
     {
         private readonly ICosmonautClient _cosmonautClient;
-        private readonly Uri _emulatorUri = new Uri("https://localhost:8081");
+        private readonly string _emulatorUri = Environment.GetEnvironmentVariable("CosmosDBEndpoint") ?? "https://localhost:8081";
         private readonly string _databaseId = $"DB{nameof(CosmosStoreTests)}";
         private readonly string _collectionName = $"COL{nameof(CosmosStoreTests)}";
         private readonly string _emulatorKey =

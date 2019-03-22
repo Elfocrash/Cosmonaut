@@ -19,7 +19,8 @@ namespace Cosmonaut.System
     public class CosmonautClientTests : IDisposable
     {
         private readonly ICosmonautClient _cosmonautClient;
-        private readonly Uri _emulatorUri = new Uri("https://localhost:8081");
+
+        private readonly string _emulatorUri = Environment.GetEnvironmentVariable("CosmosDBEndpoint") ?? "https://localhost:8081";
         private readonly string _databaseId = $"DB{nameof(CosmonautClientTests)}";
         private readonly string _scaleableDbId = $"SDB{nameof(CosmonautClientTests)}";
         private readonly string _collectionName = $"COL{nameof(CosmonautClientTests)}";
@@ -64,6 +65,12 @@ namespace Cosmonaut.System
             var expectedThroughput = 20000;
             await _cosmonautClient.CreateDatabaseAsync(new Database { Id = _scaleableDbId },
                 new RequestOptions { OfferThroughput = 10000 });
+            await _cosmonautClient.CreateCollectionAsync(_scaleableDbId, new DocumentCollection
+            {
+                Id = _collectionName,
+                PartitionKey = new PartitionKeyDefinition() { Paths = new Collection<string>(new List<string> { "/id" }) }
+            });
+
             var offer = await _cosmonautClient.GetOfferV2ForDatabaseAsync(_scaleableDbId);
 
             // Act

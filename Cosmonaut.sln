@@ -27,7 +27,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut.AzureFunction", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut.WebJobs.Extensions", "src\Cosmonaut.WebJobs.Extensions\Cosmonaut.WebJobs.Extensions.csproj", "{30FB4E88-D787-4133-9E56-5C51463BDEC0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cosmonaut.Shared", "samples\Cosmonaut.Shared\Cosmonaut.Shared.csproj", "{0819D70F-20C6-420C-8306-885B530E50E3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cosmonaut.Shared", "samples\Cosmonaut.Shared\Cosmonaut.Shared.csproj", "{0819D70F-20C6-420C-8306-885B530E50E3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
