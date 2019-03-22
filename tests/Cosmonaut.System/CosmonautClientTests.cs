@@ -65,6 +65,12 @@ namespace Cosmonaut.System
             var expectedThroughput = 20000;
             await _cosmonautClient.CreateDatabaseAsync(new Database { Id = _scaleableDbId },
                 new RequestOptions { OfferThroughput = 10000 });
+            await _cosmonautClient.CreateCollectionAsync(_scaleableDbId, new DocumentCollection
+            {
+                Id = _collectionName,
+                PartitionKey = new PartitionKeyDefinition() { Paths = new Collection<string>(new List<string> { "/id" }) }
+            });
+
             var offer = await _cosmonautClient.GetOfferV2ForDatabaseAsync(_scaleableDbId);
 
             // Act
