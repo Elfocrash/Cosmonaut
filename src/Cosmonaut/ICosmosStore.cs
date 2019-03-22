@@ -357,6 +357,12 @@ namespace Cosmonaut
         Task<TEntity> FindAsync(string id, object partitionKeyValue, CancellationToken cancellationToken = default);
 
         /// <summary>
+        ///     Ensures that the database and collection needed for this CosmosStore is provisioned. If any of the two resources are missing, they will be created automatically.
+        /// </summary>
+        /// <returns>True if both the database and the collection exists</returns>
+        Task<bool> EnsureInfrastructureProvisionedAsync();
+
+        /// <summary>
         ///     The settings that were used to initialise this CosmosStore
         /// </summary>
         CosmosStoreSettings Settings { get; }

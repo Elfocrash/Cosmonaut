@@ -243,15 +243,26 @@ namespace Cosmonaut
                 : null;
             return await FindAsync(id, requestOptions, cancellationToken);
         }
+
+        public async Task<bool> EnsureInfrastructureProvisionedAsync()
+        {
+            var databaseCreated =
+                await _databaseCreator.EnsureCreatedAsync(DatabaseName, Settings.DefaultDatabaseThroughput);
+            var collectionCreated = await _collectionCreator.EnsureCreatedAsync<TEntity>(DatabaseName, CollectionName,
+                Settings.DefaultCollectionThroughput, Settings.IndexingPolicy, Settings.OnDatabaseThroughput);
+
+            return databaseCreated && collectionCreated;
+        }
         
         private void InitialiseCosmosStore(string overridenCollectionName)
         {
             IsShared = typeof(TEntity).UsesSharedCollection();
             CollectionName = GetCosmosStoreCollectionName(overridenCollectionName);
-            
-            _databaseCreator.EnsureCreatedAsync(DatabaseName, Settings.DefaultDatabaseThroughput).ConfigureAwait(false).GetAwaiter().GetResult();
-            _collectionCreator.EnsureCreatedAsync<TEntity>(DatabaseName, CollectionName, Settings.DefaultCollectionThroughput, Settings.IndexingPolicy, Settings.OnDatabaseThroughput)
-                .ConfigureAwait(false).GetAwaiter().GetResult();
+
+            if (Settings.ProvisionInfrastructureIfMissing)
+            {
+                EnsureInfrastructureProvisionedAsync().GetAwaiter().GetResult();
+            }
         }
 
         private string GetCosmosStoreCollectionName(string overridenCollectionName)

@@ -32,6 +32,8 @@ namespace Cosmonaut
 
         public string CollectionPrefix { get; set; } = string.Empty;
 
+        public bool ProvisionInfrastructureIfMissing { get; set; } = true;
+
         public CosmosStoreSettings(string databaseName,
             string endpointUrl,
             string authKey,
