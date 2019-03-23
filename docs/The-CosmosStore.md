@@ -41,15 +41,18 @@ The `CosmosStoreSettings` object can be initialised requires 3 parameters in ord
 
 There are other optional settings you can provide such as:
 
-* ConnectionPolicy - The connection policy for this CosmosStore.
-* ConsistencyLevel - The level of consistency for this CosmosStore.
-* IndexingPolicy - The indexing policy for this CosmosStore if it's collection in not yet created.
-* DefaultDatabaseThroughput - The default database level throughput. No database throughput by default.
-* OnDatabaseThroughput - The action to be taken when the collection that is about to be created is part of a database that has RU/s provisioned for it. `UseDatabaseThroughput` will ignore the `DefaultCollectionThroughput` and use the database's RUs. `DedicateCollectionThroughput` will provision dedicated RUs for the collection of top of the database throughput with the value of `DefaultCollectionThroughput`.
-* DefaultCollectionThroughput - The default throughput for this CosmosStore if it's collection in not yet created.
-* JsonSerializerSettings - The object to json serialization settings.
-* InfiniteRetries - Whether you want infinite retries on throttled requests.
-* CollectionPrefix - A prefix prepended on the collection name.
+* `ConnectionPolicy` - The connection policy for this CosmosStore.
+* `ConsistencyLevel` - The level of consistency for this CosmosStore.
+* `IndexingPolicy` - The indexing policy for this CosmosStore if it's collection in not yet created.
+* `DefaultDatabaseThroughput` - The default database level throughput. No database throughput by default.
+* `OnDatabaseThroughput` - The action to be taken when the collection that is about to be created is part of a database that has RU/s provisioned for it. `UseDatabaseThroughput` will ignore the `DefaultCollectionThroughput` and use the database's RUs. `DedicateCollectionThroughput` will provision dedicated RUs for the collection of top of the database throughput with the value of `DefaultCollectionThroughput`.
+* `DefaultCollectionThroughput` - The default throughput for this CosmosStore if it's collection in not yet created.
+* `JsonSerializerSettings` - The object to json serialization settings.
+* `InfiniteRetries` - Whether you want infinite retries on throttled requests.
+* `CollectionPrefix` - A prefix prepended on the collection name.
+* `ProvisionInfrastructureIfMissing` - Whether the `CosmosStore` will automatically provision the infrastructure when the `CosmosStore` is instantiated. Default `true`.
+
+> Note: In some scenarios, especially with .NET Framework apps, you might notice that inintialisation of the `CosmosStore` can cause a deadlock. This is due to it's call from the UI thread and a synchronisation context issue. To work around that, you can simply set the `ProvisionInfrastructureIfMissing` to `false` and then use the `CosmosStore`'s `EnsureInfrastructureProvisionedAsync` method awaited properly. 
 
 ### CosmosResponse and response handling
 
