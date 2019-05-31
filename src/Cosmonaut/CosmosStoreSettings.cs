@@ -20,6 +20,8 @@ namespace Cosmonaut
 
         public IndexingPolicy IndexingPolicy { get; set; } = CosmosConstants.DefaultIndexingPolicy;
 
+        public UniqueKeyPolicy UniqueKeyPolicy { get; set; } = CosmosConstants.DefaultUniqueKeyPolicy;
+
         public int DefaultCollectionThroughput { get; set; } =  CosmosConstants.MinimumCosmosThroughput;
 
         public int? DefaultDatabaseThroughput { get; set; }
@@ -83,6 +85,7 @@ namespace Cosmonaut
             DefaultCollectionThroughput = defaultCollectionThroughput;
 
             IndexingPolicy = indexingPolicy ?? CosmosConstants.DefaultIndexingPolicy;
+            UniqueKeyPolicy = CosmosConstants.DefaultUniqueKeyPolicy;
         }
     }
 }

@@ -1,9 +1,12 @@
-﻿using System;
+using System;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using Cosmonaut.Configuration;
+using Cosmonaut.Exceptions;
 using Cosmonaut.Storage;
 using Cosmonaut.System.Models;
 using FluentAssertions;
+using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Xunit;
 
@@ -151,6 +154,50 @@ namespace Cosmonaut.System
 
             databaseOffer.Content.OfferThroughput.Should().Be(20000);
             collectionOffer.Content.OfferThroughput.Should().Be(10000);
+        }
+
+        [Fact]
+        public async Task CosmosStoreSettings_CreatesCollectionWithUniqueKeyPolicy()
+        {
+            var cosmosStoreSettings = new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey, settings =>
+            {
+                settings.ProvisionInfrastructureIfMissing = true;
+                settings.ConnectionPolicy = _connectionPolicy;
+                settings.UniqueKeyPolicy = new UniqueKeyPolicy
+                                           {
+                                               UniqueKeys =
+                                               {
+                                                   new UniqueKey
+                                                   {
+                                                       Paths =
+                                                       {
+                                                           "/name",
+                                                           "/bladiebla"
+                                                       }
+                                                   }
+                                               }
+                                           };
+            });
+
+            var store = new CosmosStore<Lion>(cosmosStoreSettings);
+            var collection = await store.CosmonautClient.GetCollectionAsync(_databaseId, store.CollectionName);
+
+            collection.UniqueKeyPolicy.UniqueKeys.Should().HaveCount(1);
+        }
+
+         [Fact]
+        public async Task CosmosStoreSettings_CreatesCollectionWithSharedEntity_WhenNoUniqueKeyPolicyIsDefined()
+        {
+            var cosmosStoreSettings = new CosmosStoreSettings(_databaseId, _emulatorUri, _emulatorKey, settings =>
+                                                                                                       {
+                                                                                                           settings.ProvisionInfrastructureIfMissing = true;
+                                                                                                           settings.ConnectionPolicy = _connectionPolicy;
+                                                                                                       });
+
+            var store = new CosmosStore<Lion>(cosmosStoreSettings);
+            var collection = await store.CosmonautClient.GetCollectionAsync(_databaseId, store.CollectionName);
+
+            collection.UniqueKeyPolicy.UniqueKeys.Should().HaveCount(0);
         }
 
         public void Dispose()

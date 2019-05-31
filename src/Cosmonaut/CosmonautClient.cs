@@ -50,6 +50,7 @@ namespace Cosmonaut
             bool infiniteRetrying = true)
         {
             DocumentClient = DocumentClientFactory.CreateDocumentClient(endpoint, authKeyOrResourceToken, jsonSerializerSettings, connectionPolicy, desiredConsistencyLevel);
+            
             if (infiniteRetrying)
                 DocumentClient.SetupInfiniteRetries();
         }

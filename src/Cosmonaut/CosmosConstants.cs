@@ -10,5 +10,6 @@ namespace Cosmonaut
         public const int TooManyRequestsStatusCode = 429;
         public static readonly IndexingPolicy DefaultIndexingPolicy =
             new IndexingPolicy(new RangeIndex(DataType.Number, -1), new RangeIndex(DataType.String, -1), new SpatialIndex(DataType.Point));
+        public static readonly UniqueKeyPolicy DefaultUniqueKeyPolicy = new UniqueKeyPolicy();
     }
 }
