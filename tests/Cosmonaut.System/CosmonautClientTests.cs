@@ -302,7 +302,7 @@ namespace Cosmonaut.System
             var cats = new List<Cat>();
             for (var i = 0; i < 5; i++)
             {
-                var cat = new Cat { Name = $"Cat {i}" }.ToCosmonautDocument();
+                var cat = new Cat { Name = $"Cat {i}" }.ToCosmonautDocument(null);
                 var created = await _cosmonautClient.CreateDocumentAsync(_databaseId, _collectionName, cat);
                 cats.Add(JsonConvert.DeserializeObject<Cat>(created.Resource.ToString()));
             }
@@ -451,7 +451,7 @@ namespace Cosmonaut.System
 
             // Act
             cat.Name = "MEGAKITTY";
-            var document = cat.ToCosmonautDocument();
+            var document = cat.ToCosmonautDocument(null);
             var updated = await _cosmonautClient.UpdateDocumentAsync(_databaseId, _collectionName, document);
 
             // Assert
@@ -488,7 +488,7 @@ namespace Cosmonaut.System
 
             // Act
             cat.Name = "MEGAKITTY";
-            var document = cat.ToCosmonautDocument();
+            var document = cat.ToCosmonautDocument(null);
             var updated = await _cosmonautClient.UpsertDocumentAsync(_databaseId, _collectionName, document);
 
             // Assert
@@ -521,7 +521,7 @@ namespace Cosmonaut.System
 
             // Act
             cat.Name = "MEGAKITTY";
-            var document = cat.ToCosmonautDocument();
+            var document = cat.ToCosmonautDocument(null);
             var updated = await _cosmonautClient.UpdateDocumentAsync(_databaseId, _collectionName, document);
 
             // Assert
@@ -555,7 +555,7 @@ namespace Cosmonaut.System
 
             // Act
             cat.Name = "MEGAKITTY";
-            var document = cat.ToCosmonautDocument();
+            var document = cat.ToCosmonautDocument(null);
             var updated = await _cosmonautClient.UpsertDocumentAsync(_databaseId, _collectionName, document);
 
             // Assert
@@ -568,7 +568,7 @@ namespace Cosmonaut.System
         {
             // Arrange
             var catId = Guid.NewGuid().ToString();
-            var cat = new Cat { CatId = catId, Name = "Kitty" }.ToCosmonautDocument();
+            var cat = new Cat { CatId = catId, Name = "Kitty" }.ToCosmonautDocument(null);
 
             // Act
             var added = await _cosmonautClient.CreateDocumentAsync(_databaseId, _collectionName, cat);
@@ -622,7 +622,7 @@ namespace Cosmonaut.System
         {
             // Arrange
             var catId = Guid.NewGuid().ToString();
-            var cat = new Cat { CatId = catId, Name = "Kitty" }.ToCosmonautDocument();
+            var cat = new Cat { CatId = catId, Name = "Kitty" }.ToCosmonautDocument(null);
 
             // Act
             var found = await _cosmonautClient.GetDocumentAsync(_databaseId, _collectionName, cat.Id);

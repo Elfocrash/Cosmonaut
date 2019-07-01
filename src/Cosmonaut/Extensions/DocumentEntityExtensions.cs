@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Cosmonaut.Attributes;
@@ -6,12 +7,13 @@ using Cosmonaut.Exceptions;
 using Cosmonaut.Internal;
 using Microsoft.Azure.Documents;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Cosmonaut.Extensions
 {
     public static class DocumentEntityExtensions
     {
-        internal static PartitionKeyDefinition GetPartitionKeyDefinitionForEntity(this Type type)
+        internal static PartitionKeyDefinition GetPartitionKeyDefinitionForEntity(this Type type, JsonSerializerSettings serializerSettings)
         {
             var partitionKeyProperties = InternalTypeCache.Instance.GetPropertiesFromCache(type)
                 .Where(x => x.GetCustomAttribute<CosmosPartitionKeyAttribute>() != null).ToList();
@@ -23,16 +25,22 @@ namespace Cosmonaut.Extensions
                 return null;
 
             var partitionKeyProperty = partitionKeyProperties.Single();
-            var porentialJsonPropertyAttribute = partitionKeyProperty.GetCustomAttribute<JsonPropertyAttribute>();
-            if (IsCosmosIdThePartitionKey(porentialJsonPropertyAttribute, partitionKeyProperty))
+            var potentialJsonPropertyAttribute = partitionKeyProperty.GetCustomAttribute<JsonPropertyAttribute>();
+            if (IsCosmosIdThePartitionKey(potentialJsonPropertyAttribute, partitionKeyProperty))
             {
                 return CosmonautHelpers.GetPartitionKeyDefinition(CosmosConstants.CosmosId);
             }
 
-            if (porentialJsonPropertyAttribute != null &&
-                !string.IsNullOrEmpty(porentialJsonPropertyAttribute.PropertyName))
-                return CosmonautHelpers.GetPartitionKeyDefinition(porentialJsonPropertyAttribute.PropertyName);
+            if (potentialJsonPropertyAttribute != null &&
+                !string.IsNullOrEmpty(potentialJsonPropertyAttribute.PropertyName))
+                return CosmonautHelpers.GetPartitionKeyDefinition(potentialJsonPropertyAttribute.PropertyName);
 
+            if (serializerSettings.ContractResolver is DefaultContractResolver resolver)
+            {
+                var resolvedPropertyName = resolver.GetResolvedPropertyName(partitionKeyProperty.Name);
+                return CosmonautHelpers.GetPartitionKeyDefinition(resolvedPropertyName);    
+            }
+            
             return CosmonautHelpers.GetPartitionKeyDefinition(partitionKeyProperty.Name);
         }
 
@@ -171,4 +179,22 @@ namespace Cosmonaut.Extensions
             return propertyNamedId.GetValue(entity).ToString();
         }
     }
+
+    class MyConverter : JsonConverter
+    {
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool CanConvert(Type objectType)
+        {
+            return objectType == typeof(IDictionary<string, double>);
+        }
+    } 
 }

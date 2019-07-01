@@ -6,10 +6,10 @@ namespace Cosmonaut.Extensions
 {
     public static class CosmonautHelpers
     {
-        public static Document ToCosmonautDocument<TEntity>(this TEntity obj) where TEntity : class
+        public static Document ToCosmonautDocument<TEntity>(this TEntity obj, JsonSerializerSettings settings) where TEntity : class
         {
             obj.ValidateEntityForCosmosDb();
-            var document = JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(obj));
+            var document = JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(obj, settings), settings);
 
             using (JsonReader reader = new JTokenReader(document))
             {
@@ -17,7 +17,7 @@ namespace Cosmonaut.Extensions
                 actualDocument.LoadFrom(reader);
                 actualDocument.Id = obj.GetDocumentId();
                 RemoveDuplicateIds(ref actualDocument);
-
+                
                 if (typeof(TEntity).UsesSharedCollection())
                     actualDocument.SetPropertyValue(nameof(ISharedCosmosEntity.CosmosEntityName), $"{typeof(TEntity).GetSharedCollectionEntityName()}");
 

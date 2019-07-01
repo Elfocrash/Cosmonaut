@@ -8,6 +8,8 @@ using Cosmonaut.Extensions.Microsoft.DependencyInjection;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Cosmonaut.Console
 {
@@ -23,12 +25,19 @@ namespace Cosmonaut.Console
                 ConnectionProtocol = Protocol.Tcp,
                 ConnectionMode = ConnectionMode.Direct
             };
+
+            var jsonSerializerSettings = new JsonSerializerSettings
+            {
+                ContractResolver = new DefaultContractResolver()
+            };
             
             var cosmosSettings = new CosmosStoreSettings("localtest", 
                 "https://localhost:8081", 
                 "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
                 , connectionPolicy
                 , defaultCollectionThroughput: 5000);
+            
+            cosmosSettings.JsonSerializerSettings = jsonSerializerSettings;
 
             var cosmonautClient = new CosmonautClient("https://localhost:8081",
                 "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==");
@@ -41,6 +50,7 @@ namespace Cosmonaut.Console
             {
                 settings.ConnectionPolicy = connectionPolicy;
                 settings.DefaultCollectionThroughput = 5000;
+                settings.JsonSerializerSettings = jsonSerializerSettings;
             });
             
             serviceCollection.AddCosmosStore<Car>(cosmosSettings);
@@ -62,7 +72,7 @@ namespace Cosmonaut.Console
             var dbOfferV2 = await cosmonautClient.GetOfferV2ForDatabaseAsync("scaleabledb");
 
             var newOffer = new OfferV2(dbOffer, 20000);
-            var offerResponse = await cosmonautClient.UpdateOfferAsync(newOffer);
+            //var offerResponse = await cosmonautClient.UpdateOfferAsync(newOffer);
 
             var database = await cosmonautClient.GetDatabaseAsync("localtest");
             System.Console.WriteLine($"Retrieved database with id {database.Id}");
@@ -127,9 +137,9 @@ namespace Cosmonaut.Console
             var carPageThree = await carPageTwo.GetNextPageAsync();
             var carPageFour = await carPageThree.GetNextPageAsync();
 
-            var addedRetrieved = await booksStore.Query().OrderBy(x => x.Name).ToListAsync();
+            var addedRetrieved = await booksStore.Query().OrderBy(x=> x.Name).ToListAsync();
 
-            var firstPage = await booksStore.Query().WithPagination(1, 10).OrderBy(x => x.Name).ToPagedListAsync();
+            var firstPage = await booksStore.Query().WithPagination(1, 10).ToPagedListAsync();
             var secondPage = await firstPage.GetNextPageAsync();
             var thirdPage = await secondPage.GetNextPageAsync();
             var fourthPage = await secondPage.GetNextPageAsync();
@@ -138,7 +148,7 @@ namespace Cosmonaut.Console
             //var fourthPage = await booksStore.Query().WithPagination(4, 10).OrderBy(x => x.Name).ToListAsync();
 
             var sqlPaged = await cosmonautClient.Query<Book>("localtest", "shared",
-                "select * from c where c.CosmosEntityName = @type order by c.Name", new Dictionary<string, object>{{ "type", "books" } }, new FeedOptions { EnableCrossPartitionQuery = true })
+                "select * from c where c.CosmosEntityName = @type order by c.name", new Dictionary<string, object>{{ "type", "books" } }, new FeedOptions { EnableCrossPartitionQuery = true })
                 .WithPagination(2, 10).ToListAsync();
 
             System.Console.WriteLine($"Retrieved {addedRetrieved.Count} documents in {watch.ElapsedMilliseconds}ms");

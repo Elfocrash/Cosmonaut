@@ -192,7 +192,7 @@ namespace Cosmonaut
         public async Task<CosmosResponse<TEntity>> UpdateAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
             entity.ValidateEntityForCosmosDb();
-            var document = entity.ToCosmonautDocument();
+            var document = entity.ToCosmonautDocument(Settings.JsonSerializerSettings);
             return await CosmonautClient.UpdateDocumentAsync(DatabaseName, CollectionName, document,
                 GetRequestOptions(requestOptions, entity), cancellationToken).ExecuteCosmosCommand(entity);
         }
@@ -204,7 +204,7 @@ namespace Cosmonaut
 
         public async Task<CosmosResponse<TEntity>> UpsertAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
-            var document = entity.ToCosmonautDocument();
+            var document = entity.ToCosmonautDocument(Settings.JsonSerializerSettings);
             return await CosmonautClient.UpsertDocumentAsync(DatabaseName, CollectionName, document,
                 GetRequestOptions(requestOptions, entity), cancellationToken).ExecuteCosmosCommand(entity);
         }
@@ -249,7 +249,7 @@ namespace Cosmonaut
             var databaseCreated =
                 await _databaseCreator.EnsureCreatedAsync(DatabaseName, Settings.DefaultDatabaseThroughput);
             var collectionCreated = await _collectionCreator.EnsureCreatedAsync<TEntity>(DatabaseName, CollectionName,
-                Settings.DefaultCollectionThroughput, Settings.IndexingPolicy, Settings.OnDatabaseThroughput, Settings.UniqueKeyPolicy);
+                Settings.DefaultCollectionThroughput, Settings.JsonSerializerSettings, Settings.IndexingPolicy, Settings.OnDatabaseThroughput, Settings.UniqueKeyPolicy);
 
             return databaseCreated && collectionCreated;
         }
@@ -305,7 +305,7 @@ namespace Cosmonaut
 
         private RequestOptions GetRequestOptions(string id, RequestOptions requestOptions)
         {
-            var partitionKeyDefinition = typeof(TEntity).GetPartitionKeyDefinitionForEntity();
+            var partitionKeyDefinition = typeof(TEntity).GetPartitionKeyDefinitionForEntity(requestOptions?.JsonSerializerSettings ?? Settings.JsonSerializerSettings);
             var partitionKeyIsId = partitionKeyDefinition?.Paths?.SingleOrDefault()?.Equals($"/{CosmosConstants.CosmosId}") ?? false;
             if (requestOptions == null && partitionKeyIsId)
             {
@@ -333,7 +333,7 @@ namespace Cosmonaut
                     EnableCrossPartitionQuery = shouldEnablePartitionQuery
                 };
             }
-
+            
             feedOptions.EnableCrossPartitionQuery = shouldEnablePartitionQuery;
             return feedOptions;
         }

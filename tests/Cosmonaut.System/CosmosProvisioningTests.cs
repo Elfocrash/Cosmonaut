@@ -1,13 +1,12 @@
 using System;
-using System.ComponentModel;
 using System.Threading.Tasks;
 using Cosmonaut.Configuration;
-using Cosmonaut.Exceptions;
 using Cosmonaut.Storage;
 using Cosmonaut.System.Models;
 using FluentAssertions;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace Cosmonaut.System
@@ -62,7 +61,7 @@ namespace Cosmonaut.System
             var databaseCreator = new CosmosDatabaseCreator(_cosmonautClient);
             var collectionCreator = new CosmosCollectionCreator(_cosmonautClient);
             await databaseCreator.EnsureCreatedAsync(_databaseId);
-            await collectionCreator.EnsureCreatedAsync<object>(_databaseId, _collectionName, 10000);
+            await collectionCreator.EnsureCreatedAsync<object>(_databaseId, _collectionName, 10000, new JsonSerializerSettings());
 
             var offer = await _cosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);
 
@@ -75,7 +74,7 @@ namespace Cosmonaut.System
             var databaseCreator = new CosmosDatabaseCreator(_cosmonautClient);
             var collectionCreator = new CosmosCollectionCreator(_cosmonautClient);
             await databaseCreator.EnsureCreatedAsync(_databaseId, 20000);
-            await collectionCreator.EnsureCreatedAsync<Cat>(_databaseId, _collectionName, 10000);
+            await collectionCreator.EnsureCreatedAsync<Cat>(_databaseId, _collectionName, 10000, new JsonSerializerSettings());
 
             var databaseOffer = await _cosmonautClient.GetOfferV2ForDatabaseAsync(_databaseId);
             var collectionOffer = await _cosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);
@@ -90,7 +89,7 @@ namespace Cosmonaut.System
             var databaseCreator = new CosmosDatabaseCreator(_cosmonautClient);
             var collectionCreator = new CosmosCollectionCreator(_cosmonautClient);
             await databaseCreator.EnsureCreatedAsync(_databaseId, 20000);
-            await collectionCreator.EnsureCreatedAsync<Cat>(_databaseId, _collectionName, 10000, onDatabaseBehaviour: ThroughputBehaviour.DedicateCollectionThroughput);
+            await collectionCreator.EnsureCreatedAsync<Cat>(_databaseId, _collectionName, 10000, new JsonSerializerSettings(), onDatabaseBehaviour: ThroughputBehaviour.DedicateCollectionThroughput);
 
             var databaseOffer = await _cosmonautClient.GetOfferV2ForDatabaseAsync(_databaseId);
             var collectionOffer = await _cosmonautClient.GetOfferV2ForCollectionAsync(_databaseId, _collectionName);

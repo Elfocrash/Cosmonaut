@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Cosmonaut.Configuration;
-using Cosmonaut.Exceptions;
 using Cosmonaut.Extensions;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
+using Newtonsoft.Json;
 
 namespace Cosmonaut.Storage
 {
@@ -27,6 +26,7 @@ namespace Cosmonaut.Storage
             string databaseId,
             string collectionId,
             int collectionThroughput,
+            JsonSerializerSettings partitionKeySerializer,
             IndexingPolicy indexingPolicy = null,
             ThroughputBehaviour onDatabaseBehaviour = ThroughputBehaviour.UseDatabaseThroughput, 
             UniqueKeyPolicy uniqueKeyPolicy = null) where TEntity : class
@@ -44,7 +44,7 @@ namespace Cosmonaut.Storage
                 UniqueKeyPolicy = uniqueKeyPolicy ?? CosmosConstants.DefaultUniqueKeyPolicy
             };
 
-            SetPartitionKeyDefinitionForCollection(typeof(TEntity), newCollection);
+            SetPartitionKeyDefinitionForCollection(typeof(TEntity), newCollection, partitionKeySerializer);
 
             var finalCollectionThroughput = databaseHasOffer ? onDatabaseBehaviour == ThroughputBehaviour.DedicateCollectionThroughput ? (int?)collectionThroughput : null : collectionThroughput;
 
@@ -56,9 +56,9 @@ namespace Cosmonaut.Storage
             return newCollection != null;
         }
 
-        private static void SetPartitionKeyDefinitionForCollection(Type entityType, DocumentCollection collection)
+        private static void SetPartitionKeyDefinitionForCollection(Type entityType, DocumentCollection collection, JsonSerializerSettings serializerSettings)
         {
-            var partitionKey = entityType.GetPartitionKeyDefinitionForEntity();
+            var partitionKey = entityType.GetPartitionKeyDefinitionForEntity(serializerSettings);
 
             if (partitionKey != null)
                 collection.PartitionKey = partitionKey;

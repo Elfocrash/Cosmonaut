@@ -9,10 +9,12 @@ using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.WebJobs.Host.Executors;
 using Microsoft.Azure.WebJobs.Host.Listeners;
 using Microsoft.Extensions.Logging;
+using IChangeFeedObserver = Microsoft.Azure.Documents.ChangeFeedProcessor.FeedProcessing.IChangeFeedObserver;
+using IChangeFeedObserverFactory = Microsoft.Azure.Documents.ChangeFeedProcessor.FeedProcessing.IChangeFeedObserverFactory;
 
 namespace Cosmonaut.WebJobs.Extensions.Trigger
 {
-    internal class CosmosStoreTriggerListener<T> : IListener, Microsoft.Azure.Documents.ChangeFeedProcessor.FeedProcessing.IChangeFeedObserverFactory
+    internal class CosmosStoreTriggerListener<T> : IListener, IChangeFeedObserverFactory
     {
         private const int ListenerNotRegistered = 0;
         private const int ListenerRegistering = 1;
@@ -47,7 +49,7 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
             StopAsync(CancellationToken.None).GetAwaiter().GetResult();
         }
 
-        public Microsoft.Azure.Documents.ChangeFeedProcessor.FeedProcessing.IChangeFeedObserver CreateObserver()
+        public IChangeFeedObserver CreateObserver()
         {
             return new CosmosStoreTriggerObserver<T>(_executor);
         }
