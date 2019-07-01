@@ -148,7 +148,7 @@ namespace Cosmonaut.Console
             //var fourthPage = await booksStore.Query().WithPagination(4, 10).OrderBy(x => x.Name).ToListAsync();
 
             var sqlPaged = await cosmonautClient.Query<Book>("localtest", "shared",
-                "select * from c where c.CosmosEntityName = @type order by c.name", new Dictionary<string, object>{{ "type", "books" } }, new FeedOptions { EnableCrossPartitionQuery = true })
+                "select * from c where c.CosmosEntityName = @type order by c.Name", new Dictionary<string, object>{{ "type", "books" } }, new FeedOptions { EnableCrossPartitionQuery = true })
                 .WithPagination(2, 10).ToListAsync();
 
             System.Console.WriteLine($"Retrieved {addedRetrieved.Count} documents in {watch.ElapsedMilliseconds}ms");

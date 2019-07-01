@@ -192,9 +192,10 @@ namespace Cosmonaut
         public async Task<CosmosResponse<TEntity>> UpdateAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
             entity.ValidateEntityForCosmosDb();
-            var document = entity.ToCosmonautDocument(Settings.JsonSerializerSettings);
+            requestOptions = GetRequestOptions(requestOptions, entity);
+            var document = entity.ToCosmonautDocument(requestOptions?.JsonSerializerSettings ?? Settings.JsonSerializerSettings);
             return await CosmonautClient.UpdateDocumentAsync(DatabaseName, CollectionName, document,
-                GetRequestOptions(requestOptions, entity), cancellationToken).ExecuteCosmosCommand(entity);
+                requestOptions, cancellationToken).ExecuteCosmosCommand(entity);
         }
         
         public async Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(IEnumerable<TEntity> entities, Func<TEntity, RequestOptions> requestOptions = null, CancellationToken cancellationToken = default)
@@ -204,9 +205,10 @@ namespace Cosmonaut
 
         public async Task<CosmosResponse<TEntity>> UpsertAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
-            var document = entity.ToCosmonautDocument(Settings.JsonSerializerSettings);
+            requestOptions = GetRequestOptions(requestOptions, entity);
+            var document = entity.ToCosmonautDocument(requestOptions?.JsonSerializerSettings ?? Settings.JsonSerializerSettings);
             return await CosmonautClient.UpsertDocumentAsync(DatabaseName, CollectionName, document,
-                GetRequestOptions(requestOptions, entity), cancellationToken).ExecuteCosmosCommand(entity);
+                requestOptions, cancellationToken).ExecuteCosmosCommand(entity);
         }
 
         public async Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(IEnumerable<TEntity> entities, Func<TEntity, RequestOptions> requestOptions = null, CancellationToken cancellationToken = default)
