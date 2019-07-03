@@ -265,6 +265,8 @@ namespace Cosmonaut
             {
                 EnsureInfrastructureProvisionedAsync().GetAwaiter().GetResult();
             }
+
+            Settings.JsonSerializerSettings = CosmonautClient.DocumentClient.GetJsonSerializerSettingsFromClient();
         }
 
         private string GetCosmosStoreCollectionName(string overridenCollectionName)

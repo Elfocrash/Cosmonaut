@@ -35,7 +35,7 @@ namespace Cosmonaut.Extensions
                 !string.IsNullOrEmpty(potentialJsonPropertyAttribute.PropertyName))
                 return CosmonautHelpers.GetPartitionKeyDefinition(potentialJsonPropertyAttribute.PropertyName);
 
-            if (serializerSettings.ContractResolver is DefaultContractResolver resolver)
+            if (serializerSettings?.ContractResolver is DefaultContractResolver resolver)
             {
                 var resolvedPropertyName = resolver.GetResolvedPropertyName(partitionKeyProperty.Name);
                 return CosmonautHelpers.GetPartitionKeyDefinition(resolvedPropertyName);    

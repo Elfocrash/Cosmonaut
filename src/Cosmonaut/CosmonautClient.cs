@@ -24,7 +24,7 @@ namespace Cosmonaut
             if (infiniteRetrying)
                 DocumentClient.SetupInfiniteRetries();
 
-            _serializerSettings = GetJsonSerializerSettingsFromClient(DocumentClient);
+            _serializerSettings = DocumentClient.GetJsonSerializerSettingsFromClient();
         }
         
         public CosmonautClient(Func<IDocumentClient> documentClientFunc, bool infiniteRetrying = true)
@@ -33,7 +33,7 @@ namespace Cosmonaut
             if (infiniteRetrying)
                 DocumentClient.SetupInfiniteRetries();
             
-            _serializerSettings = GetJsonSerializerSettingsFromClient(DocumentClient);
+            _serializerSettings = DocumentClient.GetJsonSerializerSettingsFromClient();
         }
 
         public CosmonautClient(
@@ -47,7 +47,7 @@ namespace Cosmonaut
             if (infiniteRetrying)
                 DocumentClient.SetupInfiniteRetries();
             
-            _serializerSettings = GetJsonSerializerSettingsFromClient(DocumentClient);
+            _serializerSettings = DocumentClient.GetJsonSerializerSettingsFromClient();
         }
 
         public CosmonautClient(
@@ -63,7 +63,7 @@ namespace Cosmonaut
             if (infiniteRetrying)
                 DocumentClient.SetupInfiniteRetries();
             
-            _serializerSettings = GetJsonSerializerSettingsFromClient(DocumentClient);
+            _serializerSettings = DocumentClient.GetJsonSerializerSettingsFromClient();
         }
 
         public CosmonautClient(
@@ -375,20 +375,6 @@ namespace Cosmonaut
             var sqlQuerySpec = parameters != null && parameters.Any() ? new SqlQuerySpec(sql, parameters) : new SqlQuerySpec(sql);
             var queryable = DocumentClient.CreateDocumentQuery<T>(collectionUri, sqlQuerySpec, feedOptions);
             return queryable;
-        }
-        
-        private static JsonSerializerSettings GetJsonSerializerSettingsFromClient(IDocumentClient documentClient)
-        {
-            try
-            {
-                return (JsonSerializerSettings) typeof(DocumentClient).GetTypeInfo()
-                    .GetField("serializerSettings", BindingFlags.NonPublic | BindingFlags.Instance)
-                    .GetValue(documentClient);
-            }
-            catch
-            {
-                return null;
-            }
         }
 
         public IDocumentClient DocumentClient { get; }
