@@ -107,7 +107,7 @@ The CosmonautClient also offers a few new methods in order to make querying and 
 * `QueryDocumentsAsync<T>(string databaseId, string collectionId,
             Expression<Func<Document, bool>> predicate = null, FeedOptions?, CancellationToken?)` - Queries all the documents that match the predicate providies. If the predicate is null then it queries all the documents in the collection. Returns results mapped to generic type `T`.
 * `QueryDocumentsAsync(string databaseId, string collectionId,
-            Expression<Func<Document, bool>> predicate = null, FeedOptions?, CancellationToken?)` - Queries all the documents that match the predicate providies. If the predicate is null then it queries all the documents in the collection. Returns `Document` results.
+            Expression<Func<Document, bool>> predicate = null, FeedOptions?, CancellationToken?)` - Queries all the documents that match the predicate provides. If the predicate is null then it queries all the documents in the collection. Returns `Document` results.
 * `QueryDocumentsAsync<T>(databaseId, collectionId,
             string sql, object parameters = null, FeedOptions?, CancellationToken?)` - Similar to QueryMultipleAsync<T>
 
@@ -116,12 +116,12 @@ The CosmonautClient also offers a few new methods in order to make querying and 
 Cosmonaut has a set of extension methods that can be used in both LINQ and SQL based IQueryables in order to asynchronously query the containers.
 
 
-* `ToListAsync<T>` - Asynchronously queries Cosmos DB and retuns a list of all the data matching the query.
-* `ToPagedListAsync<T>` - Asynchronously queries Cosmos DB and retuns a `CosmosPagedResults` response containing a list of all the data matching the query and also whether there are more pages after this query and a continuation token for the next page.
-* `FirstAsync<T>` - Asynchronously queries Cosmos DB and retuns the first item matching this query. Throws exception if no items are matched.
+* `ToListAsync<T>` - Asynchronously queries Cosmos DB and returns a list of all the data matching the query.
+* `ToPagedListAsync<T>` - Asynchronously queries Cosmos DB and returns a `CosmosPagedResults` response containing a list of all the data matching the query and also whether there are more pages after this query and a continuation token for the next page.
+* `FirstAsync<T>` - Asynchronously queries Cosmos DB and returns the first item matching this query. Throws exception if no items are matched.
 * `FirstOrDefaultAsync<T>` - Asynchronously queries Cosmos DB and retuns the first item matching this query. Returns null if no items are matched.
-* `SingleAsync<T>` - Asynchronously queries Cosmos DB and retuns a single item matching this query. Throws exception if no items or more than one item are matched.
-* `SingleOrDefaultAsync<T>` - Asynchronously queries Cosmos DB and retuns a single item matching this query. Throws exception if more than one item are matched and returns null if no items are matched.
+* `SingleAsync<T>` - Asynchronously queries Cosmos DB and returns a single item matching this query. Throws exception if no items or more than one item are matched.
+* `SingleOrDefaultAsync<T>` - Asynchronously queries Cosmos DB and returns a single item matching this query. Throws exception if more than one item are matched and returns null if no items are matched.
 * `CountAsync<T>` - Asynchronously queries Cosmos DB and retuns the count of items matching this query.
-* `MaxAsync<T>` - Asynchronously queries Cosmos DB and retuns the maximum value of item items matched.
-* `MinAsync<T>` - Asynchronously queries Cosmos DB and retuns the minimum value of item items matched.
+* `MaxAsync<T>` - Asynchronously queries Cosmos DB and retuns the maximum value of item matched.
+* `MinAsync<T>` - Asynchronously queries Cosmos DB and retuns the minimum value of item matched.
