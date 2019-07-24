@@ -19,7 +19,7 @@ namespace Cosmonaut.Unit
             var result = "select * from c".EnsureQueryIsCollectionSharingFriendly<DummySharedCollection>();
 
             // Assert
-            result.Should().BeEquivalentTo(expectedQuery);
+            result.Should().Be(expectedQuery);
         }
 
         [Fact]
@@ -32,7 +32,7 @@ namespace Cosmonaut.Unit
             var result = "select * from c".EnsureQueryIsCollectionSharingFriendly<Dummy>();
 
             // Assert
-            result.Should().BeEquivalentTo(expectedQuery);
+            result.Should().Be(expectedQuery);
         }
 
         [Fact]
@@ -45,7 +45,7 @@ namespace Cosmonaut.Unit
             var result = "select * from c where c.id = '1'".EnsureQueryIsCollectionSharingFriendly<DummySharedCollection>();
 
             // Assert
-            result.Should().BeEquivalentTo(expectedQuery);
+            result.Should().Be(expectedQuery);
         }
 
         [Fact]
@@ -58,7 +58,7 @@ namespace Cosmonaut.Unit
             var result = "select * from c where c.id = '1'".EnsureQueryIsCollectionSharingFriendly<Dummy>();
 
             // Assert
-            result.Should().BeEquivalentTo(expectedQuery);
+            result.Should().Be(expectedQuery);
         }
 
         [Fact]
@@ -71,7 +71,7 @@ namespace Cosmonaut.Unit
             var result = "select * from root as c where c.id = '1'".EnsureQueryIsCollectionSharingFriendly<DummySharedCollection>();
 
             // Assert
-            result.Should().BeEquivalentTo(expectedQuery);
+            result.Should().Be(expectedQuery);
         }
 
         [Fact]
@@ -84,7 +84,7 @@ namespace Cosmonaut.Unit
             var result = "select * from root c where c.id = '1'".EnsureQueryIsCollectionSharingFriendly<DummySharedCollection>();
 
             // Assert
-            result.Should().BeEquivalentTo(expectedQuery);
+            result.Should().Be(expectedQuery);
         }
 
         [Fact]
@@ -124,12 +124,12 @@ namespace Cosmonaut.Unit
 
             // Assert
             collection.Count.Should().Be(3);
-            collection[0].Name.Should().BeEquivalentTo($"@{nameof(obj.Cosmonaut)}");
-            collection[0].Value.Should().BeEquivalentTo("Nick");
-            collection[1].Name.Should().BeEquivalentTo($"@{nameof(obj.Position)}");
-            collection[1].Value.Should().BeEquivalentTo("Software Engineer");
-            collection[2].Name.Should().BeEquivalentTo($"@{nameof(obj.Rank)}");
-            collection[2].Value.Should().BeEquivalentTo(1);
+            collection[0].Name.Should().Be($"@{nameof(obj.Cosmonaut)}");
+            collection[0].Value.Should().Be("Nick");
+            collection[1].Name.Should().Be($"@{nameof(obj.Position)}");
+            collection[1].Value.Should().Be("Software Engineer");
+            collection[2].Name.Should().Be($"@{nameof(obj.Rank)}");
+            collection[2].Value.Should().Be(1);
         }
 
         [Fact]
@@ -146,12 +146,26 @@ namespace Cosmonaut.Unit
 
             // Assert
             collection.Count.Should().Be(3);
-            collection[0].Name.Should().BeEquivalentTo("@Cosmonaut");
-            collection[0].Value.Should().BeEquivalentTo("Nick");
-            collection[1].Name.Should().BeEquivalentTo("@Position");
-            collection[1].Value.Should().BeEquivalentTo("Software Engineer");
-            collection[2].Name.Should().BeEquivalentTo("@Rank");
-            collection[2].Value.Should().BeEquivalentTo(1);
+            collection[0].Name.Should().Be("@Cosmonaut");
+            collection[0].Value.Should().Be("Nick");
+            collection[1].Name.Should().Be("@Position");
+            collection[1].Value.Should().Be("Software Engineer");
+            collection[2].Name.Should().Be("@Rank");
+            collection[2].Value.Should().Be(1);
+        }
+
+        
+        [Fact]
+        public void SharedCollectionSqlQueryWithUpperCaseOrderClauseWithoutAsAddsCosmosEntityName()
+        {
+            // Arrange
+            var expectedQuery = "select * from c where c.CosmosEntityName = 'dummies' order by c.id";
+
+            // Act
+            var result = "select * from c ORDER BY c.id".EnsureQueryIsCollectionSharingFriendly<DummySharedCollection>();
+
+            // Assert
+            result.Should().Be(expectedQuery);
         }
     }
 }
