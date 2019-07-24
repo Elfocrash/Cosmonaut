@@ -153,5 +153,19 @@ namespace Cosmonaut.Unit
             collection[2].Name.Should().BeEquivalentTo("@Rank");
             collection[2].Value.Should().BeEquivalentTo(1);
         }
+
+        
+        [Fact]
+        public void SharedCollectionSqlQueryWithUpperCaseOrderClauseWithoutAsAddsCosmosEntityName()
+        {
+            // Arrange
+            var expectedQuery = "select * from c where c.CosmosEntityName = 'dummies' ORDER BY c.id";
+
+            // Act
+            var result = "select * from c ORDER BY c.id".EnsureQueryIsCollectionSharingFriendly<DummySharedCollection>();
+
+            // Assert
+            result.Should().BeEquivalentTo(expectedQuery);
+        }
     }
 }
