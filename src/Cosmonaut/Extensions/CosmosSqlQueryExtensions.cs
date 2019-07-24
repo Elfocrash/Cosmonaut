@@ -38,7 +38,7 @@ namespace Cosmonaut.Extensions
                 if(!hasOrderBy)
                     return $"{sql} {whereClause}";
 
-                var splitSql = Regex.Split(sql, "aa", RegexOptions.IgnoreCase);
+                var splitSql = Regex.Split(sql, " order by ", RegexOptions.IgnoreCase);
 
                 return $"{splitSql[0]} {whereClause} order by {splitSql[1]}";
             }
