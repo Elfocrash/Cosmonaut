@@ -5,7 +5,7 @@
     <Authors>Nick Chapsas</Authors>
     <Description>A supercharged .NET SDK for Azure CosmosDB with ORM support</Description>
 	<Summary>A powerful and easy to use SDK for Azure CosmosDB.</Summary>
-    <Copyright>Copyright 2018 - Nick Chapsas</Copyright>
+    <Copyright>Copyright 2019 - Nick Chapsas</Copyright>
 	<Title>Cosmonaut</Title>
     <PackageLicenseUrl>https://github.com/Elfocrash/Cosmonaut/blob/develop/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/Elfocrash/Cosmonaut</PackageProjectUrl>

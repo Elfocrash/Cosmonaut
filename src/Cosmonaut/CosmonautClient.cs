@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Cosmonaut.Diagnostics;
 using Cosmonaut.Extensions;
+using Cosmonaut.Factories;
 using Cosmonaut.Response;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
