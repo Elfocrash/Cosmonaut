@@ -261,6 +261,12 @@ Partitions are great but you should these 3 very important things about them and
 
 More on the third issue here [Unique keys in Azure Cosmos DB](https://docs.microsoft.com/en-us/azure/cosmos-db/unique-keys)
 
+#### Optimizing for performance
+
+Cosmonaut by default will create one `CosmonautClient` (which is really a wrapper around the `DocumentClient`) per `CosmosStore`. The logic behind that decision was that each `CosmosStore` might have different configuration from another even on the client level. However in scenarios where you have tens of CosmosStores this can cause socket starvation. The recommendation in such scenarios is to either reuse the same `CosmonautClient` or to cache the CosmosStores internally and swap them around for different CosmosStores. You can see this issue where a multi tenant scenario is discussed and resolved by the use of a client cache.
+
+It is also a good idea in general to create a `CosmonautClient` outside of the CosmosStore logic and  reuse the `CosmonautClient` instead of creating one each time if the configuration for the client is the same.
+
 ### Logging
 
 #### Event source
