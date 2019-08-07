@@ -11,6 +11,7 @@ using FluentAssertions;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Moq;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace Cosmonaut.Unit
@@ -42,7 +43,7 @@ namespace Cosmonaut.Unit
             var creator = new CosmosCollectionCreator(new CosmonautClient(_mockDocumentClient.Object));
 
             // Act
-            var result = await creator.EnsureCreatedAsync<Dummy>("databaseName", collection.Id, 500);
+            var result = await creator.EnsureCreatedAsync<Dummy>("databaseName", collection.Id, 500, new JsonSerializerSettings());
 
             // Assert
             result.Should().BeTrue();

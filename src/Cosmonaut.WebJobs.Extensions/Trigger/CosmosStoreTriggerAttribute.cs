@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Azure.WebJobs.Description;
 
 namespace Cosmonaut.WebJobs.Extensions.Trigger
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1019:DefineAccessorsForAttributeArguments")]
+    [SuppressMessage("Microsoft.Design", "CA1019:DefineAccessorsForAttributeArguments")]
     [AttributeUsage(AttributeTargets.Parameter)]
     [Binding]
     public sealed class CosmosStoreTriggerAttribute : Attribute

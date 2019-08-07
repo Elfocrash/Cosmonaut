@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Cosmonaut.Exceptions;
 using Cosmonaut.Extensions;
 using FluentAssertions;
@@ -18,7 +19,7 @@ namespace Cosmonaut.Unit
             var result = "select * from c".EnsureQueryIsCollectionSharingFriendly<DummySharedCollection>();
 
             // Assert
-            result.Should().BeEquivalentTo(expectedQuery);
+            result.Should().Be(expectedQuery);
         }
 
         [Fact]
@@ -31,7 +32,7 @@ namespace Cosmonaut.Unit
             var result = "select * from c".EnsureQueryIsCollectionSharingFriendly<Dummy>();
 
             // Assert
-            result.Should().BeEquivalentTo(expectedQuery);
+            result.Should().Be(expectedQuery);
         }
 
         [Fact]
@@ -44,7 +45,7 @@ namespace Cosmonaut.Unit
             var result = "select * from c where c.id = '1'".EnsureQueryIsCollectionSharingFriendly<DummySharedCollection>();
 
             // Assert
-            result.Should().BeEquivalentTo(expectedQuery);
+            result.Should().Be(expectedQuery);
         }
 
         [Fact]
@@ -57,7 +58,7 @@ namespace Cosmonaut.Unit
             var result = "select * from c where c.id = '1'".EnsureQueryIsCollectionSharingFriendly<Dummy>();
 
             // Assert
-            result.Should().BeEquivalentTo(expectedQuery);
+            result.Should().Be(expectedQuery);
         }
 
         [Fact]
@@ -70,7 +71,7 @@ namespace Cosmonaut.Unit
             var result = "select * from root as c where c.id = '1'".EnsureQueryIsCollectionSharingFriendly<DummySharedCollection>();
 
             // Assert
-            result.Should().BeEquivalentTo(expectedQuery);
+            result.Should().Be(expectedQuery);
         }
 
         [Fact]
@@ -83,7 +84,7 @@ namespace Cosmonaut.Unit
             var result = "select * from root c where c.id = '1'".EnsureQueryIsCollectionSharingFriendly<DummySharedCollection>();
 
             // Assert
-            result.Should().BeEquivalentTo(expectedQuery);
+            result.Should().Be(expectedQuery);
         }
 
         [Fact]
@@ -116,17 +117,55 @@ namespace Cosmonaut.Unit
         public void ConvertToSqlParameterCollection_WhenValidObject_ReturnsCorrectCollection()
         {
             // Arrange
-            var obj = new {Cosmonaut = "Nick", Position = "Software Engineer"};
+            var obj = new {Cosmonaut = "Nick", Position = "Software Engineer", @Rank = 1};
 
             // Act
             var collection = obj.ConvertToSqlParameterCollection();
 
             // Assert
-            collection.Count.Should().Be(2);
-            collection[0].Name.Should().BeEquivalentTo($"@{nameof(obj.Cosmonaut)}");
-            collection[0].Value.Should().BeEquivalentTo("Nick");
-            collection[1].Name.Should().BeEquivalentTo($"@{nameof(obj.Position)}");
-            collection[1].Value.Should().BeEquivalentTo("Software Engineer");
+            collection.Count.Should().Be(3);
+            collection[0].Name.Should().Be($"@{nameof(obj.Cosmonaut)}");
+            collection[0].Value.Should().Be("Nick");
+            collection[1].Name.Should().Be($"@{nameof(obj.Position)}");
+            collection[1].Value.Should().Be("Software Engineer");
+            collection[2].Name.Should().Be($"@{nameof(obj.Rank)}");
+            collection[2].Value.Should().Be(1);
+        }
+
+        [Fact]
+        public void ConvertDictionaryToSqlParameterCollection_WhenValidObject_ReturnsCorrectCollection()
+        {
+            // Arrange
+            var dictionary = new Dictionary<string, object>
+            {
+                {"Cosmonaut", "Nick"}, {"@Position", "Software Engineer"}, {"Rank", 1}
+            };
+
+            // Act
+            var collection = dictionary.ConvertDictionaryToSqlParameterCollection();
+
+            // Assert
+            collection.Count.Should().Be(3);
+            collection[0].Name.Should().Be("@Cosmonaut");
+            collection[0].Value.Should().Be("Nick");
+            collection[1].Name.Should().Be("@Position");
+            collection[1].Value.Should().Be("Software Engineer");
+            collection[2].Name.Should().Be("@Rank");
+            collection[2].Value.Should().Be(1);
+        }
+
+        
+        [Fact]
+        public void SharedCollectionSqlQueryWithUpperCaseOrderClauseWithoutAsAddsCosmosEntityName()
+        {
+            // Arrange
+            var expectedQuery = "select * from c where c.CosmosEntityName = 'dummies' order by c.id";
+
+            // Act
+            var result = "select * from c ORDER BY c.id".EnsureQueryIsCollectionSharingFriendly<DummySharedCollection>();
+
+            // Assert
+            result.Should().Be(expectedQuery);
         }
     }
 }

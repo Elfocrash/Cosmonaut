@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
+using Cosmonaut.Factories;
 using Cosmonaut.Response;
 using Cosmonaut.Storage;
 using Microsoft.Azure.Documents;
@@ -120,6 +121,41 @@ namespace Cosmonaut
             return await queryable.ToListAsync(cancellationToken);
         }
 
+        public IQueryable<TEntity> Query(string sql, IDictionary<string, object> parameters, FeedOptions feedOptions = null,
+            CancellationToken cancellationToken = default)
+        {
+            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
+            return CosmonautClient.Query<TEntity>(DatabaseName, CollectionName, collectionSharingFriendlySql, parameters, GetFeedOptionsForQuery(feedOptions));
+        }
+
+        public async Task<TEntity> QuerySingleAsync(string sql, IDictionary<string, object> parameters, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
+        {
+            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
+            var queryable = CosmonautClient.Query<TEntity>(DatabaseName, CollectionName, collectionSharingFriendlySql, parameters, GetFeedOptionsForQuery(feedOptions));
+            return await queryable.SingleOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<T> QuerySingleAsync<T>(string sql, IDictionary<string, object> parameters, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
+        {
+            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
+            var queryable = CosmonautClient.Query<T>(DatabaseName, CollectionName, collectionSharingFriendlySql, parameters, GetFeedOptionsForQuery(feedOptions));
+            return await queryable.SingleOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<TEntity>> QueryMultipleAsync(string sql, IDictionary<string, object> parameters, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
+        {
+            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
+            var queryable = CosmonautClient.Query<TEntity>(DatabaseName, CollectionName, collectionSharingFriendlySql, parameters, GetFeedOptionsForQuery(feedOptions));
+            return await queryable.ToListAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<T>> QueryMultipleAsync<T>(string sql, IDictionary<string, object> parameters, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
+        {
+            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
+            var queryable = CosmonautClient.Query<T>(DatabaseName, CollectionName, collectionSharingFriendlySql, parameters, GetFeedOptionsForQuery(feedOptions));
+            return await queryable.ToListAsync(cancellationToken);
+        }
+
         public async Task<CosmosResponse<TEntity>> AddAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
             return await CosmonautClient.CreateDocumentAsync(DatabaseName, CollectionName, entity,
@@ -157,9 +193,10 @@ namespace Cosmonaut
         public async Task<CosmosResponse<TEntity>> UpdateAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
             entity.ValidateEntityForCosmosDb();
-            var document = entity.ToCosmonautDocument();
+            requestOptions = GetRequestOptions(requestOptions, entity);
+            var document = entity.ToCosmonautDocument(requestOptions?.JsonSerializerSettings ?? Settings.JsonSerializerSettings);
             return await CosmonautClient.UpdateDocumentAsync(DatabaseName, CollectionName, document,
-                GetRequestOptions(requestOptions, entity), cancellationToken).ExecuteCosmosCommand(entity);
+                requestOptions, cancellationToken).ExecuteCosmosCommand(entity);
         }
         
         public async Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(IEnumerable<TEntity> entities, Func<TEntity, RequestOptions> requestOptions = null, CancellationToken cancellationToken = default)
@@ -169,9 +206,10 @@ namespace Cosmonaut
 
         public async Task<CosmosResponse<TEntity>> UpsertAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
-            var document = entity.ToCosmonautDocument();
+            requestOptions = GetRequestOptions(requestOptions, entity);
+            var document = entity.ToCosmonautDocument(requestOptions?.JsonSerializerSettings ?? Settings.JsonSerializerSettings);
             return await CosmonautClient.UpsertDocumentAsync(DatabaseName, CollectionName, document,
-                GetRequestOptions(requestOptions, entity), cancellationToken).ExecuteCosmosCommand(entity);
+                requestOptions, cancellationToken).ExecuteCosmosCommand(entity);
         }
 
         public async Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(IEnumerable<TEntity> entities, Func<TEntity, RequestOptions> requestOptions = null, CancellationToken cancellationToken = default)
@@ -208,15 +246,28 @@ namespace Cosmonaut
                 : null;
             return await FindAsync(id, requestOptions, cancellationToken);
         }
+
+        public async Task<bool> EnsureInfrastructureProvisionedAsync()
+        {
+            var databaseCreated =
+                await _databaseCreator.EnsureCreatedAsync(DatabaseName, Settings.DefaultDatabaseThroughput);
+            var collectionCreated = await _collectionCreator.EnsureCreatedAsync<TEntity>(DatabaseName, CollectionName,
+                Settings.DefaultCollectionThroughput, Settings.JsonSerializerSettings, Settings.IndexingPolicy, Settings.OnDatabaseThroughput, Settings.UniqueKeyPolicy);
+
+            return databaseCreated && collectionCreated;
+        }
         
         private void InitialiseCosmosStore(string overridenCollectionName)
         {
             IsShared = typeof(TEntity).UsesSharedCollection();
             CollectionName = GetCosmosStoreCollectionName(overridenCollectionName);
-            
-            _databaseCreator.EnsureCreatedAsync(DatabaseName).ConfigureAwait(false).GetAwaiter().GetResult();
-            _collectionCreator.EnsureCreatedAsync<TEntity>(DatabaseName, CollectionName, Settings.DefaultCollectionThroughput, Settings.IndexingPolicy)
-                .ConfigureAwait(false).GetAwaiter().GetResult();
+
+            if (Settings.ProvisionInfrastructureIfMissing)
+            {
+                EnsureInfrastructureProvisionedAsync().GetAwaiter().GetResult();
+            }
+
+            Settings.JsonSerializerSettings = CosmonautClient.DocumentClient.GetJsonSerializerSettingsFromClient();
         }
 
         private string GetCosmosStoreCollectionName(string overridenCollectionName)
@@ -259,7 +310,7 @@ namespace Cosmonaut
 
         private RequestOptions GetRequestOptions(string id, RequestOptions requestOptions)
         {
-            var partitionKeyDefinition = typeof(TEntity).GetPartitionKeyDefinitionForEntity();
+            var partitionKeyDefinition = typeof(TEntity).GetPartitionKeyDefinitionForEntity(requestOptions?.JsonSerializerSettings ?? Settings.JsonSerializerSettings);
             var partitionKeyIsId = partitionKeyDefinition?.Paths?.SingleOrDefault()?.Equals($"/{CosmosConstants.CosmosId}") ?? false;
             if (requestOptions == null && partitionKeyIsId)
             {
@@ -287,7 +338,7 @@ namespace Cosmonaut
                     EnableCrossPartitionQuery = shouldEnablePartitionQuery
                 };
             }
-
+            
             feedOptions.EnableCrossPartitionQuery = shouldEnablePartitionQuery;
             return feedOptions;
         }

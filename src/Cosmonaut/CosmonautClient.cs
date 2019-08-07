@@ -1,32 +1,40 @@
-﻿using Cosmonaut.Extensions;
-using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Client;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Cosmonaut.Diagnostics;
+using Cosmonaut.Extensions;
+using Cosmonaut.Factories;
 using Cosmonaut.Response;
+using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
 using Newtonsoft.Json;
 
 namespace Cosmonaut
 {
     public class CosmonautClient : ICosmonautClient
     {
+        private readonly JsonSerializerSettings _serializerSettings;
+        
         public CosmonautClient(IDocumentClient documentClient, bool infiniteRetrying = true)
         {
             DocumentClient = documentClient;
             if (infiniteRetrying)
                 DocumentClient.SetupInfiniteRetries();
-        }
 
+            _serializerSettings = DocumentClient.GetJsonSerializerSettingsFromClient();
+        }
+        
         public CosmonautClient(Func<IDocumentClient> documentClientFunc, bool infiniteRetrying = true)
         {
             DocumentClient = documentClientFunc();
             if (infiniteRetrying)
                 DocumentClient.SetupInfiniteRetries();
+            
+            _serializerSettings = DocumentClient.GetJsonSerializerSettingsFromClient();
         }
 
         public CosmonautClient(
@@ -39,6 +47,8 @@ namespace Cosmonaut
             DocumentClient = DocumentClientFactory.CreateDocumentClient(endpoint, authKeyOrResourceToken, connectionPolicy, desiredConsistencyLevel);
             if (infiniteRetrying)
                 DocumentClient.SetupInfiniteRetries();
+            
+            _serializerSettings = DocumentClient.GetJsonSerializerSettingsFromClient();
         }
 
         public CosmonautClient(
@@ -50,8 +60,11 @@ namespace Cosmonaut
             bool infiniteRetrying = true)
         {
             DocumentClient = DocumentClientFactory.CreateDocumentClient(endpoint, authKeyOrResourceToken, jsonSerializerSettings, connectionPolicy, desiredConsistencyLevel);
+            
             if (infiniteRetrying)
                 DocumentClient.SetupInfiniteRetries();
+            
+            _serializerSettings = DocumentClient.GetJsonSerializerSettingsFromClient();
         }
 
         public CosmonautClient(
@@ -115,6 +128,15 @@ namespace Cosmonaut
         {
             var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
             var sqlParameters = parameters.ConvertToSqlParameterCollection();
+            var sqlQuerySpec = sqlParameters != null && sqlParameters.Any() ? new SqlQuerySpec(sql, sqlParameters) : new SqlQuerySpec(sql);
+            return await DocumentClient.CreateDocumentQuery<T>(collectionUri, sqlQuerySpec, feedOptions).ToListAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<T>> QueryDocumentsAsync<T>(string databaseId, string collectionId, string sql, IDictionary<string, object> parameters,
+            FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
+        {
+            var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
+            var sqlParameters = parameters.ConvertDictionaryToSqlParameterCollection();
             var sqlQuerySpec = sqlParameters != null && sqlParameters.Any() ? new SqlQuerySpec(sql, sqlParameters) : new SqlQuerySpec(sql);
             return await DocumentClient.CreateDocumentQuery<T>(collectionUri, sqlQuerySpec, feedOptions).ToListAsync(cancellationToken);
         }
@@ -215,6 +237,13 @@ namespace Cosmonaut
             return GetSqlBasedQueryableForType<T>(collectionUri, sql, sqlParameters, feedOptions);
         }
 
+        public IQueryable<T> Query<T>(string databaseId, string collectionId, string sql, IDictionary<string, object> parameters, FeedOptions feedOptions = null)
+        {
+            var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
+            var sqlParameters = parameters.ConvertDictionaryToSqlParameterCollection();
+            return GetSqlBasedQueryableForType<T>(collectionUri, sql, sqlParameters, feedOptions);
+        }
+
         public async Task<ResourceResponse<DocumentCollection>> CreateCollectionAsync(string databaseId, DocumentCollection collection,
             RequestOptions requestOptions = null)
         {
@@ -242,7 +271,7 @@ namespace Cosmonaut
         public async Task<CosmosResponse<T>> CreateDocumentAsync<T>(string databaseId, string collectionId, T obj,
             RequestOptions requestOptions = null, CancellationToken cancellationToken = default) where T : class
         {
-            var safeDocument = obj.ToCosmonautDocument();
+            var safeDocument = obj.ToCosmonautDocument(requestOptions?.JsonSerializerSettings ?? _serializerSettings);
             var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
             return await this.InvokeCosmosOperationAsync(() =>
                     DocumentClient.CreateDocumentAsync(collectionUri, safeDocument, requestOptions, cancellationToken: cancellationToken), obj.GetDocumentId())
@@ -269,7 +298,7 @@ namespace Cosmonaut
         public async Task<CosmosResponse<T>> UpdateDocumentAsync<T>(string databaseId, string collectionId, T document,
             RequestOptions requestOptions = null, CancellationToken cancellationToken = default) where T : class
         {
-            var safeDocument = document.ToCosmonautDocument();
+            var safeDocument = document.ToCosmonautDocument(requestOptions?.JsonSerializerSettings ?? _serializerSettings);
             var documentUri = UriFactory.CreateDocumentUri(databaseId, collectionId, safeDocument.Id);
             return await this.InvokeCosmosOperationAsync(() =>
                     DocumentClient.ReplaceDocumentAsync(documentUri, safeDocument, requestOptions, cancellationToken), document.GetDocumentId())
@@ -288,7 +317,7 @@ namespace Cosmonaut
         public async Task<CosmosResponse<T>> UpsertDocumentAsync<T>(string databaseId, string collectionId,
             T document, RequestOptions requestOptions = null, CancellationToken cancellationToken = default) where T : class
         {
-            var safeDocument = document.ToCosmonautDocument();
+            var safeDocument = document.ToCosmonautDocument(requestOptions?.JsonSerializerSettings ?? _serializerSettings);
             var collectionUri = UriFactory.CreateDocumentCollectionUri(databaseId, collectionId);
             return await this.InvokeCosmosOperationAsync(() =>
                     DocumentClient.UpsertDocumentAsync(collectionUri, safeDocument, requestOptions, cancellationToken: cancellationToken), document.GetDocumentId())

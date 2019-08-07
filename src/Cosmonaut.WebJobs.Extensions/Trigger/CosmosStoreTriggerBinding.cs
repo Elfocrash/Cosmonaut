@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
@@ -46,7 +47,7 @@ namespace Cosmonaut.WebJobs.Extensions.Trigger
             return Task.FromResult<ITriggerData>(new TriggerData(null, _emptyBindingData));
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
+        [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
         public Task<IListener> CreateListenerAsync(ListenerFactoryContext context)
         {
             if (context == null)

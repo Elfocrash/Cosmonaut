@@ -66,6 +66,52 @@ namespace Cosmonaut
         Task<IEnumerable<T>> QueryMultipleAsync<T>(string sql, object parameters = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
 
         /// <summary>
+        ///     Returns an IQueryable that matches the expression provided. You can use ToListAsync to enumerate it or add WithPagination for
+        ///     pagination support.
+        /// </summary>
+        /// <param name="sql">The sql query for this operation.</param>
+        /// <param name="parameters">The sql parameters to replace as a dictionary</param>
+        /// <param name="feedOptions">The feed options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
+        IQueryable<TEntity> Query(string sql, IDictionary<string, object> parameters, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        ///     Returns a single item that matches the expression provided.
+        /// </summary>
+        /// <param name="sql">The sql query for this operation.</param>
+        /// <param name="parameters">The sql parameters to replace as a dictionary</param>
+        /// <param name="feedOptions">The feed options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
+        Task<TEntity> QuerySingleAsync(string sql, IDictionary<string, object> parameters, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        ///     Returns a single item of any type that matches the expression provided.
+        /// </summary>
+        /// <param name="sql">The sql query for this operation.</param>
+        /// <param name="parameters">The sql parameters to replace as a dictionary</param>
+        /// <param name="feedOptions">The feed options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
+        Task<T> QuerySingleAsync<T>(string sql, IDictionary<string, object> parameters, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        ///     Returns a collection of items that match the expression provided.
+        /// </summary>
+        /// <param name="sql">The sql query for this operation.</param>
+        /// <param name="parameters">The sql parameters to replace as a dictionary</param>
+        /// <param name="feedOptions">The feed options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
+        Task<IEnumerable<TEntity>> QueryMultipleAsync(string sql, IDictionary<string, object> parameters, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        ///     Returns a collection of items of any type that match the expression provided.
+        /// </summary>
+        /// <param name="sql">The sql query for this operation.</param>
+        /// <param name="parameters">The sql parameters to replace as a dictionary</param>
+        /// <param name="feedOptions">The feed options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
+        Task<IEnumerable<T>> QueryMultipleAsync<T>(string sql, IDictionary<string, object> parameters, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
         ///     Adds the given entity in the cosmos db store.
         /// </summary>
         /// <typeparam name="TEntity">The type of the entity.</typeparam>
@@ -309,6 +355,12 @@ namespace Cosmonaut
         /// <param name="cancellationToken">The CancellationToken for this operation.</param>
         /// <returns>The entity that matches the id and partition key. Returns null if the entity is not found.</returns>
         Task<TEntity> FindAsync(string id, object partitionKeyValue, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        ///     Ensures that the database and collection needed for this CosmosStore is provisioned. If any of the two resources are missing, they will be created automatically.
+        /// </summary>
+        /// <returns>True if both the database and the collection exists</returns>
+        Task<bool> EnsureInfrastructureProvisionedAsync();
 
         /// <summary>
         ///     The settings that were used to initialise this CosmosStore

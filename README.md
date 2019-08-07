@@ -1,4 +1,4 @@
-[![Build Status](https://dev.azure.com/nickchapsas/Cosmonaut/_apis/build/status/Elfocrash.Cosmonaut)](https://dev.azure.com/nickchapsas/Cosmonaut/_build/latest?definitionId=2) [![NuGet Package](https://img.shields.io/nuget/v/Cosmonaut.svg)](https://www.nuget.org/packages/Cosmonaut) [![Documentation Status](https://readthedocs.org/projects/cosmonaut/badge/?version=latest)](https://cosmonaut.readthedocs.io/en/latest/?badge=latest) [![Licensed under the MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/Elfocrash/Cosmonaut/blob/master/LICENSE)
+[![Build Status](https://dev.azure.com/nickchapsas/Cosmonaut/_apis/build/status/Elfocrash.Cosmonaut)](https://dev.azure.com/nickchapsas/Cosmonaut/_build/latest?definitionId=2) [![NuGet Package](https://img.shields.io/nuget/v/Cosmonaut.svg)](https://www.nuget.org/packages/Cosmonaut) [![NuGet](https://img.shields.io/nuget/dt/cosmonaut.svg)](https://www.nuget.org/packages/cosmonaut) [![Documentation Status](https://readthedocs.org/projects/cosmonaut/badge/?version=latest)](https://cosmonaut.readthedocs.io/en/latest/?badge=latest) [![Licensed under the MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/Elfocrash/Cosmonaut/blob/master/LICENSE)
 
 # Cosmonaut
 
@@ -66,7 +66,7 @@ var user = await cosmosStore.FindAsync("userId", "partitionKey");
 var user = await cosmosStore.FindAsync("userId", new RequestOptions());
 ```
 
-##### Quering for entities using LINQ
+##### Querying for entities using LINQ
 
 In order to query for entities all you have to do is call the `.Query()` method and then use LINQ to create the query you want.
 It is HIGHLY recommended that you use one of the `Async` extension methods to get the results back, such as `ToListAsync` or `FirstOrDefaultAsync` , when available.
@@ -76,7 +76,7 @@ var user = await cosmoStore.Query().FirstOrDefaultAsync(x => x.Username == "elfo
 var users = await cosmoStore.Query().Where(x => x.HairColor == HairColor.Black).ToListAsync(cancellationToken);
 ```
 
-##### Quering for entities using SQL
+##### Querying for entities using SQL
 
 ```csharp
 // plain sql query
@@ -104,7 +104,7 @@ Well it's actually pretty simple. Just implement the `ISharedCosmosEntity` inter
 The attribute accepts two properties, `SharedCollectionName` which is mandatory and `EntityName` which is optional.
 The `SharedCollectionName` property will be used to name the collection that the entity will share with other entities. 
 
-The `EntityName` will be used to make the object identifiable for Cosmosnaut. Be default it will pluralize the name of the class, but you can specify it to override this behavior. You can override this by providing your own name by setting the `EntityName` value at the attribute level.
+The `EntityName` will be used to make the object identifiable for Cosmosnaut. By default it will pluralize the name of the class, but you can specify it to override this behavior. You can override this by providing your own name by setting the `EntityName` value at the attribute level.
 
 Once you set this up you can add individual CosmosStores with shared collections.
 
@@ -130,7 +130,7 @@ public class Car : ISharedCosmosEntity
 }
 ```
 
-Even though this is convinient I understand that you might need to have a dynamic way of setting this. 
+Even though this is convenient I understand that you might need to have a dynamic way of setting this. 
 That's why the `CosmosStore` class has some extra constructors that allow you to specify the `overriddenCollectionName` property. This property will override any collection name specified at the attribute level and will use that one instead.
 
 Note: If you have specified a `CollectionPrefix` at the `CosmosStoreSettings` level it will still be added. You are only overriding the collection name that the attribute would normally set.
@@ -152,7 +152,7 @@ CosmosStore initialisation:
 var cosmosStore = new CosmosStore<Car>(someSettings, "oldcars");
 ```
 
-The outcome of this would be a collection named `oldcars` becase the `shared` collection name is overriden in the constructor. 
+The outcome of this would be a collection named `oldcars` because the `shared` collection name is overridden in the constructor. 
 There are also method overloads for the same property at the dependency injection extension level.
 
 #### Pagination
@@ -162,7 +162,7 @@ Cosmonaut supports two types of pagination.
 * Page number + Page size
 * ContinuationToken + Page size
 
-Both of there methods work by adding the `.WithPagination()` method after you used any of the `Query` methods.
+Both of these methods work by adding the `.WithPagination()` method after you used any of the `Query` methods.
 
 ```csharp
 var firstPage = await booksStore.Query().WithPagination(1, 10).OrderBy(x=>x.Name).ToListAsync();
@@ -233,7 +233,7 @@ It is **HIGHLY RECOMMENDED** that you decorate your Id property with the `[JsonP
 
 #### CosmonautClient
 
-Cosmonaut has it's own version of a `DocumentClient` called `CosmonautClient`. The difference is that the `CosmonautClient` interface is more user friendly and it looks more like something you would use in a real life scenario. It won't throw not found exceptions if an item is not found but it will return `null` instead. It will also retry automatically when you get 429s (too many requests).
+Cosmonaut has its own version of a `DocumentClient` called `CosmonautClient`. The difference is that the `CosmonautClient` interface is more user friendly and it looks more like something you would use in a real life scenario. It won't throw not found exceptions if an item is not found but it will return `null` instead. It will also retry automatically when you get 429s (too many requests).
 
 It also has support for logging and monitoring as you are going to see in the logging section of this page.
 
@@ -242,53 +242,6 @@ It also has support for logging and monitoring as you are going to see in the lo
 There is currently no way to reliably do transactions with the current CosmosDB SDK. Because Cosmonaut is a wrapper around the CosmosDB SDK it doesn't support them either. However there are plans for investigating potential other ways to achieve transactional operations such as server side stored procedures that Cosmonaut could provision and call.
 
 Every operational call (Add, Update, Upsert, Delete) however returns it's status back alongside the reason it failed, if it failed, and the entity so you can add your own retry logic.
-
-#### Indexing
-By default CosmosDB is created with the following indexing rules
-
-```javascript
-{
-    "indexingMode": "consistent",
-    "automatic": true,
-    "includedPaths": [
-        {
-            "path": "/*",
-            "indexes": [
-                {
-                    "kind": "Range",
-                    "dataType": "Number",
-                    "precision": -1
-                },
-                {
-                    "kind": "Range",
-                    "dataType": "String",
-                    "precision": -1
-                }
-                {
-                    "kind": "Spatial",
-                    "dataType": "Point"
-                }
-            ]
-        }
-    ],
-    "excludedPaths": []
-}
-```
-
-Indexing in necessary for things like querying the collections.
-Keep in mind that when you manage indexing policy, you can make fine-grained trade-offs between index storage overhead, write and query throughput, and query consistency.
-
-For example if the String datatype is Hash then exact matches like the following,
-`cosmoStore.Query().FirstOrDefaultAsync(x => x.SomeProperty.Equals($"Nick Chapsas")`
-will return the item if it exists in CosmosDB but 
-`cosmoStore.Query().FirstOrDefaultAsync(x => x.SomeProperty.StartsWith($"Nick Ch")`
-will throw an error. Changing the Hash to Range will work.
-
-However you can get around that by setting the `FeedOptions.EnableScanInQuery` to `true` for this `Query()`
-
-Same goes for ordering. If you use `OrderBy` on a string property you need to have this property's path set up as `Range` and precision `-1`.
-
-More about CosmosDB Indexing [here](https://docs.microsoft.com/en-us/azure/cosmos-db/indexing-policies)
 
 #### Partitioning
 Cosmonaut supports partitions out of the box. You can specify which property you want to be your Partition Key by adding the `[CosmosPartitionKey]` attribute above it.
@@ -307,6 +260,12 @@ Partitions are great but you should these 3 very important things about them and
 * If you use the the Upsert method to update an entity that had the value of the property that is the partition key changed, then CosmosDB won't update the document but instead it will create a whole different document with the same id but the changed partition key value.
 
 More on the third issue here [Unique keys in Azure Cosmos DB](https://docs.microsoft.com/en-us/azure/cosmos-db/unique-keys)
+
+#### Optimizing for performance
+
+Cosmonaut by default will create one `CosmonautClient` (which is really a wrapper around the `DocumentClient`) per `CosmosStore`. The logic behind that decision was that each `CosmosStore` might have different configuration from another even on the client level. However in scenarios where you have tens of CosmosStores this can cause socket starvation. The recommendation in such scenarios is to either reuse the same `CosmonautClient` or to cache the CosmosStores internally and swap them around for different CosmosStores. You can see this issue where a multi tenant scenario is discussed and resolved by the use of a client cache.
+
+It is also a good idea in general to create a `CosmonautClient` outside of the CosmosStore logic and  reuse the `CosmonautClient` instead of creating one each time if the configuration for the client is the same.
 
 ### Logging
 

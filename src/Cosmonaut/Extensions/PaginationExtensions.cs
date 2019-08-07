@@ -48,7 +48,7 @@ namespace Cosmonaut.Extensions
             }
 
             if (continuationToken == null)
-                continuationToken = string.Empty;
+                return GetQueryableWithPaginationSettings(queryable, $"{nameof(WithPagination)}/{1}", pageSize);
 
             return GetQueryableWithPaginationSettings(queryable, continuationToken, pageSize);
         }

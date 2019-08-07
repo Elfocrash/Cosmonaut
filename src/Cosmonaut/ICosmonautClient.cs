@@ -30,7 +30,10 @@ namespace Cosmonaut
 
         Task<IEnumerable<T>> QueryDocumentsAsync<T>(string databaseId, string collectionId,
             string sql, object parameters = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
-        
+
+        Task<IEnumerable<T>> QueryDocumentsAsync<T>(string databaseId, string collectionId,
+            string sql, IDictionary<string, object> parameters, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
+
         Task<Document> GetDocumentAsync(string databaseId, string collectionId, string documentId,
             RequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
@@ -70,6 +73,9 @@ namespace Cosmonaut
 
         IQueryable<T> Query<T>(string databaseId, string collectionId, string sql, object parameters = null,
             FeedOptions feedOptions = null);
+
+        IQueryable<T> Query<T>(string databaseId, string collectionId, string sql,
+            IDictionary<string, object> parameters, FeedOptions feedOptions = null);
         
         Task<ResourceResponse<DocumentCollection>> CreateCollectionAsync(string databaseId, DocumentCollection collection,
             RequestOptions requestOptions = null);

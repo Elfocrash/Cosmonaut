@@ -19,7 +19,8 @@ namespace Cosmonaut.System
     public class CosmonautClientTests : IDisposable
     {
         private readonly ICosmonautClient _cosmonautClient;
-        private readonly Uri _emulatorUri = new Uri("https://localhost:8081");
+
+        private readonly string _emulatorUri = Environment.GetEnvironmentVariable("CosmosDBEndpoint") ?? "https://localhost:8081";
         private readonly string _databaseId = $"DB{nameof(CosmonautClientTests)}";
         private readonly string _scaleableDbId = $"SDB{nameof(CosmonautClientTests)}";
         private readonly string _collectionName = $"COL{nameof(CosmonautClientTests)}";
@@ -64,6 +65,12 @@ namespace Cosmonaut.System
             var expectedThroughput = 20000;
             await _cosmonautClient.CreateDatabaseAsync(new Database { Id = _scaleableDbId },
                 new RequestOptions { OfferThroughput = 10000 });
+            await _cosmonautClient.CreateCollectionAsync(_scaleableDbId, new DocumentCollection
+            {
+                Id = _collectionName,
+                PartitionKey = new PartitionKeyDefinition() { Paths = new Collection<string>(new List<string> { "/id" }) }
+            });
+
             var offer = await _cosmonautClient.GetOfferV2ForDatabaseAsync(_scaleableDbId);
 
             // Act
@@ -224,6 +231,27 @@ namespace Cosmonaut.System
         }
 
         [Fact]
+        public async Task QueryDocumentsAsync_WhenQueryingWithSQLAndDictionary_ThenObjectsGetReturned()
+        {
+            // Arrange
+            var cats = new List<Cat>();
+            for (var i = 0; i < 5; i++)
+            {
+                var cat = new Cat { Name = $"Cat {i}" };
+                var created = await _cosmonautClient.CreateDocumentAsync(_databaseId, _collectionName, cat);
+                cats.Add(created.Entity);
+            }
+
+            // Act
+            var results = await _cosmonautClient.QueryDocumentsAsync<Cat>(_databaseId, _collectionName,
+                "select * from c where STARTSWITH(c.Name, @catName)", new Dictionary<string, object> {{"catName", "Cat"}},
+                new FeedOptions { EnableScanInQuery = true });
+
+            // Assert
+            results.Should().BeEquivalentTo(cats, ExcludeEtagCheck());
+        }
+
+        [Fact]
         public async Task QueryDocumentsAsync_WhenQueryingAllObjects_ThenAllObjectsGetReturned()
         {
             // Arrange
@@ -274,7 +302,7 @@ namespace Cosmonaut.System
             var cats = new List<Cat>();
             for (var i = 0; i < 5; i++)
             {
-                var cat = new Cat { Name = $"Cat {i}" }.ToCosmonautDocument();
+                var cat = new Cat { Name = $"Cat {i}" }.ToCosmonautDocument(null);
                 var created = await _cosmonautClient.CreateDocumentAsync(_databaseId, _collectionName, cat);
                 cats.Add(JsonConvert.DeserializeObject<Cat>(created.Resource.ToString()));
             }
@@ -423,7 +451,7 @@ namespace Cosmonaut.System
 
             // Act
             cat.Name = "MEGAKITTY";
-            var document = cat.ToCosmonautDocument();
+            var document = cat.ToCosmonautDocument(null);
             var updated = await _cosmonautClient.UpdateDocumentAsync(_databaseId, _collectionName, document);
 
             // Assert
@@ -460,7 +488,7 @@ namespace Cosmonaut.System
 
             // Act
             cat.Name = "MEGAKITTY";
-            var document = cat.ToCosmonautDocument();
+            var document = cat.ToCosmonautDocument(null);
             var updated = await _cosmonautClient.UpsertDocumentAsync(_databaseId, _collectionName, document);
 
             // Assert
@@ -493,7 +521,7 @@ namespace Cosmonaut.System
 
             // Act
             cat.Name = "MEGAKITTY";
-            var document = cat.ToCosmonautDocument();
+            var document = cat.ToCosmonautDocument(null);
             var updated = await _cosmonautClient.UpdateDocumentAsync(_databaseId, _collectionName, document);
 
             // Assert
@@ -527,7 +555,7 @@ namespace Cosmonaut.System
 
             // Act
             cat.Name = "MEGAKITTY";
-            var document = cat.ToCosmonautDocument();
+            var document = cat.ToCosmonautDocument(null);
             var updated = await _cosmonautClient.UpsertDocumentAsync(_databaseId, _collectionName, document);
 
             // Assert
@@ -540,7 +568,7 @@ namespace Cosmonaut.System
         {
             // Arrange
             var catId = Guid.NewGuid().ToString();
-            var cat = new Cat { CatId = catId, Name = "Kitty" }.ToCosmonautDocument();
+            var cat = new Cat { CatId = catId, Name = "Kitty" }.ToCosmonautDocument(null);
 
             // Act
             var added = await _cosmonautClient.CreateDocumentAsync(_databaseId, _collectionName, cat);
@@ -594,7 +622,7 @@ namespace Cosmonaut.System
         {
             // Arrange
             var catId = Guid.NewGuid().ToString();
-            var cat = new Cat { CatId = catId, Name = "Kitty" }.ToCosmonautDocument();
+            var cat = new Cat { CatId = catId, Name = "Kitty" }.ToCosmonautDocument(null);
 
             // Act
             var found = await _cosmonautClient.GetDocumentAsync(_databaseId, _collectionName, cat.Id);

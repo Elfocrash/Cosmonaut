@@ -35,7 +35,7 @@ namespace Cosmonaut.Unit
                 Name = "Test"
             };
 
-            var document = dummy.ToCosmonautDocument();
+            var document = dummy.ToCosmonautDocument(null);
             var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
 
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>(), CancellationToken.None))
@@ -64,7 +64,7 @@ namespace Cosmonaut.Unit
                 Id = id,
                 Name = "Test"
             };
-            var document = toRemove.ToCosmonautDocument();
+            var document = toRemove.ToCosmonautDocument(null);
             var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>(), CancellationToken.None))
                 .ReturnsAsync(resourceResponse);
@@ -94,7 +94,7 @@ namespace Cosmonaut.Unit
 
             var dummies = new List<Dummy> {dummy};
 
-            var document = dummy.ToCosmonautDocument();
+            var document = dummy.ToCosmonautDocument(null);
             var resourceResponse = document.ToResourceResponse(HttpStatusCode.OK);
             _mockDocumentClient.Setup(x => x.DeleteDocumentAsync(It.IsAny<Uri>(), It.IsAny<RequestOptions>(), CancellationToken.None))
                 .ReturnsAsync(resourceResponse);

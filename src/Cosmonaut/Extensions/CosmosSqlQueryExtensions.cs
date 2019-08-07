@@ -38,7 +38,7 @@ namespace Cosmonaut.Extensions
                 if(!hasOrderBy)
                     return $"{sql} {whereClause}";
 
-                var splitSql = sql.Split(new [] { " order by " }, StringSplitOptions.None);
+                var splitSql = Regex.Split(sql, " order by ", RegexOptions.IgnoreCase);
 
                 return $"{splitSql[0]} {whereClause} order by {splitSql[1]}";
             }
@@ -61,6 +61,23 @@ namespace Cosmonaut.Extensions
                 sqlParameterCollection.Add(sqlparameter);
             }
 
+            return sqlParameterCollection;
+        }
+
+        internal static SqlParameterCollection ConvertDictionaryToSqlParameterCollection(this IDictionary<string, object> dictionary)
+        {
+            var sqlParameterCollection = new SqlParameterCollection();
+
+            if (dictionary == null)
+                return sqlParameterCollection;
+
+            foreach (var pair in dictionary)
+            {
+                var key = pair.Key.StartsWith("@") ? pair.Key : $"@{pair.Key}";
+                var sqlparameter = new SqlParameter(key, pair.Value);
+                sqlParameterCollection.Add(sqlparameter);
+            }
+            
             return sqlParameterCollection;
         }
 
