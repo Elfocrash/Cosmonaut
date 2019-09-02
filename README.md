@@ -1,3 +1,5 @@
+### !Attention! Cosmonaut will be upgrading to the Cosmos DB V3 SDK. I am currently designing the approach to keep as much of the API the same. If you are currectly using Cosmonaut I would recommend sticking with it and just upgrade to V3 Cosmonaut when it's out.
+
 [![Build Status](https://dev.azure.com/nickchapsas/Cosmonaut/_apis/build/status/Elfocrash.Cosmonaut)](https://dev.azure.com/nickchapsas/Cosmonaut/_build/latest?definitionId=2) [![NuGet Package](https://img.shields.io/nuget/v/Cosmonaut.svg)](https://www.nuget.org/packages/Cosmonaut) [![NuGet](https://img.shields.io/nuget/dt/cosmonaut.svg)](https://www.nuget.org/packages/cosmonaut) [![Documentation Status](https://readthedocs.org/projects/cosmonaut/badge/?version=latest)](https://cosmonaut.readthedocs.io/en/latest/?badge=latest) [![Licensed under the MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/Elfocrash/Cosmonaut/blob/master/LICENSE)
 
 # Cosmonaut
