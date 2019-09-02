@@ -4,7 +4,7 @@ namespace Cosmonaut.Factories
     {
         public static ICosmonautClient CreateCosmonautClient(CosmosStoreSettings settings)
         {
-            return new CosmonautClient(DocumentClientFactory.CreateDocumentClient(settings));
+            return new CosmonautClient(CosmosClientFactory.CreateDocumentClient(settings));
         }
     }
 }

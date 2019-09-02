@@ -54,7 +54,7 @@ namespace Cosmonaut.Extensions
         }
 
         private static IQueryable<T> GetQueryableWithPaginationSettings<T>(IQueryable<T> queryable, string continuationInfo, int pageSize)
-        {
+        { 
             if (!queryable.GetType().Name.Equals(DocumentQueryTypeName))
                 return queryable;
 

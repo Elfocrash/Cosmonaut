@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace Cosmonaut.Storage
 {
-    public interface ICollectionCreator
+    public interface IContainerCreator
     {
         Task<bool> EnsureCreatedAsync<TEntity>(string databaseId, string collectionId, int collectionThroughput, JsonSerializerSettings partitionKeySerializer, IndexingPolicy indexingPolicy = null, ThroughputBehaviour onDatabaseBehaviour = ThroughputBehaviour.UseDatabaseThroughput, UniqueKeyPolicy uniqueKeyPolicy = null) where TEntity : class;
     }

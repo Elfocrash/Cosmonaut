@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 using Cosmonaut.Diagnostics;
 using Cosmonaut.Internal;
 using Cosmonaut.Response;
-using Microsoft.Azure.Documents.Client;
-using Microsoft.Azure.Documents.Linq;
 
 namespace Cosmonaut.Extensions
 {
@@ -28,21 +26,21 @@ namespace Cosmonaut.Extensions
             return await GetPagedListFromQueryable(queryable, cancellationToken);
         }
 
-        public static async Task<int> CountAsync<TEntity>(
+        /*public static async Task<int> CountAsync<TEntity>(
             this IQueryable<TEntity> queryable, 
             CancellationToken cancellationToken = default)
         {
             return await queryable.InvokeCosmosCallAsync(() => DocumentQueryable.CountAsync(queryable, cancellationToken), queryable.ToString(), target: GetAltLocationFromQueryable(queryable));
-        }
+        }*/
 
-        public static async Task<int> CountAsync<TEntity>(
-            this IQueryable<TEntity> queryable,
-            Expression<Func<TEntity, bool>> predicate,
-            CancellationToken cancellationToken = default)
-        {
-            var finalQueryable = queryable.Where(predicate);
-            return await CountAsync(finalQueryable, cancellationToken);
-        }
+//        public static async Task<int> CountAsync<TEntity>(
+//            this IQueryable<TEntity> queryable,
+//            Expression<Func<TEntity, bool>> predicate,
+//            CancellationToken cancellationToken = default)
+//        {
+//            var finalQueryable = queryable.Where(predicate);
+//            return await CountAsync(finalQueryable, cancellationToken);
+//        }
 
         public static async Task<TEntity> FirstOrDefaultAsync<TEntity>(
             this IQueryable<TEntity> queryable, 
@@ -108,19 +106,20 @@ namespace Cosmonaut.Extensions
             return await finalQueryable.SingleAsync(cancellationToken);
         }
 
-        public static async Task<TEntity> MaxAsync<TEntity>(
-            this IQueryable<TEntity> queryable, 
-            CancellationToken cancellationToken = default)
-        {
-            return await queryable.InvokeCosmosCallAsync(() => DocumentQueryable.MaxAsync(queryable, cancellationToken), queryable.ToString(), target: GetAltLocationFromQueryable(queryable));
-        }
-
-        public static async Task<TEntity> MinAsync<TEntity>(
-            this IQueryable<TEntity> queryable, 
-            CancellationToken cancellationToken = default)
-        {
-            return await queryable.InvokeCosmosCallAsync(() => DocumentQueryable.MinAsync(queryable, cancellationToken), queryable.ToString(), target: GetAltLocationFromQueryable(queryable));
-        }
+//        public static async Task<TEntity> MaxAsync<TEntity>(
+//            this IQueryable<TEntity> queryable, 
+//            CancellationToken cancellationToken = default)
+//        {
+//            Microsoft.Azure.Cosmos.Linq.CosmosLinqExtensions.ToQueryDefinition()
+//            return await queryable.InvokeCosmosCallAsync(() => DocumentQueryable.MaxAsync(queryable, cancellationToken), queryable.ToString(), target: GetAltLocationFromQueryable(queryable));
+//        }
+//
+//        public static async Task<TEntity> MinAsync<TEntity>(
+//            this IQueryable<TEntity> queryable, 
+//            CancellationToken cancellationToken = default)
+//        {
+//            return await queryable.InvokeCosmosCallAsync(() => DocumentQueryable.MinAsync(queryable, cancellationToken), queryable.ToString(), target: GetAltLocationFromQueryable(queryable));
+//        }
 
         private static async Task<List<T>> GetListFromQueryable<T>(IQueryable<T> queryable,
             CancellationToken cancellationToken)

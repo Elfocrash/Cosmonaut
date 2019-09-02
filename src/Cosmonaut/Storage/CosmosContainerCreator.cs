@@ -2,22 +2,23 @@
 using System.Threading.Tasks;
 using Cosmonaut.Configuration;
 using Cosmonaut.Extensions;
+using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Newtonsoft.Json;
 
 namespace Cosmonaut.Storage
 {
-    internal class CosmosCollectionCreator : ICollectionCreator
+    internal class CosmosContainerCreator : IContainerCreator
     {
         private readonly ICosmonautClient _cosmonautClient;
 
-        public CosmosCollectionCreator(ICosmonautClient cosmonautClient)
+        public CosmosContainerCreator(ICosmonautClient cosmonautClient)
         {
             _cosmonautClient = cosmonautClient;
         }
 
-        public CosmosCollectionCreator(IDocumentClient documentClient)
+        public CosmosContainerCreator(CosmosClient documentClient)
         {
             _cosmonautClient = new CosmonautClient(documentClient);
         }
