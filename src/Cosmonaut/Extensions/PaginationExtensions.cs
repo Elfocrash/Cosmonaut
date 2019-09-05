@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Reflection;
 using Cosmonaut.Internal;
-using Microsoft.Azure.Documents.Client;
 
 namespace Cosmonaut.Extensions
 {

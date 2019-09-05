@@ -53,9 +53,9 @@ namespace Cosmonaut
         {
         }
 
-        public Task<DatabaseResponse> GetDatabaseAsync(string databaseId, RequestOptions requestOptions = null)
+        public async Task<DatabaseResponse> GetDatabaseAsync(string databaseId, RequestOptions requestOptions = null)
         {
-            throw new NotImplementedException();
+            return await CosmosClient.CreateDatabaseAsync(databaseId);
         }
 
         public Task<IEnumerable<DatabaseResponse>> QueryDatabasesAsync(Expression<Func<DatabaseResponse, bool>> predicate = null, RequestOptions requestOptions = null,

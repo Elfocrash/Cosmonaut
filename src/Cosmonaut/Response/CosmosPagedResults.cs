@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
+using Microsoft.Azure.Cosmos;
 
 namespace Cosmonaut.Response
 {
@@ -14,7 +15,7 @@ namespace Cosmonaut.Response
             PageSize = pageSize;
         }
 
-        internal CosmosPagedResults(List<T> results, int pageSize, string nextPageToken, IQueryable<T> queryable)
+        internal CosmosPagedResults(List<T> results, int pageSize, string nextPageToken, FeedIterator<T> queryable)
         {
             Results = results;
             NextPageToken = nextPageToken;
@@ -24,7 +25,7 @@ namespace Cosmonaut.Response
 
         internal readonly int PageSize;
 
-        internal readonly IQueryable<T> Queryable;
+        internal readonly FeedIterator<T> Queryable;
 
         public List<T> Results { get; }
 

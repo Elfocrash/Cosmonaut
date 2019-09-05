@@ -5,7 +5,7 @@ using System.Reflection;
 using Cosmonaut.Attributes;
 using Cosmonaut.Exceptions;
 using Cosmonaut.Internal;
-using Microsoft.Azure.Documents;
+using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -13,7 +13,7 @@ namespace Cosmonaut.Extensions
 {
     public static class DocumentEntityExtensions
     {
-        internal static PartitionKeyDefinition GetPartitionKeyDefinitionForEntity(this Type type, JsonSerializerSettings serializerSettings)
+        internal static string GetPartitionKeyDefinitionForEntity(this Type type, JsonSerializerSettings serializerSettings)
         {
             var partitionKeyProperties = InternalTypeCache.Instance.GetPropertiesFromCache(type)
                 .Where(x => x.GetCustomAttribute<CosmosPartitionKeyAttribute>() != null).ToList();
@@ -44,16 +44,16 @@ namespace Cosmonaut.Extensions
             return CosmonautHelpers.GetPartitionKeyDefinition(partitionKeyProperty.Name);
         }
 
-        private static bool IsCosmosIdThePartitionKey(JsonPropertyAttribute porentialJsonPropertyAttribute, PropertyInfo partitionKeyProperty)
+        private static bool IsCosmosIdThePartitionKey(JsonPropertyAttribute potentialJsonPropertyAttribute, PropertyInfo partitionKeyProperty)
         {
-            return porentialJsonPropertyAttribute.HasJsonPropertyAttributeId()
+            return potentialJsonPropertyAttribute.HasJsonPropertyAttributeId()
                    || partitionKeyProperty.Name.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase);
         }
 
         internal static PartitionKey GetPartitionKeyValueForEntity<TEntity>(this TEntity entity) where TEntity : class
         {
             var partitionKeyValue = entity.GetPartitionKeyValueAsStringForEntity();
-            return !string.IsNullOrEmpty(partitionKeyValue) ? new PartitionKey(partitionKeyValue) : null;
+            return !string.IsNullOrEmpty(partitionKeyValue) ? new PartitionKey(partitionKeyValue) : PartitionKey.None;
         }
 
         internal static string GetPartitionKeyValueAsStringForEntity<TEntity>(this TEntity entity) where TEntity : class

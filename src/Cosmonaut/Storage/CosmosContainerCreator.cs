@@ -1,10 +1,9 @@
 ﻿using System;
+using System.Net;
 using System.Threading.Tasks;
 using Cosmonaut.Configuration;
 using Cosmonaut.Extensions;
 using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Client;
 using Newtonsoft.Json;
 
 namespace Cosmonaut.Storage
@@ -25,44 +24,34 @@ namespace Cosmonaut.Storage
 
         public async Task<bool> EnsureCreatedAsync<TEntity>(
             string databaseId,
-            string collectionId,
-            int collectionThroughput,
+            string containerId,
+            int containerThroughput,
             JsonSerializerSettings partitionKeySerializer,
             IndexingPolicy indexingPolicy = null,
             ThroughputBehaviour onDatabaseBehaviour = ThroughputBehaviour.UseDatabaseThroughput, 
             UniqueKeyPolicy uniqueKeyPolicy = null) where TEntity : class
         {
-            var collectionResource = await _cosmonautClient.GetCollectionAsync(databaseId, collectionId);
-            var databaseHasOffer = (await _cosmonautClient.GetOfferV2ForDatabaseAsync(databaseId)) != null;
+            var containerResponse = await _cosmonautClient.GetContainerAsync(databaseId, containerId);
+            var databaseHasOffer = await _cosmonautClient.CosmosClient.GetDatabase(databaseId).ReadThroughputAsync() != null;
 
-            if (collectionResource != null)
+            if (containerResponse.StatusCode != HttpStatusCode.NotFound)
                 return true;
 
-            var newCollection = new DocumentCollection
+            var partitionKeyDef = typeof(TEntity).GetPartitionKeyDefinitionForEntity(partitionKeySerializer);
+            
+            var containerProperties = new ContainerProperties
             {
-                Id = collectionId,
+                Id = containerId,
                 IndexingPolicy = indexingPolicy ?? CosmosConstants.DefaultIndexingPolicy,
-                UniqueKeyPolicy = uniqueKeyPolicy ?? CosmosConstants.DefaultUniqueKeyPolicy
+                UniqueKeyPolicy = uniqueKeyPolicy ?? CosmosConstants.DefaultUniqueKeyPolicy,
+                PartitionKeyPath = partitionKeyDef
             };
 
-            SetPartitionKeyDefinitionForCollection(typeof(TEntity), newCollection, partitionKeySerializer);
+            var finalCollectionThroughput = databaseHasOffer ? onDatabaseBehaviour == ThroughputBehaviour.DedicateCollectionThroughput ? (int?)containerThroughput : null : containerThroughput;
 
-            var finalCollectionThroughput = databaseHasOffer ? onDatabaseBehaviour == ThroughputBehaviour.DedicateCollectionThroughput ? (int?)collectionThroughput : null : collectionThroughput;
+            var response = await _cosmonautClient.CosmosClient.GetDatabase(databaseId).CreateContainerAsync(containerProperties, finalCollectionThroughput);
 
-            newCollection = await _cosmonautClient.CreateCollectionAsync(databaseId, newCollection, new RequestOptions
-            {
-                OfferThroughput = finalCollectionThroughput
-            });
-
-            return newCollection != null;
-        }
-
-        private static void SetPartitionKeyDefinitionForCollection(Type entityType, DocumentCollection collection, JsonSerializerSettings serializerSettings)
-        {
-            var partitionKey = entityType.GetPartitionKeyDefinitionForEntity(serializerSettings);
-
-            if (partitionKey != null)
-                collection.PartitionKey = partitionKey;
+            return response != null; // TODO check for status code
         }
     }
 }

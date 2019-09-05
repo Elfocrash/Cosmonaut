@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Cosmonaut.Exceptions;
 using Cosmonaut.Internal;
-using Microsoft.Azure.Documents;
 
 namespace Cosmonaut.Extensions
 {

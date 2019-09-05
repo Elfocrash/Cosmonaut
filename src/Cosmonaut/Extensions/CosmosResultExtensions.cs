@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Cosmonaut.Diagnostics;
 using Cosmonaut.Internal;
 using Cosmonaut.Response;
+using Microsoft.Azure.Cosmos;
 
 namespace Cosmonaut.Extensions
 {
@@ -177,14 +178,13 @@ namespace Cosmonaut.Extensions
             return results;
         }
 
-        private static async Task<List<T>> GetResultsFromQueryForSingleOrFirst<T>(IQueryable<T> queryable, CancellationToken cancellationToken)
+        private static async Task<List<T>> GetResultsFromQueryForSingleOrFirst<T>(FeedIterator<T> iterator, CancellationToken cancellationToken)
         {
-            var query = queryable.AsDocumentQuery();
             var results = new List<T>();
-            while (query.HasMoreResults)
+            while (iterator.HasMoreResults)
             {
-                var items = await query.InvokeExecuteNextAsync(() => query.ExecuteNextAsync<T>(cancellationToken),
-                    query.ToString(), target: GetAltLocationFromQueryable(queryable));
+                var items = await iterator.InvokeExecuteNextAsync(() => iterator.ReadNextAsync(cancellationToken),
+                    iterator.ToString(), target: GetAltLocationFromQueryable(iterator));
                 results.AddRange(items);
                 if (results.Any())
                     return results;
@@ -192,20 +192,19 @@ namespace Cosmonaut.Extensions
             return results;
         }
 
-        private static async Task<CosmosPagedResults<T>> GetSkipTakePagedResultsFromQueryToList<T>(IQueryable<T> queryable, int pageNumber, int pageSize, CancellationToken cancellationToken)
+        private static async Task<CosmosPagedResults<T>> GetSkipTakePagedResultsFromQueryToList<T>(FeedIterator<T> iterator, int pageNumber, int pageSize, CancellationToken cancellationToken)
         {
-            var query = queryable.AsDocumentQuery();
             var results = new List<T>();
             var documentsSkipped = 0;
             var nextPageToken = string.Empty;
-            while (query.HasMoreResults)
+            while (iterator.HasMoreResults)
             {
                 if (results.Count == pageSize)
                     break;
 
-                var items = await query.InvokeExecuteNextAsync(() => query.ExecuteNextAsync<T>(cancellationToken),
-                    query.ToString(), target: GetAltLocationFromQueryable(queryable));
-                nextPageToken = items.ResponseContinuation;
+                var items = await iterator.InvokeExecuteNextAsync(() => iterator.ReadNextAsync(cancellationToken),
+                    iterator.ToString(), target: GetAltLocationFromQueryable(iterator));
+                nextPageToken = items.ContinuationToken;
                 
                 foreach (var item in items)
                 {
@@ -221,7 +220,7 @@ namespace Cosmonaut.Extensions
                         break;
                 }
             }
-            return new CosmosPagedResults<T>(results, pageSize, nextPageToken, queryable);
+            return new CosmosPagedResults<T>(results, pageSize, nextPageToken, iterator);
         }
 
         private static async Task<CosmosPagedResults<T>> GetTokenPagedResultsFromQueryToList<T>(IQueryable<T> queryable, int pageSize, CancellationToken cancellationToken)
@@ -267,7 +266,7 @@ namespace Cosmonaut.Extensions
                 cancellationToken);
         }
 
-        private static string GetAltLocationFromQueryable(IQueryable queryable)
+        private static string GetAltLocationFromQueryable(FeedIterator queryable)
         {
             if (!CosmosEventSource.EventSource.IsEnabled())
                 return null;

@@ -1,12 +1,12 @@
 ﻿using System.Threading.Tasks;
 using Cosmonaut.Configuration;
-using Microsoft.Azure.Documents;
+using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
 
 namespace Cosmonaut.Storage
 {
     public interface IContainerCreator
     {
-        Task<bool> EnsureCreatedAsync<TEntity>(string databaseId, string collectionId, int collectionThroughput, JsonSerializerSettings partitionKeySerializer, IndexingPolicy indexingPolicy = null, ThroughputBehaviour onDatabaseBehaviour = ThroughputBehaviour.UseDatabaseThroughput, UniqueKeyPolicy uniqueKeyPolicy = null) where TEntity : class;
+        Task<bool> EnsureCreatedAsync<TEntity>(string databaseId, string containerId, int containerThroughput, JsonSerializerSettings partitionKeySerializer, IndexingPolicy indexingPolicy = null, ThroughputBehaviour onDatabaseBehaviour = ThroughputBehaviour.UseDatabaseThroughput, UniqueKeyPolicy uniqueKeyPolicy = null) where TEntity : class;
     }
 }
