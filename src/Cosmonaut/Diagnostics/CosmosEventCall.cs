@@ -5,8 +5,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Client;
+using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
 
 namespace Cosmonaut.Diagnostics
@@ -78,8 +77,8 @@ namespace Cosmonaut.Diagnostics
                 timer.Start();
                 var result = await eventCall();
                 timer.Stop();
-                AddEventMetadataFromHeaders(result.ResponseHeaders);
-                LogQueryMetricsIfPresent(result);
+                AddEventMetadataFromHeaders(result.Headers);
+                //LogQueryMetricsIfPresent(result);
                 TrackSuccess(timer, HttpStatusCode.OK.ToString("D"));
                 return result;
             }
@@ -91,7 +90,7 @@ namespace Cosmonaut.Diagnostics
             }
         }
 
-        internal async Task<DocumentResponse<TEntity>> InvokeAsync<TEntity>(Func<Task<DocumentResponse<TEntity>>> eventCall)
+        internal async Task<ItemResponse<TEntity>> InvokeAsync<TEntity>(Func<Task<ItemResponse<TEntity>>> eventCall)
         {
             if (!CosmosEventSource.EventSource.IsEnabled())
             {
@@ -105,7 +104,7 @@ namespace Cosmonaut.Diagnostics
                 timer.Start();
                 var result = await eventCall();
                 timer.Stop();
-                AddEventMetadataFromHeaders(result.ResponseHeaders);
+                AddEventMetadataFromHeaders(result.Headers);
                 TrackSuccess(timer, HttpStatusCode.OK.ToString("D"));
                 return result;
             }
@@ -118,7 +117,7 @@ namespace Cosmonaut.Diagnostics
             }
         }
 
-        internal async Task<ResourceResponse<TEntity>> InvokeAsync<TEntity>(Func<Task<ResourceResponse<TEntity>>> eventCall) where TEntity : Resource, new()
+        internal async Task<Response<TEntity>> InvokeAsync<TEntity>(Func<Task<Response<TEntity>>> eventCall)
         {
             if (!CosmosEventSource.EventSource.IsEnabled())
             {
@@ -132,33 +131,7 @@ namespace Cosmonaut.Diagnostics
                 timer.Start();
                 var result = await eventCall();
                 timer.Stop();
-                AddEventMetadataFromHeaders(result.ResponseHeaders);
-                TrackSuccess(timer, result.StatusCode.ToString("D"));
-                return result;
-            }
-            catch (Exception ex)
-            {
-                timer.Stop();
-                TrackException(ex, timer);
-                throw;
-            }
-        }
-
-        internal async Task<StoredProcedureResponse<TEntity>> InvokeAsync<TEntity>(Func<Task<StoredProcedureResponse<TEntity>>> eventCall)
-        {
-            if (!CosmosEventSource.EventSource.IsEnabled())
-            {
-                return await eventCall();
-            }
-
-            var timer = new Stopwatch();
-            try
-            {
-                SetPreExecutionEventMetadata(eventCall);
-                timer.Start();
-                var result = await eventCall();
-                timer.Stop();
-                AddEventMetadataFromHeaders(result.ResponseHeaders);
+                AddEventMetadataFromHeaders(result.Headers);
                 TrackSuccess(timer, HttpStatusCode.OK.ToString("D"));
                 return result;
             }
@@ -171,13 +144,13 @@ namespace Cosmonaut.Diagnostics
             }
         }
 
-        private void LogQueryMetricsIfPresent<TEntity>(FeedResponse<TEntity> result)
-        {
-            if (result.QueryMetrics == null)
-                return;
-
-            EventMetadata.Properties[nameof(result.QueryMetrics)] = JsonConvert.SerializeObject(result.QueryMetrics);
-        }
+//        private void LogQueryMetricsIfPresent<TEntity>(FeedResponse<TEntity> result)
+//        {
+//            if (result.QueryMetrics == null)
+//                return;
+//
+//            EventMetadata.Properties[nameof(result.QueryMetrics)] = JsonConvert.SerializeObject(result.QueryMetrics);
+//        }
 
         private void SetPreExecutionEventMetadata<TResult>(Func<Task<TResult>> eventCall)
         {
@@ -228,17 +201,17 @@ namespace Cosmonaut.Diagnostics
         
         private void AddEventMetadataFromException(Exception ex)
         {
-            if (!(ex is DocumentClientException documentClientException))
+            if (!(ex is CosmosException cosmosException))
             {
                 EventMetadata.ResultCode = HttpStatusCode.InternalServerError.ToString("D");
                 return;
             }
                 
-            AddEventMetadataFromHeaders(documentClientException.ResponseHeaders);
-            EventMetadata.ResultCode = documentClientException.StatusCode?.ToString("D") ?? HttpStatusCode.InternalServerError.ToString("D");
+            AddEventMetadataFromHeaders(cosmosException.Headers);
+            EventMetadata.ResultCode = cosmosException.StatusCode.ToString("D");
         }
 
-        private void AddEventMetadataFromHeaders(NameValueCollection headers)
+        private void AddEventMetadataFromHeaders(Headers headers)
         {
             if (headers == null)
                 return;

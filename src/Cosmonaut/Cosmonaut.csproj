@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard1.6</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>Nick Chapsas</Authors>
     <Description>A supercharged .NET SDK for Azure CosmosDB with ORM support</Description>
 	<Summary>A powerful and easy to use SDK for Azure CosmosDB.</Summary>
@@ -12,24 +12,16 @@
     <RepositoryUrl>https://github.com/Elfocrash/Cosmonaut</RepositoryUrl>
     <PackageTags>azure entitystore entity db orm microsoft cosmos cosmosdb documentdb docdb nosql azureofficial dotnetcore netcore netstandard</PackageTags>
     <PackageReleaseNotes>Please report any issues on Github.</PackageReleaseNotes>
-    <Version>2.11.3</Version>
-    <NeutralLanguage></NeutralLanguage>
+    <Version>3.0</Version>
     <Company>Nick Chapsas</Company>
     <PackageIconUrl>https://raw.githubusercontent.com/Elfocrash/Cosmonaut/develop/logo.png</PackageIconUrl>
-    <PackageVersion>2.11.3</PackageVersion>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <LangVersion>latest</LangVersion>
+    <PackageVersion>3.0</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Humanizer.Core.uk" Version="2.5.16" />
-    <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="2.5.1" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.1.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
   </ItemGroup>
 
 </Project>

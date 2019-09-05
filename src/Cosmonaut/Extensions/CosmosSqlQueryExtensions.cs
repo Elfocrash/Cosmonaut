@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Cosmonaut.Exceptions;
 using Cosmonaut.Internal;
-using Microsoft.Azure.Documents;
 
 namespace Cosmonaut.Extensions
 {
@@ -46,40 +45,40 @@ namespace Cosmonaut.Extensions
             return GetQueryWithExistingWhereClauseInjectedWithSharedCollection(sql, identifier, cosmosEntityNameValue);
         }
 
-        internal static SqlParameterCollection ConvertToSqlParameterCollection(this object obj)
-        {
-            var sqlParameterCollection = new SqlParameterCollection();
-
-            if (obj == null)
-                return sqlParameterCollection;
-
-            foreach (var propertyInfo in InternalTypeCache.Instance.GetPropertiesFromCache(obj.GetType()))
-            {
-                var propertyName = propertyInfo.Name.StartsWith("@") ? propertyInfo.Name : $"@{propertyInfo.Name}";
-                var propertyValue = propertyInfo.GetValue(obj);
-                var sqlparameter = new SqlParameter(propertyName, propertyValue);
-                sqlParameterCollection.Add(sqlparameter);
-            }
-
-            return sqlParameterCollection;
-        }
-
-        internal static SqlParameterCollection ConvertDictionaryToSqlParameterCollection(this IDictionary<string, object> dictionary)
-        {
-            var sqlParameterCollection = new SqlParameterCollection();
-
-            if (dictionary == null)
-                return sqlParameterCollection;
-
-            foreach (var pair in dictionary)
-            {
-                var key = pair.Key.StartsWith("@") ? pair.Key : $"@{pair.Key}";
-                var sqlparameter = new SqlParameter(key, pair.Value);
-                sqlParameterCollection.Add(sqlparameter);
-            }
-            
-            return sqlParameterCollection;
-        }
+//        internal static SqlParameterCollection ConvertToSqlParameterCollection(this object obj)
+//        {
+//            var sqlParameterCollection = new SqlParameterCollection();
+//
+//            if (obj == null)
+//                return sqlParameterCollection;
+//
+//            foreach (var propertyInfo in InternalTypeCache.Instance.GetPropertiesFromCache(obj.GetType()))
+//            {
+//                var propertyName = propertyInfo.Name.StartsWith("@") ? propertyInfo.Name : $"@{propertyInfo.Name}";
+//                var propertyValue = propertyInfo.GetValue(obj);
+//                var sqlparameter = new SqlParameter(propertyName, propertyValue);
+//                sqlParameterCollection.Add(sqlparameter);
+//            }
+//
+//            return sqlParameterCollection;
+//        }
+//
+//        internal static SqlParameterCollection ConvertDictionaryToSqlParameterCollection(this IDictionary<string, object> dictionary)
+//        {
+//            var sqlParameterCollection = new SqlParameterCollection();
+//
+//            if (dictionary == null)
+//                return sqlParameterCollection;
+//
+//            foreach (var pair in dictionary)
+//            {
+//                var key = pair.Key.StartsWith("@") ? pair.Key : $"@{pair.Key}";
+//                var sqlparameter = new SqlParameter(key, pair.Value);
+//                sqlParameterCollection.Add(sqlparameter);
+//            }
+//            
+//            return sqlParameterCollection;
+//        }
 
         private static string GetQueryWithExistingWhereClauseInjectedWithSharedCollection(string sql,
             string identifier, string cosmosEntityNameValue)

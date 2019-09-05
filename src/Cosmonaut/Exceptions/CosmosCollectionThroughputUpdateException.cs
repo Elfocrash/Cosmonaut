@@ -1,11 +1,11 @@
 ﻿using System;
-using Microsoft.Azure.Documents;
+using Microsoft.Azure.Cosmos;
 
 namespace Cosmonaut.Exceptions
 {
     public class CosmosCollectionThroughputUpdateException : Exception
     {
-        public CosmosCollectionThroughputUpdateException(DocumentCollection collection) : base($"Failed to update hroughput of collection {collection.Id}")
+        public CosmosCollectionThroughputUpdateException(Container collection) : base($"Failed to update hroughput of collection {collection.Id}")
         {
 
         }

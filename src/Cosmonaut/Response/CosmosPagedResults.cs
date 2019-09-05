@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
+using Microsoft.Azure.Cosmos;
 
 namespace Cosmonaut.Response
 {
@@ -14,17 +15,17 @@ namespace Cosmonaut.Response
             PageSize = pageSize;
         }
 
-        internal CosmosPagedResults(List<T> results, int pageSize, string nextPageToken, IQueryable<T> queryable)
+        internal CosmosPagedResults(List<T> results, int pageSize, string nextPageToken, FeedIterator<T> iterator)
         {
             Results = results;
             NextPageToken = nextPageToken;
-            Queryable = queryable;
+            Iterator = iterator;
             PageSize = pageSize;
         }
 
         internal readonly int PageSize;
 
-        internal readonly IQueryable<T> Queryable;
+        internal readonly FeedIterator<T> Iterator;
 
         public List<T> Results { get; }
 
@@ -32,19 +33,19 @@ namespace Cosmonaut.Response
 
         public bool HasNextPage => !string.IsNullOrEmpty(NextPageToken);
 
-        public async Task<CosmosPagedResults<T>> GetNextPageAsync()
-        {
-            if(Queryable == null)
-                return new CosmosPagedResults<T>(new List<T>(), PageSize, string.Empty);
-
-            if(!HasNextPage)
-                return new CosmosPagedResults<T>(new List<T>(), PageSize, string.Empty);
-
-            if(PageSize <= 0)
-                return new CosmosPagedResults<T>(new List<T>(), PageSize, string.Empty);
-
-            return await Queryable.WithPagination(NextPageToken, PageSize).ToPagedListAsync();
-        }
+//        public async Task<CosmosPagedResults<T>> GetNextPageAsync()
+//        {
+//            if(Iterator == null)
+//                return new CosmosPagedResults<T>(new List<T>(), PageSize, string.Empty);
+//
+//            if(!HasNextPage)
+//                return new CosmosPagedResults<T>(new List<T>(), PageSize, string.Empty);
+//
+//            if(PageSize <= 0)
+//                return new CosmosPagedResults<T>(new List<T>(), PageSize, string.Empty);
+//
+//            return await Iterator.WithPagination(NextPageToken, PageSize).ToPagedListAsync();
+//        }
         
         public static implicit operator List<T>(CosmosPagedResults<T> results)
         {

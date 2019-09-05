@@ -1,7 +1,6 @@
 ﻿using System;
 using Cosmonaut.Configuration;
-using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Client;
+using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
 
 namespace Cosmonaut
@@ -14,7 +13,7 @@ namespace Cosmonaut
 
         public Uri EndpointUrl { get; }
 
-        public ConnectionPolicy ConnectionPolicy { get; set; }
+        public ConnectionMode ConnectionMode { get; set; }
 
         public ConsistencyLevel? ConsistencyLevel { get; set; } = null;
 
@@ -28,7 +27,7 @@ namespace Cosmonaut
 
         public ThroughputBehaviour OnDatabaseThroughput { get; set; } = ThroughputBehaviour.UseDatabaseThroughput;
 
-        public JsonSerializerSettings JsonSerializerSettings { get; set; }
+        public CosmosSerializer CosmosSerializer { get; set; }
 
         public bool InfiniteRetries { get; set; } = true;
 
@@ -58,13 +57,13 @@ namespace Cosmonaut
             string databaseName,
             string endpointUrl,
             string authKey,
-            ConnectionPolicy connectionPolicy = null,
+            ConnectionMode connectionMode = ConnectionMode.Direct,
             IndexingPolicy indexingPolicy = null,
             int defaultCollectionThroughput = CosmosConstants.MinimumCosmosThroughput)
             : this(databaseName, 
                   new Uri(endpointUrl), 
                   authKey,
-                  connectionPolicy,
+                  connectionMode,
                   indexingPolicy,
                   defaultCollectionThroughput)
         {
@@ -74,14 +73,14 @@ namespace Cosmonaut
             string databaseName, 
             Uri endpointUrl, 
             string authKey,
-            ConnectionPolicy connectionPolicy = null,
+            ConnectionMode connectionMode = ConnectionMode.Direct,
             IndexingPolicy indexingPolicy = null,
             int defaultCollectionThroughput = CosmosConstants.MinimumCosmosThroughput)
         {
             DatabaseName = databaseName ?? throw new ArgumentNullException(nameof(databaseName));
             EndpointUrl = endpointUrl ?? throw new ArgumentNullException(nameof(endpointUrl));
             AuthKey = authKey ?? throw new ArgumentNullException(nameof(authKey));
-            ConnectionPolicy = connectionPolicy;
+            ConnectionMode = connectionMode;
             DefaultCollectionThroughput = defaultCollectionThroughput;
 
             IndexingPolicy = indexingPolicy ?? CosmosConstants.DefaultIndexingPolicy;
