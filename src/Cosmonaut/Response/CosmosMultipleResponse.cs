@@ -17,7 +17,7 @@ namespace Cosmonaut.Response
             if (response == null)
                 return;
 
-            if (response.IsSuccess) //TODO check this
+            if ((int)response.StatusCode >= 200 && (int)response.StatusCode < 400) //TODO check this
             {
                 SuccessfulEntities.Add(response);
                 return;

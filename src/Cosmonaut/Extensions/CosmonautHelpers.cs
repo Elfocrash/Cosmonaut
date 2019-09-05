@@ -11,15 +11,15 @@ namespace Cosmonaut.Extensions
             obj.ValidateEntityForCosmosDb();
             var document = JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(obj, settings), settings);
 
-            var actualDocument = new CosmosDocument(document);
-                
-            actualDocument.Id = obj.GetDocumentId();
-            RemoveDuplicateIds(ref actualDocument);
-                
-            if (typeof(TEntity).UsesSharedCollection())
-                actualDocument.SetPropertyValue(nameof(ISharedCosmosEntity.CosmosEntityName), $"{typeof(TEntity).GetSharedCollectionEntityName()}");
-
-            return actualDocument;
+//            var actualDocument = new CosmosDocument(document) {Id = obj.GetDocumentId()};
+//
+//            RemoveDuplicateIds(ref actualDocument);
+//                
+//            if (typeof(TEntity).UsesSharedCollection())
+//                actualDocument.SetPropertyValue(nameof(ISharedCosmosEntity.CosmosEntityName), $"{typeof(TEntity).GetSharedCollectionEntityName()}");
+//
+//            return actualDocument;
+            return new CosmosDocument(null);
         }
 
         internal static string GetPartitionKeyDefinition(string partitionKeyName)
