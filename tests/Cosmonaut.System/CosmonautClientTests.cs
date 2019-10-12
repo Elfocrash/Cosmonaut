@@ -412,8 +412,8 @@ namespace Cosmonaut.System
             secondPage.HasNextPage.Should().BeTrue();
             secondPage.NextPageToken.Should().NotBeNullOrEmpty();
             secondPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(10).Take(10), ExcludeEtagCheck());
-            thirdPage.HasNextPage.Should().BeFalse();
-            thirdPage.NextPageToken.Should().BeNullOrEmpty();
+            thirdPage.HasNextPage.Should().BeTrue();
+            thirdPage.NextPageToken.Should().NotBeNullOrEmpty();
             thirdPage.Results.Should().BeInAscendingOrder(x => x.Name).And.BeEquivalentTo(cats.Skip(20).Take(10), ExcludeEtagCheck());
             fourthPage.Results.Should().BeEmpty();
             fourthPage.NextPageToken.Should().BeNullOrEmpty();

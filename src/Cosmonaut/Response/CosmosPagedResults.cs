@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
@@ -30,6 +31,8 @@ namespace Cosmonaut.Response
 
         public string NextPageToken { get; }
 
+        [Obsolete("Cosmos changed the way it used to work so this isn't accurate any more. You can now " +
+                  "get a continuation token but the next result will be empty and have no token.")]
         public bool HasNextPage => !string.IsNullOrEmpty(NextPageToken);
 
         public async Task<CosmosPagedResults<T>> GetNextPageAsync()
