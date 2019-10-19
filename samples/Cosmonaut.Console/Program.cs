@@ -90,7 +90,7 @@ namespace Cosmonaut.Console
 
             var aCarId = addedCars.SuccessfulEntities.First().Entity.Value.Id;
 
-            var firstAddedCar = await carStore.Query().ToListAsync();
+            var firstAddedCar = await carStore.Query().FirstOrDefaultAsync();
 //            var allTheCars = await carStore.QueryMultipleAsync<Car>("select * from c");
 //
 //            var carPageOne = await carStore.Query("select * from c order by c.Name asc").WithPagination(1, 5).ToPagedListAsync();
@@ -98,7 +98,7 @@ namespace Cosmonaut.Console
 //            var carPageThree = await carPageTwo.GetNextPageAsync();
 //            var carPageFour = await carPageThree.GetNextPageAsync();
 //
-//            var addedRetrieved = await booksStore.Query().OrderBy(x=> x.Name).ToListAsync();
+            var addedRetrieved = await booksStore.Query().OrderBy(x=> x.Name).ToListAsync();
 //
 //            var firstPage = await booksStore.Query().WithPagination(1, 10).ToPagedListAsync();
 //            var secondPage = await firstPage.GetNextPageAsync();
@@ -127,10 +127,10 @@ namespace Cosmonaut.Console
 //            System.Console.WriteLine($"Updated {updated.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
 //            watch.Restart();
 //
-//            var removed = await booksStore.RemoveRangeAsync(addedRetrieved);
-//            System.Console.WriteLine($"Removed {removed.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
-//            watch.Reset();
-//            watch.Stop();
+            var removed = await booksStore.RemoveRangeAsync(addedRetrieved);
+            System.Console.WriteLine($"Removed {removed.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
+            watch.Reset();
+            watch.Stop();
 
             System.Console.ReadKey();
         }

@@ -23,14 +23,7 @@ namespace Cosmonaut.Extensions
             this IQueryable<TEntity> queryable, 
             CancellationToken cancellationToken = default)
         {
-            return await GetResultsFromQueryToList(queryable.ToFeedIterator(), cancellationToken);
-        }
-        
-        public static async Task<List<TEntity>> ToListAsync<TEntity>(
-            this FeedIterator<TEntity> iterator, 
-            CancellationToken cancellationToken = default)
-        {
-            return await GetResultsFromQueryToList(iterator, cancellationToken);
+            return await GetResultsFromQueryToList(queryable, cancellationToken);
         }
 
 //        public static async Task<CosmosPagedResults<TEntity>> ToPagedListAsync<TEntity>(
@@ -56,12 +49,12 @@ namespace Cosmonaut.Extensions
 //            return await CountAsync(finalQueryable, cancellationToken);
 //        }
 
-//        public static async Task<TEntity> FirstOrDefaultAsync<TEntity>(
-//            this IQueryable<TEntity> queryable, 
-//            CancellationToken cancellationToken = default)
-//        {
-//            return (await GetSingleOrFirstFromQueryable(queryable, cancellationToken)).FirstOrDefault();
-//        }
+        public static async Task<TEntity> FirstOrDefaultAsync<TEntity>(
+            this IQueryable<TEntity> queryable, 
+            CancellationToken cancellationToken = default)
+        {
+            return (await GetSingleOrFirstFromQueryable(queryable, cancellationToken)).FirstOrDefault();
+        }
 
 //        public static async Task<TEntity> FirstOrDefaultAsync<TEntity>(
 //            this IQueryable<TEntity> queryable,
@@ -147,25 +140,26 @@ namespace Cosmonaut.Extensions
 //            return await GetPaginatedResultsFromQueryable(iterator, cancellationToken, feedOptions);
 //        }
 //
-//        private static async Task<List<T>> GetSingleOrFirstFromQueryable<T>(IQueryable<T> queryable,
-//            CancellationToken cancellationToken)
-//        {
-//            SetFeedOptionsForSingleOperation(ref queryable, out var feedOptions);
-//
-//            if (feedOptions?.RequestContinuation == null)
-//            {
-//                return await GetResultsFromQueryForSingleOrFirst(queryable, cancellationToken);
-//            }
-//
-//            return await GetPaginatedResultsFromQueryable(queryable, cancellationToken, feedOptions);
-//        }
-//
-//        private static void SetFeedOptionsForSingleOperation<T>(ref IQueryable<T> queryable, out FeedOptions feedOptions)
-//        {
-//            feedOptions = queryable.GetFeedOptionsForQueryable() ?? new FeedOptions();
-//            feedOptions.MaxItemCount = 1;
-//            queryable.SetFeedOptionsForQueryable(feedOptions);
-//        }
+        private static async Task<List<T>> GetSingleOrFirstFromQueryable<T>(IQueryable<T> queryable,
+            CancellationToken cancellationToken, string continuationToken = null)
+        {
+            SetFeedOptionsForSingleOperation(ref queryable, out var requestOptions);
+
+            if (continuationToken == null)
+            {
+                return await GetResultsFromQueryForSingleOrFirst(queryable, cancellationToken);
+            }
+
+            //return await GetPaginatedResultsFromQueryable(queryable, cancellationToken, feedOptions);
+            return new List<T>();
+        }
+
+        private static void SetFeedOptionsForSingleOperation<T>(ref IQueryable<T> queryable, out QueryRequestOptions requestOptions)
+        {
+            requestOptions = queryable.GetQueryRequestOptionsForQueryable() ?? new QueryRequestOptions();
+            requestOptions.MaxItemCount = 1;
+            queryable.SetQueryRequestOptionsForQueryable(requestOptions);
+        }
 
 //        private static async Task<CosmosPagedResults<T>> GetPagedListFromQueryable<T>(IQueryable<T> queryable,
 //            CancellationToken cancellationToken)
@@ -178,8 +172,9 @@ namespace Cosmonaut.Extensions
 //            return await GetPaginatedResultsFromQueryable(queryable, cancellationToken, feedOptions);
 //        }
 
-        private static async Task<List<T>> GetResultsFromQueryToList<T>(FeedIterator<T> iterator, CancellationToken cancellationToken)
+        private static async Task<List<T>> GetResultsFromQueryToList<T>(IQueryable<T> queryable, CancellationToken cancellationToken)
         {
+            var iterator = queryable.ToFeedIterator();
             var results = new List<T>();
             while (iterator.HasMoreResults)
             {
@@ -190,8 +185,9 @@ namespace Cosmonaut.Extensions
             return results;
         }
 
-        private static async Task<List<T>> GetResultsFromQueryForSingleOrFirst<T>(FeedIterator<T> iterator, CancellationToken cancellationToken)
+        private static async Task<List<T>> GetResultsFromQueryForSingleOrFirst<T>(IQueryable<T> queryable, CancellationToken cancellationToken)
         {
+            var iterator = queryable.ToFeedIterator();
             var results = new List<T>();
             while (iterator.HasMoreResults)
             {
@@ -285,7 +281,7 @@ namespace Cosmonaut.Extensions
             if (!queryable.GetType().Name.Equals("DocumentQuery`1"))
                 return null;
 
-            return string.Empty;//InternalTypeCache.Instance.DocumentFeedOrDbLinkFieldInfo?.GetValue(queryable.Provider)?.ToString();
+            return string.Empty;//TODO InternalTypeCache.Instance.DocumentFeedOrDbLinkFieldInfo?.GetValue(queryable.Provider)?.ToString();
         }
     }
 }

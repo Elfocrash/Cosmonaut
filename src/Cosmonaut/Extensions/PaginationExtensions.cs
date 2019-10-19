@@ -8,7 +8,7 @@ namespace Cosmonaut.Extensions
 {
     public static class PaginationExtensions
     {
-        private const string DocumentQueryTypeName = "DocumentQuery`1";
+        private const string CosmosLinqQueryTypeName = "CosmosLinqQuery`1";
 
         /// <summary>
         /// Adds pagination for your CosmosDB query. This is an inefficient and expensive form of pagination because it goes
@@ -65,23 +65,21 @@ namespace Cosmonaut.Extensions
             return iterator;
         }
 
-        internal static RequestOptions GetFeedOptionsForQueryable<T>(this IQueryable<T> queryable)
+        internal static QueryRequestOptions GetQueryRequestOptionsForQueryable<T>(this IQueryable<T> queryable)
         {
-            if (!queryable.GetType().Name.Equals(DocumentQueryTypeName))
+            if (!queryable.GetType().Name.Equals(CosmosLinqQueryTypeName))
                 return null;
-
-            //TODO see if i need this
-            return (RequestOptions) InternalTypeCache.Instance.FeedOptionsFieldInfo.GetValue(queryable.Provider);
+            
+            return (QueryRequestOptions) InternalTypeCache.Instance.QueryRequestOptionsFieldInfo.GetValue(queryable.Provider);
         }
 
-        internal static void SetFeedOptionsForQueryable<T>(this IQueryable<T> queryable, RequestOptions requestOptions)
+        internal static void SetQueryRequestOptionsForQueryable<T>(this IQueryable<T> queryable, QueryRequestOptions requestOptions)
         {
-            if (!queryable.GetType().Name.Equals(DocumentQueryTypeName))
+            if (!queryable.GetType().Name.Equals(CosmosLinqQueryTypeName))
                 return;
 
-            //InternalTypeCache.Instance.GetFieldInfoFromCache(queryable.GetType(), "feedOptions", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(queryable, feedOptions);
-            //InternalTypeCache.Instance.FeedOptionsFieldInfo.SetValue(queryable.Provider, feedOptions);
-            //TODO see if i need this
+            InternalTypeCache.Instance.GetFieldInfoFromCache(queryable.GetType(), "cosmosQueryRequestOptions", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(queryable, requestOptions);
+            InternalTypeCache.Instance.QueryRequestOptionsFieldInfo.SetValue(queryable.Provider, requestOptions);
         }
     }
 }
