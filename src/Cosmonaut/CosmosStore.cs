@@ -157,12 +157,12 @@ namespace Cosmonaut
 //            return await queryable.ToListAsync(cancellationToken);
 //        }
 //
-        public async Task<ResponseMessage> AddAsync(TEntity entity, ItemRequestOptions requestOptions = null, CancellationToken cancellationToken = default)
+        public async Task<CosmosResponse<TEntity>> AddAsync(TEntity entity, ItemRequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
             entity.ValidateEntityForCosmosDb();
             var stream = entity.ToCosmonautStream(Settings.CosmosSerializer);
             var response = await Container.CreateItemStreamAsync(stream, entity.GetPartitionKeyValueForEntity(), requestOptions, cancellationToken);
-            return response;
+            return new CosmosResponse<TEntity>(Settings.CosmosSerializer, response);
         }
         
         public async Task<CosmosMultipleResponse<TEntity>> AddRangeAsync(IEnumerable<TEntity> entities, Func<TEntity, ItemRequestOptions> requestOptions = null, CancellationToken cancellationToken = default)
@@ -180,11 +180,12 @@ namespace Cosmonaut
             return await RemoveRangeAsync(entitiesToRemove, requestOptions, cancellationToken);
         }
 
-        public async Task<ResponseMessage> RemoveAsync(TEntity entity, ItemRequestOptions requestOptions = null, CancellationToken cancellationToken = default)
+        public async Task<CosmosResponse<TEntity>> RemoveAsync(TEntity entity, ItemRequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
             entity.ValidateEntityForCosmosDb();
             var documentId = entity.GetDocumentId();
-            return await Container.DeleteItemStreamAsync(documentId, entity.GetPartitionKeyValueForEntity(), requestOptions, cancellationToken);//.ExecuteCosmosCommand(entity);
+            var response = await Container.DeleteItemStreamAsync(documentId, entity.GetPartitionKeyValueForEntity(), requestOptions, cancellationToken);//.ExecuteCosmosCommand(entity);
+            return new CosmosResponse<TEntity>(Settings.CosmosSerializer, response);
         }
         
         public async Task<CosmosMultipleResponse<TEntity>> RemoveRangeAsync(IEnumerable<TEntity> entities, Func<TEntity, ItemRequestOptions> requestOptions = null, CancellationToken cancellationToken = default)
@@ -281,7 +282,7 @@ namespace Cosmonaut
         }
 
         private async Task<CosmosMultipleResponse<TEntity>> ExecuteMultiOperationAsync(IEnumerable<TEntity> entities,
-            Func<TEntity, Task<ResponseMessage>> operationFunc)
+            Func<TEntity, Task<CosmosResponse<TEntity>>> operationFunc)
         {
             var multipleResponse = new CosmosMultipleResponse<TEntity>();
 
@@ -290,8 +291,8 @@ namespace Cosmonaut
                 return multipleResponse;
             
             var results = (await entitiesList.Select(operationFunc).WhenAllTasksAsync()).ToList();
-            multipleResponse.SuccessfulEntities.AddRange(results.Where(x => x.IsSuccessStatusCode));
-            multipleResponse.FailedEntities.AddRange(results.Where(x => !x.IsSuccessStatusCode));
+            multipleResponse.SuccessfulEntities.AddRange(results.Where(x => x.IsSuccess));
+            multipleResponse.FailedEntities.AddRange(results.Where(x => !x.IsSuccess));
             return multipleResponse;
         }
 

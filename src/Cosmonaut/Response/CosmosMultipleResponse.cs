@@ -8,16 +8,16 @@ namespace Cosmonaut.Response
     {
         public bool IsSuccess => !FailedEntities.Any();
 
-        public List<ResponseMessage> FailedEntities { get; } = new List<ResponseMessage>();
+        public List<CosmosResponse<TEntity>> FailedEntities { get; } = new List<CosmosResponse<TEntity>>();
 
-        public List<ResponseMessage> SuccessfulEntities { get; } = new List<ResponseMessage>();
+        public List<CosmosResponse<TEntity>> SuccessfulEntities { get; } = new List<CosmosResponse<TEntity>>();
 
-        internal void AddResponse(ResponseMessage response)
+        internal void AddResponse(CosmosResponse<TEntity> response)
         {
             if (response == null)
                 return;
 
-            if ((int)response.StatusCode >= 200 && (int)response.StatusCode < 400) //TODO check this
+            if (response.IsSuccess)
             {
                 SuccessfulEntities.Add(response);
                 return;

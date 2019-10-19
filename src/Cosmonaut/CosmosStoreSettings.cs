@@ -1,5 +1,6 @@
 ﻿using System;
 using Cosmonaut.Configuration;
+using Cosmonaut.Storage;
 using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
 
@@ -27,7 +28,7 @@ namespace Cosmonaut
 
         public ThroughputBehaviour OnDatabaseThroughput { get; set; } = ThroughputBehaviour.UseDatabaseThroughput;
 
-        public CosmosSerializer CosmosSerializer { get; set; }
+        public CosmosSerializer CosmosSerializer { get; set; } = new CosmosJsonNetSerializer();
 
         public bool InfiniteRetries { get; set; } = true;
 

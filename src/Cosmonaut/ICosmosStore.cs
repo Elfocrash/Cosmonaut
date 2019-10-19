@@ -131,7 +131,7 @@ namespace Cosmonaut
         ///     An error is encountered while processing the entity.
         ///     This is because the given entity does not have an Id specified.
         /// </exception>
-        Task<ResponseMessage> AddAsync(TEntity entity, ItemRequestOptions requestOptions = null, CancellationToken cancellationToken = default);
+        Task<CosmosResponse<TEntity>> AddAsync(TEntity entity, ItemRequestOptions requestOptions = null, CancellationToken cancellationToken = default);
         
         /// <summary>
         ///     Adds the given entities in the cosmos db store.
@@ -284,7 +284,7 @@ namespace Cosmonaut
         ///     An error is encountered while processing the entity.
         ///     This is because the given entity has more that one Ids specified for it.
         /// </exception>
-        Task<ResponseMessage> RemoveAsync(TEntity entity, ItemRequestOptions requestOptions = null, CancellationToken cancellationToken = default);
+        Task<CosmosResponse<TEntity>> RemoveAsync(TEntity entity, ItemRequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 //        
         /// <summary>
         ///     Removes the given entities from the cosmos db store.

@@ -17,9 +17,6 @@ namespace Cosmonaut.Console
     {
         static async Task Main(string[] args)
         {
-            //Uncomment to enable Serilog logging
-            //SerilogEventListener.Instance.Initialize();
-
             var jsonSerializerSettings = new CosmosJsonNetSerializer(new JsonSerializerSettings());
             
             var cosmosSettings = new CosmosStoreSettings("localtest", 
@@ -35,26 +32,26 @@ namespace Cosmonaut.Console
 
             var serviceCollection = new ServiceCollection();
 
-//            serviceCollection.AddCosmosStore<Book>("localtest", "https://localhost:8081",
-//                "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==",
-//                settings =>
-//            {
-//                settings.DefaultContainerThroughput = 5000;
-//                settings.CosmosSerializer = jsonSerializerSettings;
-//            });
+            serviceCollection.AddCosmosStore<Book>("localtest", "https://localhost:8081",
+                "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==",
+                settings =>
+            {
+                settings.DefaultContainerThroughput = 5000;
+                settings.CosmosSerializer = jsonSerializerSettings;
+            });
             
             serviceCollection.AddCosmosStore<Car>(cosmosSettings);
 
             var provider = serviceCollection.BuildServiceProvider();
 
-            //var booksStore = provider.GetService<ICosmosStore<Book>>();
+            var booksStore = provider.GetService<ICosmosStore<Book>>();
             var carStore = provider.GetService<ICosmosStore<Car>>();
             
             System.Console.WriteLine($"Started");
             
-//
-//            var booksRemoved = await booksStore.RemoveAsync(x => true);
-//            System.Console.WriteLine($"Removed {booksRemoved.SuccessfulEntities.Count} books from the database.");
+
+            var booksRemoved = await booksStore.RemoveAsync(x => true);
+            System.Console.WriteLine($"Removed {booksRemoved.SuccessfulEntities.Count} books from the database.");
 
             var carsRemoved = await carStore.RemoveAsync(x => true);
             System.Console.WriteLine($"Removed {carsRemoved.SuccessfulEntities.Count} cars from the database.");
@@ -84,15 +81,15 @@ namespace Cosmonaut.Console
             watch.Start();
 
             var addedCars = await carStore.AddRangeAsync(cars);
-//
-//            var addedBooks = await booksStore.AddRangeAsync(books);
-//
-//            System.Console.WriteLine($"Added {addedCars.SuccessfulEntities.Count + addedBooks.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
-//            watch.Restart();
-//            //await Task.Delay(3000);
-//
-//            var aCarId = addedCars.SuccessfulEntities.First().Entity.Id;
-//
+
+            var addedBooks = await booksStore.AddRangeAsync(books);
+
+            System.Console.WriteLine($"Added {addedCars.SuccessfulEntities.Count + addedBooks.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
+            watch.Restart();
+            //await Task.Delay(3000);
+
+            var aCarId = addedCars.SuccessfulEntities.First().Entity.Value.Id;
+
             var firstAddedCar = await carStore.Query().ToListAsync();
 //            var allTheCars = await carStore.QueryMultipleAsync<Car>("select * from c");
 //
