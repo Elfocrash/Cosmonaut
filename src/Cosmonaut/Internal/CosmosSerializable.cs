@@ -5,7 +5,7 @@ namespace Cosmonaut.Internal
 {
     public class CosmosSerializable
     {
-        private JObject _propertyBag;
+        protected JObject _propertyBag;
         
         protected CosmosSerializable()
         {

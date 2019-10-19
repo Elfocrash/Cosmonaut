@@ -7,7 +7,7 @@ namespace Cosmonaut
 {
     public class CosmosStoreSettings
     {
-        public string DatabaseName { get; }
+        public string DatabaseId { get; }
 
         internal string AuthKey { get; }
 
@@ -21,7 +21,7 @@ namespace Cosmonaut
 
         public UniqueKeyPolicy UniqueKeyPolicy { get; set; } = CosmosConstants.DefaultUniqueKeyPolicy;
 
-        public int DefaultCollectionThroughput { get; set; } =  CosmosConstants.MinimumCosmosThroughput;
+        public int DefaultContainerThroughput { get; set; } =  CosmosConstants.MinimumCosmosThroughput;
 
         public int? DefaultDatabaseThroughput { get; set; }
 
@@ -35,53 +35,53 @@ namespace Cosmonaut
 
         public bool ProvisionInfrastructureIfMissing { get; set; } = true;
 
-        public CosmosStoreSettings(string databaseName,
+        public CosmosStoreSettings(string databaseId,
             string endpointUrl,
             string authKey,
-            Action<CosmosStoreSettings> settings) : this(databaseName, new Uri(endpointUrl), authKey, settings)
+            Action<CosmosStoreSettings> settings) : this(databaseId, new Uri(endpointUrl), authKey, settings)
         {
         }
 
-        public CosmosStoreSettings(string databaseName,
+        public CosmosStoreSettings(string databaseId,
             Uri endpointUrl,
             string authKey,
             Action<CosmosStoreSettings> settings)
         {
-            DatabaseName = databaseName ?? throw new ArgumentNullException(nameof(databaseName));
+            DatabaseId = databaseId ?? throw new ArgumentNullException(nameof(databaseId));
             EndpointUrl = endpointUrl ?? throw new ArgumentNullException(nameof(endpointUrl));
             AuthKey = authKey ?? throw new ArgumentNullException(nameof(authKey));
             settings?.Invoke(this);
         }
 
         public CosmosStoreSettings(
-            string databaseName,
+            string databaseId,
             string endpointUrl,
             string authKey,
             ConnectionMode connectionMode = ConnectionMode.Direct,
             IndexingPolicy indexingPolicy = null,
-            int defaultCollectionThroughput = CosmosConstants.MinimumCosmosThroughput)
-            : this(databaseName, 
+            int defaultContainerThroughput = CosmosConstants.MinimumCosmosThroughput)
+            : this(databaseId, 
                   new Uri(endpointUrl), 
                   authKey,
                   connectionMode,
                   indexingPolicy,
-                  defaultCollectionThroughput)
+                  defaultContainerThroughput)
         {
         }
         
         public CosmosStoreSettings(
-            string databaseName, 
+            string databaseId, 
             Uri endpointUrl, 
             string authKey,
             ConnectionMode connectionMode = ConnectionMode.Direct,
             IndexingPolicy indexingPolicy = null,
-            int defaultCollectionThroughput = CosmosConstants.MinimumCosmosThroughput)
+            int defaultContainerThroughput = CosmosConstants.MinimumCosmosThroughput)
         {
-            DatabaseName = databaseName ?? throw new ArgumentNullException(nameof(databaseName));
+            DatabaseId = databaseId ?? throw new ArgumentNullException(nameof(databaseId));
             EndpointUrl = endpointUrl ?? throw new ArgumentNullException(nameof(endpointUrl));
             AuthKey = authKey ?? throw new ArgumentNullException(nameof(authKey));
             ConnectionMode = connectionMode;
-            DefaultCollectionThroughput = defaultCollectionThroughput;
+            DefaultContainerThroughput = defaultContainerThroughput;
 
             IndexingPolicy = indexingPolicy ?? CosmosConstants.DefaultIndexingPolicy;
             UniqueKeyPolicy = CosmosConstants.DefaultUniqueKeyPolicy;

@@ -7,6 +7,6 @@ namespace Cosmonaut.Storage
 {
     public interface IContainerCreator
     {
-        Task<bool> EnsureCreatedAsync<TEntity>(string databaseId, string containerId, int containerThroughput, JsonSerializerSettings partitionKeySerializer, IndexingPolicy indexingPolicy = null, ThroughputBehaviour onDatabaseBehaviour = ThroughputBehaviour.UseDatabaseThroughput, UniqueKeyPolicy uniqueKeyPolicy = null) where TEntity : class;
+        Task<bool> EnsureCreatedAsync<TEntity>(string databaseId, string containerId, int containerThroughput, CosmosSerializer partitionKeySerializer, IndexingPolicy indexingPolicy = null, ThroughputBehaviour onDatabaseBehaviour = ThroughputBehaviour.UseDatabaseThroughput, UniqueKeyPolicy uniqueKeyPolicy = null) where TEntity : class;
     }
 }

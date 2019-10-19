@@ -69,14 +69,14 @@ namespace Cosmonaut.Internal
 
         private InternalTypeCache()
         {
-            DocumentServiceResponseCtorInfo = Type.GetType($"Microsoft.Azure.Documents.DocumentServiceResponse{LibVersion}")
-                .GetTypeInfo().GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance)[0];
-            DictionaryNameValueCollectionType = Type.GetType($"Microsoft.Azure.Documents.Collections.DictionaryNameValueCollection{LibVersion}");
-
-            var documentQueryProviderTypeInfo = Type.GetType($"Microsoft.Azure.Documents.Linq.DocumentQueryProvider{LibVersion}").GetTypeInfo();
-
-            DocumentFeedOrDbLinkFieldInfo = documentQueryProviderTypeInfo.GetField("documentsFeedOrDatabaseLink", BindingFlags.Instance | BindingFlags.NonPublic);
-            FeedOptionsFieldInfo = documentQueryProviderTypeInfo.GetField("feedOptions", BindingFlags.Instance | BindingFlags.NonPublic);
+//            DocumentServiceResponseCtorInfo = Type.GetType($"Microsoft.Azure.Documents.DocumentServiceResponse{LibVersion}")
+//                .GetTypeInfo().GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance)[0];
+//            DictionaryNameValueCollectionType = Type.GetType($"Microsoft.Azure.Documents.Collections.DictionaryNameValueCollection{LibVersion}");
+//
+//            var documentQueryProviderTypeInfo = Type.GetType($"Microsoft.Azure.Documents.Linq.DocumentQueryProvider{LibVersion}").GetTypeInfo();
+//
+//            DocumentFeedOrDbLinkFieldInfo = documentQueryProviderTypeInfo.GetField("documentsFeedOrDatabaseLink", BindingFlags.Instance | BindingFlags.NonPublic);
+//            FeedOptionsFieldInfo = documentQueryProviderTypeInfo.GetField("feedOptions", BindingFlags.Instance | BindingFlags.NonPublic);
         }
 
         internal static InternalTypeCache Instance

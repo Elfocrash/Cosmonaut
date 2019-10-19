@@ -13,7 +13,7 @@ namespace Cosmonaut.Extensions
 {
     public static class DocumentEntityExtensions
     {
-        internal static string GetPartitionKeyDefinitionForEntity(this Type type, JsonSerializerSettings serializerSettings)
+        internal static string GetPartitionKeyDefinitionForEntity(this Type type, CosmosSerializer serializerSettings)
         {
             var partitionKeyProperties = InternalTypeCache.Instance.GetPropertiesFromCache(type)
                 .Where(x => x.GetCustomAttribute<CosmosPartitionKeyAttribute>() != null).ToList();
@@ -35,11 +35,12 @@ namespace Cosmonaut.Extensions
                 !string.IsNullOrEmpty(potentialJsonPropertyAttribute.PropertyName))
                 return CosmonautHelpers.GetPartitionKeyDefinition(potentialJsonPropertyAttribute.PropertyName);
 
-            if (serializerSettings?.ContractResolver is DefaultContractResolver resolver)
-            {
-                var resolvedPropertyName = resolver.GetResolvedPropertyName(partitionKeyProperty.Name);
-                return CosmonautHelpers.GetPartitionKeyDefinition(resolvedPropertyName);    
-            }
+            //TODO Sort this out
+//            if (serializerSettings?.ContractResolver is DefaultContractResolver resolver)
+//            {
+//                var resolvedPropertyName = resolver.GetResolvedPropertyName(partitionKeyProperty.Name);
+//                return CosmonautHelpers.GetPartitionKeyDefinition(resolvedPropertyName);    
+//            }
             
             return CosmonautHelpers.GetPartitionKeyDefinition(partitionKeyProperty.Name);
         }

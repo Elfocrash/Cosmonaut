@@ -20,9 +20,9 @@ namespace Cosmonaut.Storage
 
         public async Task<bool> EnsureCreatedAsync(string databaseId, int? databaseThroughput = null)
         {
-            var database = await _cosmonautClient.GetDatabaseAsync(databaseId);
+            var database = await _cosmonautClient.CosmosClient.GetDatabase(databaseId).ReadAsync();
 
-            if (database.StatusCode == HttpStatusCode.NotFound) return false;
+            if (database.StatusCode == HttpStatusCode.OK) return true;
 
             database = await _cosmonautClient.CosmosClient.CreateDatabaseAsync(databaseId, databaseThroughput);
             return database != null; //TODO check this

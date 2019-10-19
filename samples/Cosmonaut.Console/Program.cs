@@ -5,8 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Cosmonaut.Extensions;
 using Cosmonaut.Extensions.Microsoft.DependencyInjection;
-using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Client;
+using Cosmonaut.Storage;
+using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -20,77 +20,41 @@ namespace Cosmonaut.Console
             //Uncomment to enable Serilog logging
             //SerilogEventListener.Instance.Initialize();
 
-            var connectionPolicy = new ConnectionPolicy
-            {
-                ConnectionProtocol = Protocol.Tcp,
-                ConnectionMode = ConnectionMode.Direct
-            };
-
-            var jsonSerializerSettings = new JsonSerializerSettings
-            {
-                ContractResolver = new DefaultContractResolver()
-            };
+            var jsonSerializerSettings = new CosmosJsonNetSerializer(new JsonSerializerSettings());
             
             var cosmosSettings = new CosmosStoreSettings("localtest", 
                 "https://localhost:8081", 
                 "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
-                , connectionPolicy
-                , defaultCollectionThroughput: 5000);
+                , ConnectionMode.Direct
+                , defaultContainerThroughput: 5000);
             
-            cosmosSettings.JsonSerializerSettings = jsonSerializerSettings;
+            cosmosSettings.CosmosSerializer = jsonSerializerSettings;
 
             var cosmonautClient = new CosmonautClient("https://localhost:8081",
                 "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==");
 
             var serviceCollection = new ServiceCollection();
 
-            serviceCollection.AddCosmosStore<Book>("localtest", "https://localhost:8081",
-                "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==",
-                settings =>
-            {
-                settings.ConnectionPolicy = connectionPolicy;
-                settings.DefaultCollectionThroughput = 5000;
-                settings.JsonSerializerSettings = jsonSerializerSettings;
-            });
+//            serviceCollection.AddCosmosStore<Book>("localtest", "https://localhost:8081",
+//                "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==",
+//                settings =>
+//            {
+//                settings.DefaultContainerThroughput = 5000;
+//                settings.CosmosSerializer = jsonSerializerSettings;
+//            });
             
             serviceCollection.AddCosmosStore<Car>(cosmosSettings);
 
             var provider = serviceCollection.BuildServiceProvider();
 
-            var booksStore = provider.GetService<ICosmosStore<Book>>();
+            //var booksStore = provider.GetService<ICosmosStore<Book>>();
             var carStore = provider.GetService<ICosmosStore<Car>>();
             
             System.Console.WriteLine($"Started");
-
-            var scaleableDb = await cosmonautClient.GetDatabaseAsync("scaleabledb");
-
-            if(scaleableDb == null)
-                scaleableDb = await cosmonautClient.CreateDatabaseAsync(new Database {Id = "scaleabledb"},
-                new RequestOptions {OfferThroughput = 10000});
-
-            var dbOffer = await cosmonautClient.GetOfferForDatabaseAsync("scaleabledb");
-            var dbOfferV2 = await cosmonautClient.GetOfferV2ForDatabaseAsync("scaleabledb");
-
-            var newOffer = new OfferV2(dbOffer, 20000);
-            //var offerResponse = await cosmonautClient.UpdateOfferAsync(newOffer);
-
-            var database = await cosmonautClient.GetDatabaseAsync("localtest");
-            System.Console.WriteLine($"Retrieved database with id {database.Id}");
-
-            var collection = await cosmonautClient.GetCollectionAsync("localtest", "shared");
-            System.Console.WriteLine($"Retrieved collection with id {collection.Id}");
-
-            var offer = await cosmonautClient.GetOfferForCollectionAsync("localtest", "shared");
-            System.Console.WriteLine($"Retrieved offer with id {offer.Id}");
-
-            var offerV2 = await cosmonautClient.GetOfferV2ForCollectionAsync("localtest", "shared");
-            System.Console.WriteLine($"Retrieved offerV2 with id {offerV2.Id}");
-
-            var databases = await cosmonautClient.QueryDatabasesAsync();
-            System.Console.WriteLine($"Retrieved all {databases.Count()} databased in the account.");
-
-            var booksRemoved = await booksStore.RemoveAsync(x => true);
-            System.Console.WriteLine($"Removed {booksRemoved.SuccessfulEntities.Count} books from the database.");
+            
+//
+//            var booksRemoved = await booksStore.RemoveAsync(x => true);
+//            System.Console.WriteLine($"Removed {booksRemoved.SuccessfulEntities.Count} books from the database.");
 
             var carsRemoved = await carStore.RemoveAsync(x => true);
             System.Console.WriteLine($"Removed {carsRemoved.SuccessfulEntities.Count} cars from the database.");
@@ -120,56 +84,56 @@ namespace Cosmonaut.Console
             watch.Start();
 
             var addedCars = await carStore.AddRangeAsync(cars);
-
-            var addedBooks = await booksStore.AddRangeAsync(books);
-
-            System.Console.WriteLine($"Added {addedCars.SuccessfulEntities.Count + addedBooks.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
-            watch.Restart();
-            //await Task.Delay(3000);
-
-            var aCarId = addedCars.SuccessfulEntities.First().Entity.Id;
-
-            var firstAddedCar = await carStore.Query().FirstOrDefaultAsync();
-            var allTheCars = await carStore.QueryMultipleAsync<Car>("select * from c");
-
-            var carPageOne = await carStore.Query("select * from c order by c.Name asc").WithPagination(1, 5).ToPagedListAsync();
-            var carPageTwo = await carStore.Query("select * from c order by c.Name asc").WithPagination(carPageOne.NextPageToken, 5).ToPagedListAsync();
-            var carPageThree = await carPageTwo.GetNextPageAsync();
-            var carPageFour = await carPageThree.GetNextPageAsync();
-
-            var addedRetrieved = await booksStore.Query().OrderBy(x=> x.Name).ToListAsync();
-
-            var firstPage = await booksStore.Query().WithPagination(1, 10).ToPagedListAsync();
-            var secondPage = await firstPage.GetNextPageAsync();
-            var thirdPage = await secondPage.GetNextPageAsync();
-            var fourthPage = await secondPage.GetNextPageAsync();
-
-            //var thirdPage = await booksStore.Query().WithPagination(secondPage.NextPageToken, 10).OrderBy(x => x.Name).ToPagedListAsync();
-            //var fourthPage = await booksStore.Query().WithPagination(4, 10).OrderBy(x => x.Name).ToListAsync();
-
-            var sqlPaged = await cosmonautClient.Query<Book>("localtest", "shared",
-                "select * from c where c.CosmosEntityName = @type order by c.Name", new Dictionary<string, object>{{ "type", "books" } }, new FeedOptions { EnableCrossPartitionQuery = true })
-                .WithPagination(2, 10).ToListAsync();
-
-            System.Console.WriteLine($"Retrieved {addedRetrieved.Count} documents in {watch.ElapsedMilliseconds}ms");
-            watch.Restart();
-            foreach (var addedre in addedRetrieved)
-            {
-                addedre.AnotherRandomProp += " Nick";
-            }
-
-            var updated = await booksStore.UpsertRangeAsync(addedRetrieved, x => new RequestOptions { AccessCondition = new AccessCondition
-            {
-                Type = AccessConditionType.IfMatch,
-                Condition = x.Etag
-            }});
-            System.Console.WriteLine($"Updated {updated.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
-            watch.Restart();
-
-            var removed = await booksStore.RemoveRangeAsync(addedRetrieved);
-            System.Console.WriteLine($"Removed {removed.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
-            watch.Reset();
-            watch.Stop();
+//
+//            var addedBooks = await booksStore.AddRangeAsync(books);
+//
+//            System.Console.WriteLine($"Added {addedCars.SuccessfulEntities.Count + addedBooks.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
+//            watch.Restart();
+//            //await Task.Delay(3000);
+//
+//            var aCarId = addedCars.SuccessfulEntities.First().Entity.Id;
+//
+            var firstAddedCar = await carStore.Query().ToListAsync();
+//            var allTheCars = await carStore.QueryMultipleAsync<Car>("select * from c");
+//
+//            var carPageOne = await carStore.Query("select * from c order by c.Name asc").WithPagination(1, 5).ToPagedListAsync();
+//            var carPageTwo = await carStore.Query("select * from c order by c.Name asc").WithPagination(carPageOne.NextPageToken, 5).ToPagedListAsync();
+//            var carPageThree = await carPageTwo.GetNextPageAsync();
+//            var carPageFour = await carPageThree.GetNextPageAsync();
+//
+//            var addedRetrieved = await booksStore.Query().OrderBy(x=> x.Name).ToListAsync();
+//
+//            var firstPage = await booksStore.Query().WithPagination(1, 10).ToPagedListAsync();
+//            var secondPage = await firstPage.GetNextPageAsync();
+//            var thirdPage = await secondPage.GetNextPageAsync();
+//            var fourthPage = await secondPage.GetNextPageAsync();
+//
+//            //var thirdPage = await booksStore.Query().WithPagination(secondPage.NextPageToken, 10).OrderBy(x => x.Name).ToPagedListAsync();
+//            //var fourthPage = await booksStore.Query().WithPagination(4, 10).OrderBy(x => x.Name).ToListAsync();
+//
+//            var sqlPaged = await cosmonautClient.Query<Book>("localtest", "shared",
+//                "select * from c where c.CosmosEntityName = @type order by c.Name", new Dictionary<string, object>{{ "type", "books" } }, new FeedOptions { EnableCrossPartitionQuery = true })
+//                .WithPagination(2, 10).ToListAsync();
+//
+//            System.Console.WriteLine($"Retrieved {addedRetrieved.Count} documents in {watch.ElapsedMilliseconds}ms");
+//            watch.Restart();
+//            foreach (var addedre in addedRetrieved)
+//            {
+//                addedre.AnotherRandomProp += " Nick";
+//            }
+//
+//            var updated = await booksStore.UpsertRangeAsync(addedRetrieved, x => new RequestOptions { AccessCondition = new AccessCondition
+//            {
+//                Type = AccessConditionType.IfMatch,
+//                Condition = x.Etag
+//            }});
+//            System.Console.WriteLine($"Updated {updated.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
+//            watch.Restart();
+//
+//            var removed = await booksStore.RemoveRangeAsync(addedRetrieved);
+//            System.Console.WriteLine($"Removed {removed.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
+//            watch.Reset();
+//            watch.Stop();
 
             System.Console.ReadKey();
         }

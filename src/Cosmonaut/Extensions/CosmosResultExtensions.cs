@@ -8,16 +8,28 @@ using Cosmonaut.Diagnostics;
 using Cosmonaut.Internal;
 using Cosmonaut.Response;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Linq;
 
 namespace Cosmonaut.Extensions
 {
     public static class CosmosResultExtensions
     {
+        public static bool IsSuccess<TEntity>(this Response<TEntity> response)
+        {
+            return (int)response.StatusCode >= 200 && (int)response.StatusCode < 300;
+        }
+        
+        public static async Task<List<TEntity>> ToListAsync<TEntity>(
+            this IQueryable<TEntity> queryable, 
+            CancellationToken cancellationToken = default)
+        {
+            return await GetResultsFromQueryToList(queryable.ToFeedIterator(), cancellationToken);
+        }
+        
         public static async Task<List<TEntity>> ToListAsync<TEntity>(
             this FeedIterator<TEntity> iterator, 
             CancellationToken cancellationToken = default)
         {
-            //return await GetListFromQueryable(queryable, cancellationToken);
             return await GetResultsFromQueryToList(iterator, cancellationToken);
         }
 

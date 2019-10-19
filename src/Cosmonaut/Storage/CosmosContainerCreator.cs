@@ -26,12 +26,12 @@ namespace Cosmonaut.Storage
             string databaseId,
             string containerId,
             int containerThroughput,
-            JsonSerializerSettings partitionKeySerializer,
+            CosmosSerializer partitionKeySerializer,
             IndexingPolicy indexingPolicy = null,
             ThroughputBehaviour onDatabaseBehaviour = ThroughputBehaviour.UseDatabaseThroughput, 
             UniqueKeyPolicy uniqueKeyPolicy = null) where TEntity : class
         {
-            var containerResponse = await _cosmonautClient.GetContainerAsync(databaseId, containerId);
+            var containerResponse = await _cosmonautClient.CosmosClient.GetContainer(databaseId, containerId).ReadContainerAsync();
             var databaseHasOffer = await _cosmonautClient.CosmosClient.GetDatabase(databaseId).ReadThroughputAsync() != null;
 
             if (containerResponse.StatusCode != HttpStatusCode.NotFound)
