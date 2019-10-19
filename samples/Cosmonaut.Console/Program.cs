@@ -91,7 +91,7 @@ namespace Cosmonaut.Console
             var aCarId = addedCars.SuccessfulEntities.First().Entity.Value.Id;
 
             var firstAddedCar = await carStore.Query().FirstOrDefaultAsync();
-//            var allTheCars = await carStore.QueryMultipleAsync<Car>("select * from c");
+            var allTheCars = await carStore.QueryMultipleAsync<Car>("select * from c");
 //
 //            var carPageOne = await carStore.Query("select * from c order by c.Name asc").WithPagination(1, 5).ToPagedListAsync();
 //            var carPageTwo = await carStore.Query("select * from c order by c.Name asc").WithPagination(carPageOne.NextPageToken, 5).ToPagedListAsync();

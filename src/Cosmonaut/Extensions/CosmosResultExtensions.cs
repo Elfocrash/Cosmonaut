@@ -23,7 +23,14 @@ namespace Cosmonaut.Extensions
             this IQueryable<TEntity> queryable, 
             CancellationToken cancellationToken = default)
         {
-            return await GetResultsFromQueryToList(queryable, cancellationToken);
+            return await GetResultsFromQueryToList(queryable.ToFeedIterator(), cancellationToken);
+        }
+        
+        public static async Task<List<TEntity>> ToListAsync<TEntity>(
+            this FeedIterator<TEntity> iterator, 
+            CancellationToken cancellationToken = default)
+        {
+            return await GetResultsFromQueryToList(iterator, cancellationToken);
         }
 
 //        public static async Task<CosmosPagedResults<TEntity>> ToPagedListAsync<TEntity>(
@@ -172,9 +179,8 @@ namespace Cosmonaut.Extensions
 //            return await GetPaginatedResultsFromQueryable(queryable, cancellationToken, feedOptions);
 //        }
 
-        private static async Task<List<T>> GetResultsFromQueryToList<T>(IQueryable<T> queryable, CancellationToken cancellationToken)
+        private static async Task<List<T>> GetResultsFromQueryToList<T>(FeedIterator<T> iterator, CancellationToken cancellationToken)
         {
-            var iterator = queryable.ToFeedIterator();
             var results = new List<T>();
             while (iterator.HasMoreResults)
             {
