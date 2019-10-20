@@ -8,15 +8,13 @@ namespace Cosmonaut.Extensions
 {
     public static class PaginationExtensions
     {
-        private const string CosmosLinqQueryTypeName = "CosmosLinqQuery`1";
+        public const string CosmosLinqQueryTypeName = "CosmosLinqQuery`1";
 
         /// <summary>
-        /// Adds pagination for your CosmosDB query. This is an inefficient and expensive form of pagination because it goes
-        /// though all the documents to get to the page you want. The usage of WithPagination with the ContinuationToken is recommended. 
-        /// Read more at https://github.com/Elfocrash/Cosmonaut
+        /// Adds pagination for your CosmosDB query
         /// </summary>
         /// <returns>A specific page of the results that your query matches.</returns>
-        public static FeedIterator<T> WithPagination<T>(this FeedIterator<T> iterator, int pageNumber, int pageSize)
+        public static IQueryable<T> WithPagination<T>(this IQueryable<T> queryable, int pageNumber, int pageSize)
         {
             if (pageNumber <= 0)
             {
@@ -28,41 +26,20 @@ namespace Cosmonaut.Extensions
                 throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be a positive number.");
             }
 
-            return GetQueryableWithPaginationSettings(iterator, $"{nameof(WithPagination)}/{pageNumber}", pageSize);
+            var skip = (pageNumber - 1) * pageSize;
+            return queryable.Skip(skip).Take(pageSize);
         }
 
-        /// <summary>
-        /// Adds pagination for your CosmosDB query. This is an efficient and cheap form of pagination because it doesn't go 
-        /// though all the documents to get to the page you want. Read more at https://github.com/Elfocrash/Cosmonaut
-        /// </summary>
-        /// ///
-        /// <param name="iterator">The DocumentQueryable for the operation</param>
-        /// <param name="continuationToken">When null or empty string, the first page of items will be returned</param>
-        /// <param name="pageSize">The size of the page we are expecting</param>
-        /// <returns>A specific page of the results that your query matches.</returns>
-        public static FeedIterator<T> WithPagination<T>(this FeedIterator<T> iterator, string continuationToken, int pageSize)
-        {
-            if (pageSize <= 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be a positive number.");
-            }
-
-            if (continuationToken == null)
-                return GetQueryableWithPaginationSettings(iterator, $"{nameof(WithPagination)}/{1}", pageSize);
-
-            return GetQueryableWithPaginationSettings(iterator, continuationToken, pageSize);
-        }
-
-        private static FeedIterator<T> GetQueryableWithPaginationSettings<T>(FeedIterator<T> iterator, string continuationInfo, int pageSize)
+        private static IQueryable<T> GetQueryableWithPaginationSettings<T>(IQueryable<T> queryable, string continuationInfo, int pageSize)
         { 
-//            if (!iterator.GetType().Name.Equals(DocumentQueryTypeName))
-//                return iterator;
-//
-//            var feedOptions = iterator.GetFeedOptionsForQueryable() ?? new QueryRequestOptions();
-//            feedOptions.MaxItemCount = pageSize;
-//            feedOptions.RequestContinuation = continuationInfo;
-            //iterator.SetFeedOptionsForQueryable(feedOptions);
-            return iterator;
+            if (!queryable.GetType().Name.Equals(CosmosLinqQueryTypeName))
+                return queryable;
+
+            var queryRequestOptions = queryable.GetQueryRequestOptionsForQueryable() ?? new QueryRequestOptions();
+            queryRequestOptions.MaxItemCount = pageSize; //TODO see if i still need that
+            queryable.SetContinuationToken($"^~{pageSize}~{continuationInfo}");
+            queryable.SetQueryRequestOptionsForQueryable(queryRequestOptions);
+            return queryable;
         }
 
         internal static QueryRequestOptions GetQueryRequestOptionsForQueryable<T>(this IQueryable<T> queryable)

@@ -92,25 +92,24 @@ namespace Cosmonaut.Console
 
             var firstAddedCar = await carStore.Query().FirstOrDefaultAsync();
             var allTheCars = await carStore.QueryMultipleAsync<Car>("select * from c");
-//
-//            var carPageOne = await carStore.Query("select * from c order by c.Name asc").WithPagination(1, 5).ToPagedListAsync();
+
+            var carPageOne = await carStore.Query("select * from c order by c.Name asc offset 0 limit 5").ToListAsync();
 //            var carPageTwo = await carStore.Query("select * from c order by c.Name asc").WithPagination(carPageOne.NextPageToken, 5).ToPagedListAsync();
 //            var carPageThree = await carPageTwo.GetNextPageAsync();
 //            var carPageFour = await carPageThree.GetNextPageAsync();
 //
             var addedRetrieved = await booksStore.Query().OrderBy(x=> x.Name).ToListAsync();
+
+            var newPage = await booksStore.Query().Skip(5).Take(5).ToListAsync();
+            
+            var firstPage = await booksStore.Query().WithPagination(1, 10).ToListAsync();
+            var firstPagedPage = await booksStore.Query().ToListWithContinuationAsync(5);
+            var secondPage = await booksStore.Query(continuationToken: firstPagedPage.ContinuationToken).ToListWithContinuationAsync(5);
+            
+            var fourthPage = await booksStore.Query().WithPagination(3, 10).ToListAsync();
 //
-//            var firstPage = await booksStore.Query().WithPagination(1, 10).ToPagedListAsync();
-//            var secondPage = await firstPage.GetNextPageAsync();
-//            var thirdPage = await secondPage.GetNextPageAsync();
-//            var fourthPage = await secondPage.GetNextPageAsync();
-//
-//            //var thirdPage = await booksStore.Query().WithPagination(secondPage.NextPageToken, 10).OrderBy(x => x.Name).ToPagedListAsync();
-//            //var fourthPage = await booksStore.Query().WithPagination(4, 10).OrderBy(x => x.Name).ToListAsync();
-//
-//            var sqlPaged = await cosmonautClient.Query<Book>("localtest", "shared",
-//                "select * from c where c.CosmosEntityName = @type order by c.Name", new Dictionary<string, object>{{ "type", "books" } }, new FeedOptions { EnableCrossPartitionQuery = true })
-//                .WithPagination(2, 10).ToListAsync();
+            var sqlPaged = await booksStore.Query("select * from c where c.CosmosEntityName = @type order by c.Name offset 10 limit 10", new Dictionary<string, object>{{ "type", "books" } })
+                .ToListAsync();
 //
 //            System.Console.WriteLine($"Retrieved {addedRetrieved.Count} documents in {watch.ElapsedMilliseconds}ms");
 //            watch.Restart();

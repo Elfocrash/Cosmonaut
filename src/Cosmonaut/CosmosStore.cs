@@ -86,14 +86,17 @@ namespace Cosmonaut
             var queryable = Container.GetItemLinqQueryable<TEntity>(allowSynchronousQueryExecution, continuationToken, requestOptions);
             return IsShared ? queryable.Where(ExpressionExtensions.SharedCollectionExpression<TEntity>()) : queryable;
         }
-//
-//        public IQueryable<TEntity> Query(string sql, object parameters = null, FeedOptions feedOptions = null,
-//            CancellationToken cancellationToken = default)
-//        {
-//            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-//            return CosmonautClient.Query<TEntity>(DatabaseName, CollectionName, collectionSharingFriendlySql, parameters, GetFeedOptionsForQuery(feedOptions));
-//        }
-//
+
+        public FeedIterator<TEntity> Query(string sql, object parameters = null, QueryRequestOptions queryRequestOptions = null, string continuationToken = null,
+            CancellationToken cancellationToken = default)
+        {
+            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
+            var queryDefinition = new QueryDefinition(collectionSharingFriendlySql);
+            var dictionary = parameters.ConvertToSqlParameterDictionary();
+            queryDefinition = dictionary.Aggregate(queryDefinition, (current, parameter) => current.WithParameter($"@{parameter.Key}", parameter.Value));
+            return Container.GetItemQueryIterator<TEntity>(queryDefinition, continuationToken, queryRequestOptions);
+        }
+
 //        public async Task<TEntity> QuerySingleAsync(string sql, object parameters = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
 //        {
 //            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
@@ -113,7 +116,7 @@ namespace Cosmonaut
             var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
             var queryDefinition = new QueryDefinition(collectionSharingFriendlySql);
             var dictionary = parameters.ConvertToSqlParameterDictionary();
-            queryDefinition = dictionary.Aggregate(queryDefinition, (current, parameter) => current.WithParameter(parameter.Key, parameter.Value));
+            queryDefinition = dictionary.Aggregate(queryDefinition, (current, parameter) => current.WithParameter($"@{parameter.Key}", parameter.Value));
             var iterator = Container.GetItemQueryIterator<TEntity>(queryDefinition, continuationToken, queryRequestOptions);
             return await iterator.ToListAsync(cancellationToken);
         }
@@ -123,17 +126,20 @@ namespace Cosmonaut
             var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
             var queryDefinition = new QueryDefinition(collectionSharingFriendlySql);
             var dictionary = parameters.ConvertToSqlParameterDictionary();
-            queryDefinition = dictionary.Aggregate(queryDefinition, (current, parameter) => current.WithParameter(parameter.Key, parameter.Value));
+            queryDefinition = dictionary.Aggregate(queryDefinition, (current, parameter) => current.WithParameter($"@{parameter.Key}", parameter.Value));
             var iterator = Container.GetItemQueryIterator<T>(queryDefinition, continuationToken, queryRequestOptions);
             return await iterator.ToListAsync(cancellationToken);
         }
-//
-//        public IQueryable<TEntity> Query(string sql, IDictionary<string, object> parameters, FeedOptions feedOptions = null,
-//            CancellationToken cancellationToken = default)
-//        {
-//            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-//            return CosmonautClient.Query<TEntity>(DatabaseName, CollectionName, collectionSharingFriendlySql, parameters, GetFeedOptionsForQuery(feedOptions));
-//        }
+
+        public FeedIterator<TEntity> Query(string sql, IDictionary<string, object> parameters, QueryRequestOptions queryRequestOptions = null, string continuationToken = null,
+            CancellationToken cancellationToken = default)
+        {
+            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
+            var queryDefinition = new QueryDefinition(collectionSharingFriendlySql);
+            //TODO make this @ symbol safe
+            queryDefinition = parameters.Aggregate(queryDefinition, (current, parameter) => current.WithParameter($"@{parameter.Key}", parameter.Value));
+            return Container.GetItemQueryIterator<TEntity>(queryDefinition, continuationToken, queryRequestOptions);
+        }
 //
 //        public async Task<TEntity> QuerySingleAsync(string sql, IDictionary<string, object> parameters, FeedOptions feedOptions = null, CancellationToken cancellationToken = default)
 //        {
@@ -153,7 +159,7 @@ namespace Cosmonaut
         {
             var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
             var queryDefinition = new QueryDefinition(collectionSharingFriendlySql);
-            queryDefinition = parameters.Aggregate(queryDefinition, (current, parameter) => current.WithParameter(parameter.Key, parameter.Value));
+            queryDefinition = parameters.Aggregate(queryDefinition, (current, parameter) => current.WithParameter($"@{parameter.Key}", parameter.Value));
             var iterator = Container.GetItemQueryIterator<TEntity>(queryDefinition, continuationToken, queryRequestOptions);
             return await iterator.ToListAsync(cancellationToken);
         }
@@ -162,7 +168,7 @@ namespace Cosmonaut
         {
             var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
             var queryDefinition = new QueryDefinition(collectionSharingFriendlySql);
-            queryDefinition = parameters.Aggregate(queryDefinition, (current, parameter) => current.WithParameter(parameter.Key, parameter.Value));
+            queryDefinition = parameters.Aggregate(queryDefinition, (current, parameter) => current.WithParameter($"@{parameter.Key}", parameter.Value));
             var iterator = Container.GetItemQueryIterator<T>(queryDefinition, continuationToken, queryRequestOptions);
             return await iterator.ToListAsync(cancellationToken);
         }
