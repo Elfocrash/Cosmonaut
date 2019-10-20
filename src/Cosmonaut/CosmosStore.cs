@@ -194,7 +194,7 @@ namespace Cosmonaut
         {
             return await ExecuteMultiOperationAsync(entities, x => AddAsync(x, requestOptions?.Invoke(x), cancellationToken));
         }
-//        
+        
         public async Task<CosmosMultipleResponse<TEntity>> RemoveAsync(
             Expression<Func<TEntity, bool>> predicate, 
             QueryRequestOptions queryRequestOptions = null,

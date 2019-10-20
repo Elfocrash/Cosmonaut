@@ -31,27 +31,33 @@ namespace Cosmonaut.Storage
             ThroughputBehaviour onDatabaseBehaviour = ThroughputBehaviour.UseDatabaseThroughput, 
             UniqueKeyPolicy uniqueKeyPolicy = null) where TEntity : class
         {
-            var containerResponse = await _cosmonautClient.CosmosClient.GetContainer(databaseId, containerId).ReadContainerAsync();
-            var databaseHasOffer = await _cosmonautClient.CosmosClient.GetDatabase(databaseId).ReadThroughputAsync() != null;
-
-            if (containerResponse.StatusCode != HttpStatusCode.NotFound)
-                return true;
-
-            var partitionKeyDef = typeof(TEntity).GetPartitionKeyDefinitionForEntity(partitionKeySerializer);
-            
-            var containerProperties = new ContainerProperties
+            try
             {
-                Id = containerId,
-                IndexingPolicy = indexingPolicy ?? CosmosConstants.DefaultIndexingPolicy,
-                UniqueKeyPolicy = uniqueKeyPolicy ?? CosmosConstants.DefaultUniqueKeyPolicy,
-                PartitionKeyPath = partitionKeyDef
-            };
+                var containerResponse = await _cosmonautClient.CosmosClient.GetContainer(databaseId, containerId).ReadContainerAsync();
 
-            var finalContainerThroughput = databaseHasOffer ? onDatabaseBehaviour == ThroughputBehaviour.DedicateContainerThroughput ? (int?)containerThroughput : null : containerThroughput;
+                if (containerResponse.StatusCode == HttpStatusCode.OK)
+                    return true;
 
-            var response = await _cosmonautClient.CosmosClient.GetDatabase(databaseId).CreateContainerAsync(containerProperties, finalContainerThroughput);
+                return false;
+            }
+            catch (CosmosException ex)
+            {
+                var databaseHasOffer = await _cosmonautClient.CosmosClient.GetDatabase(databaseId).ReadThroughputAsync() != null;
+                var partitionKeyDef = typeof(TEntity).GetPartitionKeyDefinitionForEntity(partitionKeySerializer);
+            
+                var containerProperties = new ContainerProperties
+                {
+                    Id = containerId,
+                    IndexingPolicy = indexingPolicy ?? CosmosConstants.DefaultIndexingPolicy,
+                    UniqueKeyPolicy = uniqueKeyPolicy ?? CosmosConstants.DefaultUniqueKeyPolicy,
+                    PartitionKeyPath = partitionKeyDef
+                };
 
-            return response != null; // TODO check for status code
+                var finalContainerThroughput = databaseHasOffer ? onDatabaseBehaviour == ThroughputBehaviour.DedicateContainerThroughput ? (int?)containerThroughput : null : containerThroughput;
+
+                var response = await _cosmonautClient.CosmosClient.GetDatabase(databaseId).CreateContainerAsync(containerProperties, finalContainerThroughput);
+                return response.StatusCode == HttpStatusCode.Created;   
+            }
         }
     }
 }
