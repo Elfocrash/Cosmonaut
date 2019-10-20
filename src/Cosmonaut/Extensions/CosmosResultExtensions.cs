@@ -42,21 +42,23 @@ namespace Cosmonaut.Extensions
             return (await GetResultsFromQueryToList(iterator, cancellationToken)).items;
         }
         
-        /*public static async Task<int> CountAsync<TEntity>(
+        public static async Task<int> CountAsync<TEntity>(
             this IQueryable<TEntity> queryable, 
             CancellationToken cancellationToken = default)
         {
-            return await queryable.InvokeCosmosCallAsync(() => DocumentQueryable.CountAsync(queryable, cancellationToken), queryable.ToString(), target: GetAltLocationFromQueryable(queryable));
-        }*/
+            return await queryable.InvokeCosmosCallAsync(
+                () => CosmosLinqExtensions.CountAsync(queryable, cancellationToken), queryable.ToString(),
+                target: GetAltLocationFromQueryable(queryable));
+        }
 
-//        public static async Task<int> CountAsync<TEntity>(
-//            this IQueryable<TEntity> queryable,
-//            Expression<Func<TEntity, bool>> predicate,
-//            CancellationToken cancellationToken = default)
-//        {
-//            var finalQueryable = queryable.Where(predicate);
-//            return await CountAsync(finalQueryable, cancellationToken);
-//        }
+        public static async Task<int> CountAsync<TEntity>(
+            this IQueryable<TEntity> queryable,
+            Expression<Func<TEntity, bool>> predicate,
+            CancellationToken cancellationToken = default)
+        {
+            var finalQueryable = queryable.Where(predicate);
+            return await CountAsync(finalQueryable, cancellationToken);
+        }
 
         public static async Task<TEntity> FirstOrDefaultAsync<TEntity>(
             this IQueryable<TEntity> queryable, 
@@ -122,8 +124,6 @@ namespace Cosmonaut.Extensions
             return await finalQueryable.SingleAsync(cancellationToken);
         }
         
-        //asdasda
-        
         public static async Task<TEntity> FirstOrDefaultAsync<TEntity>(
             this FeedIterator<TEntity> iterator, 
             CancellationToken cancellationToken = default)
@@ -152,20 +152,19 @@ namespace Cosmonaut.Extensions
             return (await GetResultsFromQueryForSingleOrFirst(iterator, cancellationToken)).Single();
         }
 
-//        public static async Task<TEntity> MaxAsync<TEntity>(
-//            this IQueryable<TEntity> queryable, 
-//            CancellationToken cancellationToken = default)
-//        {
-//            Microsoft.Azure.Cosmos.Linq.CosmosLinqExtensions.ToQueryDefinition()
-//            return await queryable.InvokeCosmosCallAsync(() => DocumentQueryable.MaxAsync(queryable, cancellationToken), queryable.ToString(), target: GetAltLocationFromQueryable(queryable));
-//        }
-//
-//        public static async Task<TEntity> MinAsync<TEntity>(
-//            this IQueryable<TEntity> queryable, 
-//            CancellationToken cancellationToken = default)
-//        {
-//            return await queryable.InvokeCosmosCallAsync(() => DocumentQueryable.MinAsync(queryable, cancellationToken), queryable.ToString(), target: GetAltLocationFromQueryable(queryable));
-//        }
+        public static async Task<TEntity> MaxAsync<TEntity>(
+            this IQueryable<TEntity> queryable, 
+            CancellationToken cancellationToken = default)
+        {
+            return await queryable.InvokeCosmosCallAsync(() => CosmosLinqExtensions.MaxAsync(queryable, cancellationToken), queryable.ToString(), target: GetAltLocationFromQueryable(queryable));
+        }
+
+        public static async Task<TEntity> MinAsync<TEntity>(
+            this IQueryable<TEntity> queryable, 
+            CancellationToken cancellationToken = default)
+        {
+            return await queryable.InvokeCosmosCallAsync(() => CosmosLinqExtensions.MinAsync(queryable, cancellationToken), queryable.ToString(), target: GetAltLocationFromQueryable(queryable));
+        }
 
         private static async Task<List<T>> GetSingleOrFirstFromQueryable<T>(IQueryable<T> queryable,
             CancellationToken cancellationToken)
@@ -189,7 +188,7 @@ namespace Cosmonaut.Extensions
             while (iterator.HasMoreResults)
             {
                 var items = await iterator.InvokeExecuteNextAsync(() => iterator.ReadNextAsync(cancellationToken),
-                    iterator.ToString(), target: string.Empty/* GetAltLocationFromQueryable(queryable)*/);
+                    iterator.ToString(), target: GetAltLocationFromIterator(iterator));
                 results.AddRange(items);
                 lastContinuationToken = items.ContinuationToken;
             }
@@ -207,7 +206,7 @@ namespace Cosmonaut.Extensions
                     break;
 
                 var items = await query.InvokeExecuteNextAsync(() => query.ReadNextAsync(cancellationToken),
-                    query.ToString(), target: string.Empty /*GetAltLocationFromQueryable(queryable)*/);
+                    query.ToString(), target: GetAltLocationFromQueryable(queryable));
                 nextPageToken = items.ContinuationToken;
                 
                 foreach (var item in items)
@@ -233,7 +232,7 @@ namespace Cosmonaut.Extensions
             while (iterator.HasMoreResults)
             {
                 var items = await iterator.InvokeExecuteNextAsync(() => iterator.ReadNextAsync(cancellationToken),
-                    iterator.ToString(), target: GetAltLocationFromQueryable(iterator));
+                    iterator.ToString(), target: GetAltLocationFromIterator(iterator));
                 results.AddRange(items);
                 if (results.Any())
                     return results;
@@ -241,12 +240,23 @@ namespace Cosmonaut.Extensions
             return results;
         }
 
-        private static string GetAltLocationFromQueryable<T>(FeedIterator<T> queryable)
+        private static string GetAltLocationFromQueryable<T>(IQueryable<T> queryable)
         {
             if (!CosmosEventSource.EventSource.IsEnabled())
                 return null;
 
             if (!queryable.GetType().Name.Equals("DocumentQuery`1"))
+                return null;
+
+            return string.Empty;//TODO InternalTypeCache.Instance.DocumentFeedOrDbLinkFieldInfo?.GetValue(queryable.Provider)?.ToString();
+        }
+        
+        private static string GetAltLocationFromIterator<T>(FeedIterator<T> iterator)
+        {
+            if (!CosmosEventSource.EventSource.IsEnabled())
+                return null;
+
+            if (!iterator.GetType().Name.Equals("DocumentQuery`1"))
                 return null;
 
             return string.Empty;//TODO InternalTypeCache.Instance.DocumentFeedOrDbLinkFieldInfo?.GetValue(queryable.Provider)?.ToString();

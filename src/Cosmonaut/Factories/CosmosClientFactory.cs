@@ -6,7 +6,7 @@ namespace Cosmonaut.Factories
 {
     public class CosmosClientFactory
     {
-        public static CosmosClient CreateDocumentClient(CosmosStoreSettings settings)
+        public static CosmosClient CreateCosmosClient(CosmosStoreSettings settings)
         {
             return new CosmosClient(settings.EndpointUrl.ToString(), settings.AuthKey, new CosmosClientOptions
                 {

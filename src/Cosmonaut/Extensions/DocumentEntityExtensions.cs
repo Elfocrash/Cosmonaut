@@ -5,6 +5,7 @@ using System.Reflection;
 using Cosmonaut.Attributes;
 using Cosmonaut.Exceptions;
 using Cosmonaut.Internal;
+using Cosmonaut.Storage;
 using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -35,14 +36,15 @@ namespace Cosmonaut.Extensions
                 !string.IsNullOrEmpty(potentialJsonPropertyAttribute.PropertyName))
                 return CosmonautHelpers.GetPartitionKeyDefinition(potentialJsonPropertyAttribute.PropertyName);
 
-            //TODO Sort this out
-//            if (serializerSettings?.ContractResolver is DefaultContractResolver resolver)
-//            {
-//                var resolvedPropertyName = resolver.GetResolvedPropertyName(partitionKeyProperty.Name);
-//                return CosmonautHelpers.GetPartitionKeyDefinition(resolvedPropertyName);    
-//            }
+
+            if (!(serializerSettings is CosmosJsonNetSerializer serializer))
+                return CosmonautHelpers.GetPartitionKeyDefinition(partitionKeyProperty.Name);
+
+            if (!(serializer.SerializerSettings?.ContractResolver is DefaultContractResolver resolver))
+                return CosmonautHelpers.GetPartitionKeyDefinition(partitionKeyProperty.Name);
             
-            return CosmonautHelpers.GetPartitionKeyDefinition(partitionKeyProperty.Name);
+            var resolvedPropertyName = resolver.GetResolvedPropertyName(partitionKeyProperty.Name);
+            return CosmonautHelpers.GetPartitionKeyDefinition(resolvedPropertyName);
         }
 
         private static bool IsCosmosIdThePartitionKey(JsonPropertyAttribute potentialJsonPropertyAttribute, PropertyInfo partitionKeyProperty)
@@ -96,7 +98,7 @@ namespace Cosmonaut.Extensions
 
             if (idProperty != null && containsJsonAttributeIdCount == 1)
             {
-                CheckIfPropertyHasMultpleIdAttributes(idProperty);
+                CheckIfPropertyHasMultipleIdAttributes(idProperty);
             }
 
             if (idProperty != null && idProperty.GetValue(entity) == null)
@@ -105,7 +107,7 @@ namespace Cosmonaut.Extensions
             }
         }
 
-        private static void CheckIfPropertyHasMultpleIdAttributes(PropertyInfo idProperty)
+        private static void CheckIfPropertyHasMultipleIdAttributes(PropertyInfo idProperty)
         {
             if (!idProperty.GetCustomAttributes<JsonPropertyAttribute>().Any(x => !string.IsNullOrEmpty(x?.PropertyName) &&
                 x.PropertyName.Equals(CosmosConstants.CosmosId, StringComparison.OrdinalIgnoreCase)))

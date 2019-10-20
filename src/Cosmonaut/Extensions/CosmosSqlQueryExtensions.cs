@@ -15,16 +15,16 @@ namespace Cosmonaut.Extensions
 
         private static readonly IEnumerable<string> PostSelectCosmosSqlOperators = new[] {"where", "order", "join", "as", "select", "by"};
 
-        internal static string EnsureQueryIsCollectionSharingFriendly<TEntity>(this string sql) where TEntity : class
+        internal static string EnsureQueryIsContainerSharingFriendly<TEntity>(this string sql) where TEntity : class
         {
-            var isSharedQuery = typeof(TEntity).UsesSharedCollection();
+            var isSharedQuery = typeof(TEntity).UsesSharedContainer();
 
             if (!isSharedQuery)
                 return sql;
 
-            var identifier = GetCollectionIdentifier(sql);
+            var identifier = GetContainerIdentifier(sql);
 
-            var cosmosEntityNameValue = $"{typeof(TEntity).GetSharedCollectionEntityName()}";
+            var cosmosEntityNameValue = $"{typeof(TEntity).GetSharedContainerEntityName()}";
 
             var hasExistingWhereClause = sql.IndexOf(" where ", StringComparison.OrdinalIgnoreCase) >= 0;
 
@@ -42,7 +42,7 @@ namespace Cosmonaut.Extensions
                 return $"{splitSql[0]} {whereClause} order by {splitSql[1]}";
             }
             
-            return GetQueryWithExistingWhereClauseInjectedWithSharedCollection(sql, identifier, cosmosEntityNameValue);
+            return GetQueryWithExistingWhereClauseInjectedWithSharedContainer(sql, identifier, cosmosEntityNameValue);
         }
 
         internal static IDictionary<string, object> ConvertToSqlParameterDictionary(this object obj)
@@ -62,18 +62,18 @@ namespace Cosmonaut.Extensions
             return dictionary;
         }
 
-        private static string GetQueryWithExistingWhereClauseInjectedWithSharedCollection(string sql,
+        private static string GetQueryWithExistingWhereClauseInjectedWithSharedContainer(string sql,
             string identifier, string cosmosEntityNameValue)
         {
             var splitQuery = Regex.Split(sql, " where ", RegexOptions.IgnoreCase);
             var firstPartQuery = splitQuery[0];
             var secondPartQuery = splitQuery[1];
-            var sharedCollectionExpressionQuery =
+            var sharedContainerExpressionQuery =
                 $"{identifier}.{nameof(ISharedCosmosEntity.CosmosEntityName)} = '{cosmosEntityNameValue}'";
-            return $"{firstPartQuery} where {sharedCollectionExpressionQuery} and {secondPartQuery}";
+            return $"{firstPartQuery} where {sharedContainerExpressionQuery} and {secondPartQuery}";
         }
 
-        private static string GetCollectionIdentifier(string sql)
+        private static string GetContainerIdentifier(string sql)
         {
             var matchedWithAs = IdentifierWithAsMatchRegex.Match(sql);
 

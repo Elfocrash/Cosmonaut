@@ -2,7 +2,7 @@
 
 namespace Cosmonaut.Console
 {
-    [SharedCosmosCollection("shared", true)]
+    [SharedCosmosContainer("shared", true)]
     public class Car : ISharedCosmosEntity
     {
         public string Id { get; set; }

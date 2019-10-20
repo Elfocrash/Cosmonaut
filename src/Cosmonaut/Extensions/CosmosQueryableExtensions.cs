@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Reflection;
+using Cosmonaut.Internal;
 
 namespace Cosmonaut.Extensions
 {
@@ -10,7 +11,8 @@ namespace Cosmonaut.Extensions
             if (!queryable.GetType().Name.Equals("CosmosLinqQuery`1"))
                 return null;
             
-            return queryable.GetType().GetField("continuationToken",BindingFlags.Instance | BindingFlags.NonPublic).GetValue(queryable)?.ToString();
+            var queryableField = InternalTypeCache.Instance.GetFieldInfoFromCache(queryable.GetType(), "continuationToken", BindingFlags.Instance | BindingFlags.NonPublic);
+            return queryableField.GetValue(queryable)?.ToString();
         }
         
         public static void SetContinuationToken<T>(this IQueryable<T> queryable, string continuationToken)
@@ -18,8 +20,11 @@ namespace Cosmonaut.Extensions
             if (!queryable.GetType().Name.Equals("CosmosLinqQuery`1"))
                 return;
             
-            queryable.GetType().GetField("continuationToken",BindingFlags.Instance | BindingFlags.NonPublic).SetValue(queryable, continuationToken);
-            queryable.Provider.GetType().GetField("continuationToken",BindingFlags.Instance | BindingFlags.NonPublic).SetValue(queryable.Provider, continuationToken);
+            var queryableField = InternalTypeCache.Instance.GetFieldInfoFromCache(queryable.GetType(), "continuationToken", BindingFlags.Instance | BindingFlags.NonPublic);
+            queryableField.SetValue(queryable, continuationToken);
+            
+            var queryableProviderField = InternalTypeCache.Instance.GetFieldInfoFromCache(queryable.Provider.GetType(), "continuationToken", BindingFlags.Instance | BindingFlags.NonPublic);
+            queryableProviderField.SetValue(queryable.Provider, continuationToken);
         }
     }
 }

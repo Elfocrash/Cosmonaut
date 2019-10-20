@@ -12,7 +12,7 @@
     <RepositoryUrl>https://github.com/Elfocrash/Cosmonaut</RepositoryUrl>
     <PackageTags>azure entitystore entity db orm microsoft cosmos cosmosdb documentdb docdb nosql azureofficial dotnetcore netcore netstandard</PackageTags>
     <PackageReleaseNotes>Please report any issues on Github.</PackageReleaseNotes>
-    <Version>3.0</Version>
+    <Version>3.0.0</Version>
     <Company>Nick Chapsas</Company>
     <PackageIconUrl>https://raw.githubusercontent.com/Elfocrash/Cosmonaut/develop/logo.png</PackageIconUrl>
     <PackageVersion>3.0</PackageVersion>

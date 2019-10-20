@@ -3,6 +3,6 @@
     public enum ThroughputBehaviour
     {
         UseDatabaseThroughput,
-        DedicateCollectionThroughput
+        DedicateContainerThroughput
     }
 }

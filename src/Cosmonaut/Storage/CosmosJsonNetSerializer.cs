@@ -9,7 +9,8 @@ namespace Cosmonaut.Storage
     {
         private static readonly Encoding DefaultEncoding = new UTF8Encoding(false, true);
         private readonly JsonSerializer Serializer;
-        private readonly JsonSerializerSettings serializerSettings;
+        
+        public JsonSerializerSettings SerializerSettings { get; }
 
         public CosmosJsonNetSerializer()
             : this(new JsonSerializerSettings())
@@ -20,8 +21,8 @@ namespace Cosmonaut.Storage
             JsonSerializerSettings serializerSettings
         )
         {
-            this.serializerSettings = serializerSettings;
-            this.Serializer = JsonSerializer.Create(this.serializerSettings);
+            SerializerSettings = serializerSettings;
+            Serializer = JsonSerializer.Create(SerializerSettings);
         }
 
         public override T FromStream<T>(Stream stream)

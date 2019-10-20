@@ -30,18 +30,6 @@ namespace Cosmonaut.Extensions
             return queryable.Skip(skip).Take(pageSize);
         }
 
-        private static IQueryable<T> GetQueryableWithPaginationSettings<T>(IQueryable<T> queryable, string continuationInfo, int pageSize)
-        { 
-            if (!queryable.GetType().Name.Equals(CosmosLinqQueryTypeName))
-                return queryable;
-
-            var queryRequestOptions = queryable.GetQueryRequestOptionsForQueryable() ?? new QueryRequestOptions();
-            queryRequestOptions.MaxItemCount = pageSize; //TODO see if i still need that
-            queryable.SetContinuationToken($"^~{pageSize}~{continuationInfo}");
-            queryable.SetQueryRequestOptionsForQueryable(queryRequestOptions);
-            return queryable;
-        }
-
         internal static QueryRequestOptions GetQueryRequestOptionsForQueryable<T>(this IQueryable<T> queryable)
         {
             if (!queryable.GetType().Name.Equals(CosmosLinqQueryTypeName))

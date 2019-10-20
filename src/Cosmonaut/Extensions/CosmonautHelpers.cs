@@ -18,8 +18,8 @@ namespace Cosmonaut.Extensions
 
             RemoveDuplicateIds(ref actualDocument);
                 
-            if (typeof(TEntity).UsesSharedCollection())
-                actualDocument.SetPropertyValue(nameof(ISharedCosmosEntity.CosmosEntityName), $"{typeof(TEntity).GetSharedCollectionEntityName()}");
+            if (typeof(TEntity).UsesSharedContainer())
+                actualDocument.SetPropertyValue(nameof(ISharedCosmosEntity.CosmosEntityName), $"{typeof(TEntity).GetSharedContainerEntityName()}");
 
             return actualDocument;
         }
@@ -27,8 +27,8 @@ namespace Cosmonaut.Extensions
         public static Stream ToCosmonautStream<TEntity>(this TEntity obj, CosmosSerializer serializer)
             where TEntity : class
         {
-            var pew = ToCosmonautDocument(obj, serializer);//.ToString().Replace("\r\n", "").Replace("\\", "");
-            return SimpleStringSerializer.ToStream(pew.ToString().Replace("\r\n", ""));
+            var pew = ToCosmonautDocument(obj, serializer);
+            return SimpleStringSerializer.ToStream(pew.ToString().Replace("\r\n", string.Empty));
         }
 
         internal static string GetPartitionKeyDefinition(string partitionKeyName)

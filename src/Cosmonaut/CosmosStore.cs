@@ -32,17 +32,17 @@ namespace Cosmonaut
         {
         }
 
-        public CosmosStore(CosmosStoreSettings settings, string overriddenCollectionName)
+        public CosmosStore(CosmosStoreSettings settings, string overriddenContainerName)
         {
             Settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            var documentClient = CosmosClientFactory.CreateDocumentClient(settings);
+            var documentClient = CosmosClientFactory.CreateCosmosClient(settings);
             CosmonautClient = new CosmonautClient(documentClient, Settings.InfiniteRetries);
             Database = CosmonautClient.CosmosClient.GetDatabase(settings.DatabaseId);
             
             if (string.IsNullOrEmpty(Settings.DatabaseId)) throw new ArgumentNullException(nameof(Settings.DatabaseId));
             _containerCreator = new CosmosContainerCreator(CosmonautClient);
             _databaseCreator = new CosmosDatabaseCreator(CosmonautClient);
-            InitialiseCosmosStore(overriddenCollectionName);
+            InitialiseCosmosStore(overriddenContainerName);
         }
 
         public CosmosStore(ICosmonautClient cosmonautClient,
@@ -54,9 +54,9 @@ namespace Cosmonaut
 
         public CosmosStore(ICosmonautClient cosmonautClient,
             string databaseId,
-            string overriddenCollectionName) : this(cosmonautClient,
+            string overriddenContainerName) : this(cosmonautClient,
             databaseId,
-            overriddenCollectionName,
+            overriddenContainerName,
             new CosmosDatabaseCreator(cosmonautClient),
             new CosmosContainerCreator(cosmonautClient))
         {
@@ -64,7 +64,7 @@ namespace Cosmonaut
 
         internal CosmosStore(ICosmonautClient cosmonautClient,
             string databaseId,
-            string overriddenCollectionName,
+            string overriddenContainerName,
             IDatabaseCreator databaseCreator = null,
             IContainerCreator containerCreator = null)
         {
@@ -77,21 +77,21 @@ namespace Cosmonaut
             if (string.IsNullOrEmpty(Settings.DatabaseId)) throw new ArgumentNullException(nameof(Settings.DatabaseId));
             _containerCreator = containerCreator ?? new CosmosContainerCreator(CosmonautClient);
             _databaseCreator = databaseCreator ?? new CosmosDatabaseCreator(CosmonautClient);
-            InitialiseCosmosStore(overriddenCollectionName);
+            InitialiseCosmosStore(overriddenContainerName);
         }
 
         public IQueryable<TEntity> Query(QueryRequestOptions requestOptions = null, string continuationToken = null, 
             bool allowSynchronousQueryExecution = false)
         {
             var queryable = Container.GetItemLinqQueryable<TEntity>(allowSynchronousQueryExecution, continuationToken, requestOptions);
-            return IsShared ? queryable.Where(ExpressionExtensions.SharedCollectionExpression<TEntity>()) : queryable;
+            return IsShared ? queryable.Where(ExpressionExtensions.SharedContainerExpression<TEntity>()) : queryable;
         }
 
         public FeedIterator<TEntity> Query(string sql, object parameters = null, QueryRequestOptions queryRequestOptions = null, string continuationToken = null,
             CancellationToken cancellationToken = default)
         {
-            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-            var queryDefinition = new QueryDefinition(collectionSharingFriendlySql);
+            var containerSharingFriendlySql = sql.EnsureQueryIsContainerSharingFriendly<TEntity>();
+            var queryDefinition = new QueryDefinition(containerSharingFriendlySql);
             var dictionary = parameters.ConvertToSqlParameterDictionary();
             queryDefinition = dictionary.Aggregate(queryDefinition, (current, parameter) => current.WithParameter($"@{parameter.Key}", parameter.Value));
             return Container.GetItemQueryIterator<TEntity>(queryDefinition, continuationToken, queryRequestOptions);
@@ -99,8 +99,8 @@ namespace Cosmonaut
 
         public async Task<TEntity> QuerySingleAsync(string sql, object parameters = null, QueryRequestOptions queryRequestOptions = null, string continuationToken = null, CancellationToken cancellationToken = default)
         {
-            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-            var queryDefinition = new QueryDefinition(collectionSharingFriendlySql);
+            var containerSharingFriendlySql = sql.EnsureQueryIsContainerSharingFriendly<TEntity>();
+            var queryDefinition = new QueryDefinition(containerSharingFriendlySql);
             var dictionary = parameters.ConvertToSqlParameterDictionary();
             queryDefinition = dictionary.Aggregate(queryDefinition, (current, parameter) => current.WithParameter($"@{parameter.Key}", parameter.Value));
             PrepareQueryRequestOptionsForSingleOperation(queryRequestOptions);
@@ -110,8 +110,8 @@ namespace Cosmonaut
 
         public async Task<T> QuerySingleAsync<T>(string sql, object parameters = null, QueryRequestOptions queryRequestOptions = null, string continuationToken = null, CancellationToken cancellationToken = default)
         {
-            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-            var queryDefinition = new QueryDefinition(collectionSharingFriendlySql);
+            var containerSharingFriendlySql = sql.EnsureQueryIsContainerSharingFriendly<TEntity>();
+            var queryDefinition = new QueryDefinition(containerSharingFriendlySql);
             var dictionary = parameters.ConvertToSqlParameterDictionary();
             queryDefinition = dictionary.Aggregate(queryDefinition, (current, parameter) => current.WithParameter($"@{parameter.Key}", parameter.Value));
             PrepareQueryRequestOptionsForSingleOperation(queryRequestOptions);
@@ -121,8 +121,8 @@ namespace Cosmonaut
         
         public async Task<IEnumerable<TEntity>> QueryMultipleAsync(string sql, object parameters = null, QueryRequestOptions queryRequestOptions = null, string continuationToken = null, CancellationToken cancellationToken = default)
         {
-            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-            var queryDefinition = new QueryDefinition(collectionSharingFriendlySql);
+            var containerSharingFriendlySql = sql.EnsureQueryIsContainerSharingFriendly<TEntity>();
+            var queryDefinition = new QueryDefinition(containerSharingFriendlySql);
             var dictionary = parameters.ConvertToSqlParameterDictionary();
             queryDefinition = dictionary.Aggregate(queryDefinition, (current, parameter) => current.WithParameter($"@{parameter.Key}", parameter.Value));
             var iterator = Container.GetItemQueryIterator<TEntity>(queryDefinition, continuationToken, queryRequestOptions);
@@ -131,8 +131,8 @@ namespace Cosmonaut
 
         public async Task<IEnumerable<T>> QueryMultipleAsync<T>(string sql, object parameters = null, QueryRequestOptions queryRequestOptions = null, string continuationToken = null, CancellationToken cancellationToken = default)
         {
-            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-            var queryDefinition = new QueryDefinition(collectionSharingFriendlySql);
+            var containerSharingFriendlySql = sql.EnsureQueryIsContainerSharingFriendly<TEntity>();
+            var queryDefinition = new QueryDefinition(containerSharingFriendlySql);
             var dictionary = parameters.ConvertToSqlParameterDictionary();
             queryDefinition = dictionary.Aggregate(queryDefinition, (current, parameter) => current.WithParameter($"@{parameter.Key}", parameter.Value));
             var iterator = Container.GetItemQueryIterator<T>(queryDefinition, continuationToken, queryRequestOptions);
@@ -142,16 +142,16 @@ namespace Cosmonaut
         public FeedIterator<TEntity> Query(string sql, IDictionary<string, object> parameters, QueryRequestOptions queryRequestOptions = null, string continuationToken = null,
             CancellationToken cancellationToken = default)
         {
-            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-            var queryDefinition = new QueryDefinition(collectionSharingFriendlySql);
+            var containerSharingFriendlySql = sql.EnsureQueryIsContainerSharingFriendly<TEntity>();
+            var queryDefinition = new QueryDefinition(containerSharingFriendlySql);
             queryDefinition = parameters.Aggregate(queryDefinition, (current, parameter) => current.WithParameter($"@{parameter.Key}", parameter.Value));
             return Container.GetItemQueryIterator<TEntity>(queryDefinition, continuationToken, queryRequestOptions);
         }
 
         public async Task<TEntity> QuerySingleAsync(string sql, IDictionary<string, object> parameters, QueryRequestOptions queryRequestOptions = null, string continuationToken = null, CancellationToken cancellationToken = default)
         {
-            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-            var queryDefinition = new QueryDefinition(collectionSharingFriendlySql);
+            var containerSharingFriendlySql = sql.EnsureQueryIsContainerSharingFriendly<TEntity>();
+            var queryDefinition = new QueryDefinition(containerSharingFriendlySql);
             queryDefinition = parameters.Aggregate(queryDefinition, (current, parameter) => current.WithParameter($"@{parameter.Key}", parameter.Value));
             var iterator = Container.GetItemQueryIterator<TEntity>(queryDefinition, continuationToken, queryRequestOptions);
             return await iterator.SingleOrDefaultAsync(cancellationToken);
@@ -159,16 +159,16 @@ namespace Cosmonaut
 
         public async Task<T> QuerySingleAsync<T>(string sql, IDictionary<string, object> parameters, QueryRequestOptions queryRequestOptions = null, string continuationToken = null, CancellationToken cancellationToken = default)
         {
-            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-            var queryDefinition = new QueryDefinition(collectionSharingFriendlySql);
+            var containerSharingFriendlySql = sql.EnsureQueryIsContainerSharingFriendly<TEntity>();
+            var queryDefinition = new QueryDefinition(containerSharingFriendlySql);
             var iterator = Container.GetItemQueryIterator<T>(queryDefinition, continuationToken, queryRequestOptions);
             return await iterator.SingleOrDefaultAsync(cancellationToken);
         }
 
         public async Task<IEnumerable<TEntity>> QueryMultipleAsync(string sql, IDictionary<string, object> parameters, QueryRequestOptions queryRequestOptions = null, string continuationToken = null, CancellationToken cancellationToken = default)
         {
-            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-            var queryDefinition = new QueryDefinition(collectionSharingFriendlySql);
+            var containerSharingFriendlySql = sql.EnsureQueryIsContainerSharingFriendly<TEntity>();
+            var queryDefinition = new QueryDefinition(containerSharingFriendlySql);
             queryDefinition = parameters.Aggregate(queryDefinition, (current, parameter) => current.WithParameter($"@{parameter.Key}", parameter.Value));
             var iterator = Container.GetItemQueryIterator<TEntity>(queryDefinition, continuationToken, queryRequestOptions);
             return await iterator.ToListAsync(cancellationToken);
@@ -176,8 +176,8 @@ namespace Cosmonaut
 
         public async Task<IEnumerable<T>> QueryMultipleAsync<T>(string sql, IDictionary<string, object> parameters, QueryRequestOptions queryRequestOptions = null, string continuationToken = null, CancellationToken cancellationToken = default)
         {
-            var collectionSharingFriendlySql = sql.EnsureQueryIsCollectionSharingFriendly<TEntity>();
-            var queryDefinition = new QueryDefinition(collectionSharingFriendlySql);
+            var containerSharingFriendlySql = sql.EnsureQueryIsContainerSharingFriendly<TEntity>();
+            var queryDefinition = new QueryDefinition(containerSharingFriendlySql);
             queryDefinition = parameters.Aggregate(queryDefinition, (current, parameter) => current.WithParameter($"@{parameter.Key}", parameter.Value));
             var iterator = Container.GetItemQueryIterator<T>(queryDefinition, continuationToken, queryRequestOptions);
             return await iterator.ToListAsync(cancellationToken);
@@ -257,16 +257,16 @@ namespace Cosmonaut
         {
             var databaseCreated =
                 await _databaseCreator.EnsureCreatedAsync(Database.Id, Settings.DefaultDatabaseThroughput);
-            var collectionCreated = await _containerCreator.EnsureCreatedAsync<TEntity>(Database.Id, Container.Id,
+            var containerCreated = await _containerCreator.EnsureCreatedAsync<TEntity>(Database.Id, Container.Id,
                 Settings.DefaultContainerThroughput, Settings.CosmosSerializer, Settings.IndexingPolicy, Settings.OnDatabaseThroughput, Settings.UniqueKeyPolicy);
 
-            return databaseCreated && collectionCreated;
+            return databaseCreated && containerCreated;
         }
         
-        private void InitialiseCosmosStore(string overridenCollectionName)
+        private void InitialiseCosmosStore(string overridenContainerName)
         {
-            IsShared = typeof(TEntity).UsesSharedCollection();
-            Container = CosmonautClient.CosmosClient.GetContainer(Database.Id, GetCosmosStoreContainerName(overridenCollectionName));
+            IsShared = typeof(TEntity).UsesSharedContainer();
+            Container = CosmonautClient.CosmosClient.GetContainer(Database.Id, GetCosmosStoreContainerName(overridenContainerName));
 
             if (Settings.ProvisionInfrastructureIfMissing)
             {
@@ -280,8 +280,8 @@ namespace Cosmonaut
         {
             var hasOverridenName = !string.IsNullOrEmpty(overridenContainerName);
             return IsShared
-                ? $"{Settings.CollectionPrefix ?? string.Empty}{(hasOverridenName ? overridenContainerName : typeof(TEntity).GetSharedCollectionName())}"
-                : $"{Settings.CollectionPrefix ?? string.Empty}{(hasOverridenName ? overridenContainerName : typeof(TEntity).GetCollectionName())}";
+                ? $"{Settings.ContainerPrefix ?? string.Empty}{(hasOverridenName ? overridenContainerName : typeof(TEntity).GetSharedContainerName())}"
+                : $"{Settings.ContainerPrefix ?? string.Empty}{(hasOverridenName ? overridenContainerName : typeof(TEntity).GetContainerName())}";
         }
 
         private async Task<CosmosMultipleResponse<TEntity>> ExecuteMultiOperationAsync(IEnumerable<TEntity> entities,

@@ -47,9 +47,9 @@ namespace Cosmonaut.Storage
                 PartitionKeyPath = partitionKeyDef
             };
 
-            var finalCollectionThroughput = databaseHasOffer ? onDatabaseBehaviour == ThroughputBehaviour.DedicateCollectionThroughput ? (int?)containerThroughput : null : containerThroughput;
+            var finalContainerThroughput = databaseHasOffer ? onDatabaseBehaviour == ThroughputBehaviour.DedicateContainerThroughput ? (int?)containerThroughput : null : containerThroughput;
 
-            var response = await _cosmonautClient.CosmosClient.GetDatabase(databaseId).CreateContainerAsync(containerProperties, finalCollectionThroughput);
+            var response = await _cosmonautClient.CosmosClient.GetDatabase(databaseId).CreateContainerAsync(containerProperties, finalContainerThroughput);
 
             return response != null; // TODO check for status code
         }

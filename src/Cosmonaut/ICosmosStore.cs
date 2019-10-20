@@ -13,7 +13,7 @@ namespace Cosmonaut
     public interface ICosmosStore<TEntity> where TEntity : class
     {
         /// <summary>
-        ///     Entry point to the usage of LINQ in order to query the collection. It is highly recommended to get the results with the .ToListAsync method
+        ///     Entry point to the usage of LINQ in order to query the container. It is highly recommended to get the results with the .ToListAsync method
         ///     because it is using the internal paginated retrieval to prevent locking.
         /// </summary>
         IQueryable<TEntity> Query(QueryRequestOptions requestOptions = null, string continuationToken = null, 
@@ -46,7 +46,7 @@ namespace Cosmonaut
         /// <param name="feedOptions">The feed options for this operation.</param>
         /// <param name="cancellationToken">The CancellationToken for this operation.</param>
         Task<T> QuerySingleAsync<T>(string sql, object parameters = null, QueryRequestOptions queryRequestOptions = null, string continuationToken = null, CancellationToken cancellationToken = default);
-//
+
         /// <summary>
         ///     Returns a collection of items that match the expression provided.
         /// </summary>
@@ -323,8 +323,7 @@ namespace Cosmonaut
         Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id, PartitionKey partitionKey, ItemRequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
         /// <summary>
-        ///     Returns an entity by document/entity id from the cosmos db store. If the collection is partitioned you will need to provide the
-        ///     partition key value in the <see cref="RequestOptions"/>.
+        ///     Returns an entity by document/entity id from the cosmos db store.
         /// </summary>
         /// <param name="id">The id of the document/entity.</param>
         /// <param name="requestOptions">The request options for this operation.</param>
@@ -333,9 +332,9 @@ namespace Cosmonaut
         Task<TEntity> FindAsync(string id, PartitionKey partitionKey, ItemRequestOptions requestOptions = null, CancellationToken cancellationToken = default);
 
         /// <summary>
-        ///     Ensures that the database and collection needed for this CosmosStore is provisioned. If any of the two resources are missing, they will be created automatically.
+        ///     Ensures that the database and container needed for this CosmosStore is provisioned. If any of the two resources are missing, they will be created automatically.
         /// </summary>
-        /// <returns>True if both the database and the collection exists</returns>
+        /// <returns>True if both the database and the container exists</returns>
         Task<bool> EnsureInfrastructureProvisionedAsync();
 
         /// <summary>

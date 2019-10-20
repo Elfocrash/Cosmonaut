@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace Cosmonaut.Console
 {
-    [SharedCosmosCollection("shared", "books")]
+    [SharedCosmosContainer("shared", "books")]
     public class Book : ISharedCosmosEntity
     {
         [CosmosPartitionKey]

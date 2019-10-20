@@ -32,7 +32,7 @@ namespace Cosmonaut
 
         public bool InfiniteRetries { get; set; } = true;
 
-        public string CollectionPrefix { get; set; } = string.Empty;
+        public string ContainerPrefix { get; set; } = string.Empty;
 
         public bool ProvisionInfrastructureIfMissing { get; set; } = true;
 
