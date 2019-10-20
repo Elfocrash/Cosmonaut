@@ -185,7 +185,6 @@ namespace Cosmonaut
 
         public async Task<CosmosResponse<TEntity>> AddAsync(TEntity entity, ItemRequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
-            entity.ValidateEntityForCosmosDb();
             var stream = entity.ToCosmonautStream(Settings.CosmosSerializer);
             var response = await Container.CreateItemStreamAsync(stream, entity.GetPartitionKeyValueForEntity(), requestOptions, cancellationToken);
             return new CosmosResponse<TEntity>(Settings.CosmosSerializer, response);
@@ -205,10 +204,22 @@ namespace Cosmonaut
             var entitiesToRemove = await Query(queryRequestOptions).Where(predicate).ToListAsync(cancellationToken);
             return await RemoveRangeAsync(entitiesToRemove, requestOptions, cancellationToken);
         }
+        
+        public async Task<CosmosResponse<TEntity>> UpdateAsync(TEntity entity, ItemRequestOptions requestOptions = null, CancellationToken cancellationToken = default)
+        {
+            var documentId = entity.GetDocumentId();
+            var stream = entity.ToCosmonautStream(Settings.CosmosSerializer);
+            var response = await Container.ReplaceItemStreamAsync(stream, documentId, entity.GetPartitionKeyValueForEntity(), requestOptions, cancellationToken);//.ExecuteCosmosCommand(entity);
+            return new CosmosResponse<TEntity>(Settings.CosmosSerializer, response);
+        }
+        
+        public async Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(IEnumerable<TEntity> entities, Func<TEntity, ItemRequestOptions> requestOptions = null, CancellationToken cancellationToken = default)
+        {
+            return await ExecuteMultiOperationAsync(entities, x => UpdateAsync(x, requestOptions?.Invoke(x), cancellationToken));
+        }
 
         public async Task<CosmosResponse<TEntity>> RemoveAsync(TEntity entity, ItemRequestOptions requestOptions = null, CancellationToken cancellationToken = default)
         {
-            entity.ValidateEntityForCosmosDb();
             var documentId = entity.GetDocumentId();
             var response = await Container.DeleteItemStreamAsync(documentId, entity.GetPartitionKeyValueForEntity(), requestOptions, cancellationToken);//.ExecuteCosmosCommand(entity);
             return new CosmosResponse<TEntity>(Settings.CosmosSerializer, response);
@@ -218,64 +229,30 @@ namespace Cosmonaut
         {
             return await ExecuteMultiOperationAsync(entities, x => RemoveAsync(x, requestOptions?.Invoke(x), cancellationToken));
         }
-//
-//        public async Task<CosmosResponse<TEntity>> UpdateAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
-//        {
-//            entity.ValidateEntityForCosmosDb();
-//            requestOptions = GetRequestOptions(requestOptions, entity);
-//            var document = entity.ToCosmonautDocument(requestOptions?.JsonSerializerSettings ?? Settings.JsonSerializerSettings);
-//            return await CosmonautClient.UpdateDocumentAsync(DatabaseName, CollectionName, document,
-//                requestOptions, cancellationToken).ExecuteCosmosCommand(entity);
-//        }
-//        
-//        public async Task<CosmosMultipleResponse<TEntity>> UpdateRangeAsync(IEnumerable<TEntity> entities, Func<TEntity, RequestOptions> requestOptions = null, CancellationToken cancellationToken = default)
-//        {
-//            return await ExecuteMultiOperationAsync(entities, x => UpdateAsync(x, requestOptions?.Invoke(x), cancellationToken));
-//        }
-//
-//        public async Task<CosmosResponse<TEntity>> UpsertAsync(TEntity entity, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
-//        {
-//            requestOptions = GetRequestOptions(requestOptions, entity);
-//            var document = entity.ToCosmonautDocument(requestOptions?.JsonSerializerSettings ?? Settings.JsonSerializerSettings);
-//            return await CosmonautClient.UpsertDocumentAsync(DatabaseName, CollectionName, document,
-//                requestOptions, cancellationToken).ExecuteCosmosCommand(entity);
-//        }
-//
-//        public async Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(IEnumerable<TEntity> entities, Func<TEntity, RequestOptions> requestOptions = null, CancellationToken cancellationToken = default)
-//        {
-//            return await ExecuteMultiOperationAsync(entities, x => UpsertAsync(x, requestOptions?.Invoke(x), cancellationToken));
-//        }
-//        
-//        public async Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
-//        {
-//            var response = await CosmonautClient.DeleteDocumentAsync(DatabaseName, CollectionName, id,
-//                GetRequestOptions(id, requestOptions), cancellationToken);
-//            return new CosmosResponse<TEntity>(response);
-//        }
-//
-//        public async Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id, object partitionKeyValue, CancellationToken cancellationToken = default)
-//        {
-//            var requestOptions = partitionKeyValue != null
-//                ? new RequestOptions { PartitionKey = new PartitionKey(partitionKeyValue) }
-//                : null;
-//
-//            return await RemoveByIdAsync(id, requestOptions, cancellationToken);
-//        }
-//
-//        public async Task<TEntity> FindAsync(string id, RequestOptions requestOptions = null, CancellationToken cancellationToken = default)
-//        {
-//            return await CosmonautClient.GetDocumentAsync<TEntity>(DatabaseName, CollectionName, id,
-//                GetRequestOptions(id, requestOptions), cancellationToken);
-//        }
-//
-//        public async Task<TEntity> FindAsync(string id, object partitionKeyValue, CancellationToken cancellationToken = default)
-//        {
-//            var requestOptions = partitionKeyValue != null
-//                ? new RequestOptions { PartitionKey = new PartitionKey(partitionKeyValue) }
-//                : null;
-//            return await FindAsync(id, requestOptions, cancellationToken);
-//        }
-//
+
+        public async Task<CosmosResponse<TEntity>> UpsertAsync(TEntity entity, ItemRequestOptions requestOptions = null, CancellationToken cancellationToken = default)
+        {
+            var stream = entity.ToCosmonautStream(Settings.CosmosSerializer);
+            var response = await Container.UpsertItemStreamAsync(stream, entity.GetPartitionKeyValueForEntity(), requestOptions, cancellationToken);//.ExecuteCosmosCommand(entity);
+            return new CosmosResponse<TEntity>(Settings.CosmosSerializer, response);
+        }
+
+        public async Task<CosmosMultipleResponse<TEntity>> UpsertRangeAsync(IEnumerable<TEntity> entities, Func<TEntity, ItemRequestOptions> requestOptions = null, CancellationToken cancellationToken = default)
+        {
+            return await ExecuteMultiOperationAsync(entities, x => UpsertAsync(x, requestOptions?.Invoke(x), cancellationToken));
+        }
+        
+        public async Task<CosmosResponse<TEntity>> RemoveByIdAsync(string id, PartitionKey partitionKey, ItemRequestOptions requestOptions = null, CancellationToken cancellationToken = default)
+        {
+            var response = await Container.DeleteItemStreamAsync(id, partitionKey, requestOptions, cancellationToken);
+            return new CosmosResponse<TEntity>(Settings.CosmosSerializer, response);
+        }
+
+        public async Task<TEntity> FindAsync(string id, PartitionKey partitionKey, ItemRequestOptions requestOptions = null, CancellationToken cancellationToken = default)
+        {
+            return await Container.ReadItemAsync<TEntity>(id, partitionKey, requestOptions, cancellationToken);
+        }
+
         public async Task<bool> EnsureInfrastructureProvisionedAsync()
         {
             var databaseCreated =
@@ -320,24 +297,6 @@ namespace Cosmonaut
             multipleResponse.SuccessfulEntities.AddRange(results.Where(x => x.IsSuccess));
             multipleResponse.FailedEntities.AddRange(results.Where(x => !x.IsSuccess));
             return multipleResponse;
-        }
-
-        private QueryRequestOptions GetQueryRequestOptions(string id, QueryRequestOptions requestOptions)
-        {
-            var partitionKeyDefinition = typeof(TEntity).GetPartitionKeyDefinitionForEntity(Settings.CosmosSerializer);
-            var partitionKeyIsId = partitionKeyDefinition?.Equals($"/{CosmosConstants.CosmosId}") ?? false;
-            if (requestOptions == null && partitionKeyIsId)
-            {
-                return new QueryRequestOptions
-                {
-                    PartitionKey = new PartitionKey(id)
-                };
-            }
-
-            if (requestOptions != null && partitionKeyIsId)
-                requestOptions.PartitionKey = new PartitionKey(id);
-
-            return requestOptions;
         }
         
         private static void PrepareQueryRequestOptionsForSingleOperation(QueryRequestOptions queryRequestOptions)

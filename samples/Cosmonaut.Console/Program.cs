@@ -74,6 +74,7 @@ namespace Cosmonaut.Console
                 {
                     Id = Guid.NewGuid().ToString(),
                     Name = "Car " + i,
+                    OtherName = $"Boom {i} what?"
                 });
             }
 
@@ -94,12 +95,11 @@ namespace Cosmonaut.Console
             var allTheCars = await carStore.QueryMultipleAsync<Car>("select * from c");
 
             var carPageOne = await carStore.Query("select * from c order by c.Name asc offset 0 limit 5").ToListAsync();
-//            var carPageTwo = await carStore.Query("select * from c order by c.Name asc").WithPagination(carPageOne.NextPageToken, 5).ToPagedListAsync();
-//            var carPageThree = await carPageTwo.GetNextPageAsync();
-//            var carPageFour = await carPageThree.GetNextPageAsync();
-//
+            var carPageTwo = await carStore.Query().OrderBy(x=>x.Name).Skip(5).Take(5).ToListAsync();
+            
             var addedRetrieved = await booksStore.Query().OrderBy(x=> x.Name).ToListAsync();
-
+            var addedCarsRetrieved = await carStore.Query("select * from c order by c.Name asc").ToListAsync();
+            
             var newPage = await booksStore.Query().Skip(5).Take(5).ToListAsync();
             
             var firstPage = await booksStore.Query().WithPagination(1, 10).ToListAsync();
@@ -107,25 +107,30 @@ namespace Cosmonaut.Console
             var secondPage = await booksStore.Query(continuationToken: firstPagedPage.ContinuationToken).ToListWithContinuationAsync(5);
             
             var fourthPage = await booksStore.Query().WithPagination(3, 10).ToListAsync();
-//
+
             var sqlPaged = await booksStore.Query("select * from c where c.CosmosEntityName = @type order by c.Name offset 10 limit 10", new Dictionary<string, object>{{ "type", "books" } })
                 .ToListAsync();
-//
-//            System.Console.WriteLine($"Retrieved {addedRetrieved.Count} documents in {watch.ElapsedMilliseconds}ms");
-//            watch.Restart();
-//            foreach (var addedre in addedRetrieved)
-//            {
-//                addedre.AnotherRandomProp += " Nick";
-//            }
-//
-//            var updated = await booksStore.UpsertRangeAsync(addedRetrieved, x => new RequestOptions { AccessCondition = new AccessCondition
-//            {
-//                Type = AccessConditionType.IfMatch,
-//                Condition = x.Etag
-//            }});
-//            System.Console.WriteLine($"Updated {updated.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
-//            watch.Restart();
-//
+
+            System.Console.WriteLine($"Retrieved {addedRetrieved.Count} documents in {watch.ElapsedMilliseconds}ms");
+            watch.Restart();
+            foreach (var addedre in addedRetrieved)
+            {
+                addedre.AnotherRandomProp += " Nick";
+            }
+            
+            foreach (var addedre in addedCarsRetrieved)
+            {
+                addedre.OtherName += " AddStuff";
+            }
+
+            var upserted = await booksStore.UpsertRangeAsync(addedRetrieved, x => new ItemRequestOptions { IfMatchEtag = x.Etag });
+            System.Console.WriteLine($"Upserted {upserted.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
+            watch.Restart();
+            
+            var updated = await carStore.UpdateRangeAsync(addedCarsRetrieved);
+            System.Console.WriteLine($"Updated {updated.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
+            watch.Restart();
+
             var removed = await booksStore.RemoveRangeAsync(addedRetrieved);
             System.Console.WriteLine($"Removed {removed.SuccessfulEntities.Count} documents in {watch.ElapsedMilliseconds}ms");
             watch.Reset();
