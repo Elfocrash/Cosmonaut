@@ -28,24 +28,24 @@ namespace Cosmonaut
         /// <param name="feedOptions">The feed options for this operation.</param>
         /// <param name="cancellationToken">The CancellationToken for this operation.</param>
         FeedIterator<TEntity> Query(string sql, object parameters = null, QueryRequestOptions queryRequestOptions = null, string continuationToken = null, CancellationToken cancellationToken = default);
-//
-//        /// <summary>
-//        ///     Returns a single item that matches the expression provided.
-//        /// </summary>
-//        /// <param name="sql">The sql query for this operation.</param>
-//        /// <param name="parameters">The sql parameters to replace if any</param>
-//        /// <param name="feedOptions">The feed options for this operation.</param>
-//        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
-//        Task<TEntity> QuerySingleAsync(string sql, object parameters = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
-//
-//        /// <summary>
-//        ///     Returns a single item of any type that matches the expression provided.
-//        /// </summary>
-//        /// <param name="sql">The sql query for this operation.</param>
-//        /// <param name="parameters">The sql parameters to replace if any</param>
-//        /// <param name="feedOptions">The feed options for this operation.</param>
-//        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
-//        Task<T> QuerySingleAsync<T>(string sql, object parameters = null, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        ///     Returns a single item that matches the expression provided.
+        /// </summary>
+        /// <param name="sql">The sql query for this operation.</param>
+        /// <param name="parameters">The sql parameters to replace if any</param>
+        /// <param name="feedOptions">The feed options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
+        Task<TEntity> QuerySingleAsync(string sql, object parameters = null, QueryRequestOptions queryRequestOptions = null, string continuationToken = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        ///     Returns a single item of any type that matches the expression provided.
+        /// </summary>
+        /// <param name="sql">The sql query for this operation.</param>
+        /// <param name="parameters">The sql parameters to replace if any</param>
+        /// <param name="feedOptions">The feed options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
+        Task<T> QuerySingleAsync<T>(string sql, object parameters = null, QueryRequestOptions queryRequestOptions = null, string continuationToken = null, CancellationToken cancellationToken = default);
 //
         /// <summary>
         ///     Returns a collection of items that match the expression provided.
@@ -74,24 +74,24 @@ namespace Cosmonaut
         /// <param name="feedOptions">The feed options for this operation.</param>
         /// <param name="cancellationToken">The CancellationToken for this operation.</param>
         FeedIterator<TEntity> Query(string sql, IDictionary<string, object> parameters, QueryRequestOptions queryRequestOptions = null, string continuationToken = null, CancellationToken cancellationToken = default);
-//
-//        /// <summary>
-//        ///     Returns a single item that matches the expression provided.
-//        /// </summary>
-//        /// <param name="sql">The sql query for this operation.</param>
-//        /// <param name="parameters">The sql parameters to replace as a dictionary</param>
-//        /// <param name="feedOptions">The feed options for this operation.</param>
-//        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
-//        Task<TEntity> QuerySingleAsync(string sql, IDictionary<string, object> parameters, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
-//
-//        /// <summary>
-//        ///     Returns a single item of any type that matches the expression provided.
-//        /// </summary>
-//        /// <param name="sql">The sql query for this operation.</param>
-//        /// <param name="parameters">The sql parameters to replace as a dictionary</param>
-//        /// <param name="feedOptions">The feed options for this operation.</param>
-//        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
-//        Task<T> QuerySingleAsync<T>(string sql, IDictionary<string, object> parameters, FeedOptions feedOptions = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        ///     Returns a single item that matches the expression provided.
+        /// </summary>
+        /// <param name="sql">The sql query for this operation.</param>
+        /// <param name="parameters">The sql parameters to replace as a dictionary</param>
+        /// <param name="feedOptions">The feed options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
+        Task<TEntity> QuerySingleAsync(string sql, IDictionary<string, object> parameters, QueryRequestOptions queryRequestOptions = null, string continuationToken = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        ///     Returns a single item of any type that matches the expression provided.
+        /// </summary>
+        /// <param name="sql">The sql query for this operation.</param>
+        /// <param name="parameters">The sql parameters to replace as a dictionary</param>
+        /// <param name="feedOptions">The feed options for this operation.</param>
+        /// <param name="cancellationToken">The CancellationToken for this operation.</param>
+        Task<T> QuerySingleAsync<T>(string sql, IDictionary<string, object> parameters, QueryRequestOptions queryRequestOptions = null, string continuationToken = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         ///     Returns a collection of items that match the expression provided.

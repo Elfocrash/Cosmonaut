@@ -65,62 +65,92 @@ namespace Cosmonaut.Extensions
             return (await GetSingleOrFirstFromQueryable(queryable, cancellationToken)).FirstOrDefault();
         }
 
-//        public static async Task<TEntity> FirstOrDefaultAsync<TEntity>(
-//            this IQueryable<TEntity> queryable,
-//            Expression<Func<TEntity, bool>> predicate,
-//            CancellationToken cancellationToken = default)
-//        {
-//            var finalQueryable = queryable.Where(predicate);
-//            return await finalQueryable.FirstOrDefaultAsync(cancellationToken);
-//        }
-//
-//        public static async Task<TEntity> FirstAsync<TEntity>(
-//            this IQueryable<TEntity> queryable, 
-//            CancellationToken cancellationToken = default)
-//        {
-//            return (await GetSingleOrFirstFromQueryable(queryable, cancellationToken)).First();
-//        }
-//
-//        public static async Task<TEntity> FirstAsync<TEntity>(
-//            this IQueryable<TEntity> queryable, 
-//            Expression<Func<TEntity, bool>> predicate,
-//            CancellationToken cancellationToken = default)
-//        {
-//            var finalQueryable = queryable.Where(predicate);
-//            return await finalQueryable.FirstAsync(cancellationToken);
-//        }
-//
-//        public static async Task<TEntity> SingleOrDefaultAsync<TEntity>(
-//            this IQueryable<TEntity> queryable, 
-//            CancellationToken cancellationToken = default)
-//        {
-//            return (await GetSingleOrFirstFromQueryable(queryable, cancellationToken)).SingleOrDefault();
-//        }
-//
-//        public static async Task<TEntity> SingleOrDefaultAsync<TEntity>(
-//            this IQueryable<TEntity> queryable,
-//            Expression<Func<TEntity, bool>> predicate,
-//            CancellationToken cancellationToken = default)
-//        {
-//            var finalQueryable = queryable.Where(predicate);
-//            return await finalQueryable.SingleOrDefaultAsync(cancellationToken);
-//        }
-//
-//        public static async Task<TEntity> SingleAsync<TEntity>(
-//            this IQueryable<TEntity> queryable, 
-//            CancellationToken cancellationToken = default)
-//        {
-//            return (await GetSingleOrFirstFromQueryable(queryable, cancellationToken)).Single();
-//        }
-//
-//        public static async Task<TEntity> SingleAsync<TEntity>(
-//            this IQueryable<TEntity> queryable,
-//            Expression<Func<TEntity, bool>> predicate,
-//            CancellationToken cancellationToken = default)
-//        {
-//            var finalQueryable = queryable.Where(predicate);
-//            return await finalQueryable.SingleAsync(cancellationToken);
-//        }
+        public static async Task<TEntity> FirstOrDefaultAsync<TEntity>(
+            this IQueryable<TEntity> queryable,
+            Expression<Func<TEntity, bool>> predicate,
+            CancellationToken cancellationToken = default)
+        {
+            var finalQueryable = queryable.Where(predicate);
+            return await finalQueryable.FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public static async Task<TEntity> FirstAsync<TEntity>(
+            this IQueryable<TEntity> queryable, 
+            CancellationToken cancellationToken = default)
+        {
+            return (await GetSingleOrFirstFromQueryable(queryable, cancellationToken)).First();
+        }
+
+        public static async Task<TEntity> FirstAsync<TEntity>(
+            this IQueryable<TEntity> queryable, 
+            Expression<Func<TEntity, bool>> predicate,
+            CancellationToken cancellationToken = default)
+        {
+            var finalQueryable = queryable.Where(predicate);
+            return await finalQueryable.FirstAsync(cancellationToken);
+        }
+
+        public static async Task<TEntity> SingleOrDefaultAsync<TEntity>(
+            this IQueryable<TEntity> queryable, 
+            CancellationToken cancellationToken = default)
+        {
+            return (await GetSingleOrFirstFromQueryable(queryable, cancellationToken)).SingleOrDefault();
+        }
+
+        public static async Task<TEntity> SingleOrDefaultAsync<TEntity>(
+            this IQueryable<TEntity> queryable,
+            Expression<Func<TEntity, bool>> predicate,
+            CancellationToken cancellationToken = default)
+        {
+            var finalQueryable = queryable.Where(predicate);
+            return await finalQueryable.SingleOrDefaultAsync(cancellationToken);
+        }
+
+        public static async Task<TEntity> SingleAsync<TEntity>(
+            this IQueryable<TEntity> queryable, 
+            CancellationToken cancellationToken = default)
+        {
+            return (await GetSingleOrFirstFromQueryable(queryable, cancellationToken)).Single();
+        }
+
+        public static async Task<TEntity> SingleAsync<TEntity>(
+            this IQueryable<TEntity> queryable,
+            Expression<Func<TEntity, bool>> predicate,
+            CancellationToken cancellationToken = default)
+        {
+            var finalQueryable = queryable.Where(predicate);
+            return await finalQueryable.SingleAsync(cancellationToken);
+        }
+        
+        //asdasda
+        
+        public static async Task<TEntity> FirstOrDefaultAsync<TEntity>(
+            this FeedIterator<TEntity> iterator, 
+            CancellationToken cancellationToken = default)
+        {
+            return (await GetResultsFromQueryForSingleOrFirst(iterator, cancellationToken)).FirstOrDefault();
+        }
+
+        public static async Task<TEntity> FirstAsync<TEntity>(
+            this FeedIterator<TEntity> iterator, 
+            CancellationToken cancellationToken = default)
+        {
+            return (await GetResultsFromQueryForSingleOrFirst(iterator, cancellationToken)).First();
+        }
+
+        public static async Task<TEntity> SingleOrDefaultAsync<TEntity>(
+            this FeedIterator<TEntity> iterator, 
+            CancellationToken cancellationToken = default)
+        {
+            return (await GetResultsFromQueryForSingleOrFirst(iterator, cancellationToken)).SingleOrDefault();
+        }
+        
+        public static async Task<TEntity> SingleAsync<TEntity>(
+            this FeedIterator<TEntity> iterator, 
+            CancellationToken cancellationToken = default)
+        {
+            return (await GetResultsFromQueryForSingleOrFirst(iterator, cancellationToken)).Single();
+        }
 
 //        public static async Task<TEntity> MaxAsync<TEntity>(
 //            this IQueryable<TEntity> queryable, 
@@ -194,6 +224,11 @@ namespace Cosmonaut.Extensions
         private static async Task<List<T>> GetResultsFromQueryForSingleOrFirst<T>(IQueryable<T> queryable, CancellationToken cancellationToken)
         {
             var iterator = queryable.ToFeedIterator();
+            return await GetResultsFromQueryForSingleOrFirst(iterator, cancellationToken);
+        }
+        
+        private static async Task<List<T>> GetResultsFromQueryForSingleOrFirst<T>(FeedIterator<T> iterator, CancellationToken cancellationToken)
+        {
             var results = new List<T>();
             while (iterator.HasMoreResults)
             {
